@@ -1,6 +1,6 @@
 import numpy as np
 from cbsyst.MyAMI_V2 import MyAMI_params, MyAMI_pK_calc
-
+from tqdm import tqdm
 
 class cbsyst(object):
     """
@@ -72,14 +72,7 @@ class cbsyst(object):
 
         # calculate constants
         if constants == 'MyAMI':
-            cpars = MyAMI_params(Ca, Mg)
-            scpars = {k: cpars[k] for k in ['K1', 'K2', 'Kb', 'Kw']}
-            pKs = MyAMI_pK_calc(t, s, scpars)
-
-            self.pK1 = pKs['K1']
-            self.pK2 = pKs['K2']
-            self.pKB = pKs['Kb']
-            self.KW = 10**(-pKs['Kw'])
+            self.pKcalc_MyAMI(Ca, Mg)
         else:
             if self.pKB is None:
                 self.pKBcalc()
@@ -245,8 +238,64 @@ class cbsyst(object):
                               2 * self.chiB + 2)
         return
 
-
     # constant calculators
+    def pKcalc_MyAMI(self, Ca, Mg):
+        Ca = np.array(Ca)
+        Mg = np.array(Mg)
+
+        if (Ca.size == Mg.size) | (Mg.size == 1):
+            CaMg = np.zeros((Ca.size, 2))
+            CaMg[:, 0] = Ca
+            CaMg[:, 1] = Mg
+        elif Ca.size == 1:
+            CaMg = np.zeros((Mg.size, 2))
+            CaMg[:, 0] = Ca
+            CaMg[:, 1] = Mg
+        else:
+            raise ValueError('Ca and Mg must be the same length, or one must have a size of 1.')
+
+        # calculate Ks
+        size = np.max(CaMg.shape[0])
+        pK1s = np.zeros(size)
+        pK2s = np.zeros(size)
+        pKBs = np.zeros(size)
+        KWs = np.zeros(size)
+
+        if isinstance(self.t, (str, float)):
+            t = np.array([self.t] * size)
+        else:
+            t = self.t
+
+        if isinstance(self.s, (str, float)):
+            s = np.array([self.s] * size)
+        else:
+            s = self.s
+
+        # determine unique combinations of Ca and Mg
+        unique = set([(ca, mg) for ca, mg in CaMg])
+        # calculate parameters for each unique combo
+        upars = {}
+
+        for (ca, mg) in tqdm(unique, desc='Calculating MyAMI Constants', leave=False):
+            upars[(ca, mg)] = MyAMI_params(ca, mg)
+
+            ind = (CaMg[:, 0] == ca) & (CaMg[:, 1] == mg)
+
+            pKs = MyAMI_pK_calc(t[ind], s[ind], upars[(ca, mg)])
+
+            pK1s[ind] = pKs['K1']
+            pK2s[ind] = pKs['K2']
+            pKBs[ind] = pKs['Kb']
+            KWs[ind] = 10**-pKs['Kw']
+
+        self.pK1 = pK1s
+        self.pK2 = pK2s
+        self.pKB = pKBs
+        self.KW = KWs
+        self.upars = upars
+
+        return
+
     def pKcalc(self):
         # Calculate fH
         # fH = (1.2948 - 0.002036 * self.tK +
