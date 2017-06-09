@@ -2,6 +2,7 @@ import numpy as np
 from cbsyst.MyAMI_V2 import MyAMI_params, MyAMI_pK_calc
 from tqdm import tqdm
 
+
 class cbsyst(object):
     """
     Calculate the speciation of Carbon and Boron in Seawater.

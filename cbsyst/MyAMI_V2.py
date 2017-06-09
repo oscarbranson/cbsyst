@@ -9,7 +9,7 @@
 #  5. Make it work with the cbsyst module
 #     (https://github.com/oscarbranson/cbsyst) for
 #     calculating seawater carbonate and B chem in seawater.
-# 
+#
 # Original Header
 # ---------------
 # MyAMI Specific Ion Interaction Model (Version 1.0):
