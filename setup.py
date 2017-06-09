@@ -15,5 +15,4 @@ setup(name='cbsyst',
                    ],
       install_requires=['numpy',
                         'tqdm'],
-      packages=['cbsyst'],
       zip_safe=False)
