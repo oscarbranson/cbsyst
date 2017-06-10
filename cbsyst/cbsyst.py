@@ -48,12 +48,9 @@ def Csys(pH=None, DIC=None, CO2=None,
     """
 
     # Bunch inputs
-    if pdict is None:
-        ps = Bunch(locals())
-    elif isinstance(pdict, Bunch):
-        ps = pdict
-    elif isinstance(pdict, dict):
-        ps = Bunch(ps)
+    ps = Bunch(locals())
+    if isinstance(pdict, dict):
+        ps.update(pdict)
 
     # if neither Ca nor Mg provided, use MyAMI Ks for modern SW
     if ps.Ca is None and ps.Mg is None:
@@ -192,12 +189,9 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
     """
 
     # Bunch inputs
-    if pdict is None:
-        ps = Bunch(locals())
-    elif isinstance(pdict, Bunch):
-        ps = pdict
-    elif isinstance(pdict, dict):
-        ps = Bunch(ps)
+    ps = Bunch(locals())
+    if isinstance(pdict, dict):
+        ps.update(pdict)
 
     # if neither Ca nor Mg provided, use default Ks
     if ps.Ca is None and ps.Mg is None:
@@ -301,12 +295,9 @@ def ABsys(pH=None,
     """
 
     # Bunch inputs
-    if pdict is None:
-        ps = Bunch(locals())
-    elif isinstance(pdict, Bunch):
-        ps = pdict
-    elif isinstance(pdict, dict):
-        ps = Bunch(ps)
+    ps = Bunch(locals())
+    if isinstance(pdict, dict):
+        ps.update(pdict)
 
     # if neither Ca nor Mg provided, use default Ks
     if ps.Ca is None and ps.Mg is None:
@@ -425,12 +416,9 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None,
     """
 
     # Bunch inputs
-    if pdict is None:
-        ps = Bunch(locals())
-    elif isinstance(pdict, Bunch):
-        ps = pdict
-    elif isinstance(pdict, dict):
-        ps = Bunch(ps)
+    ps = Bunch(locals())
+    if isinstance(pdict, dict):
+        ps.update(pdict)
 
     # Calculate Ks
     # if neither Ca nor Mg provided, use MyAMI Ks for modern SW
