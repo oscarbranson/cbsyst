@@ -1,5 +1,5 @@
 import numpy as np
-from cbsyst.MyAMI_V2 import MyAMI_params, MyAMI_pK_calc
+from cbsyst.MyAMI_V2 import MyAMI_pK_calc
 from tqdm import tqdm
 
 
@@ -278,11 +278,9 @@ class cbsyst(object):
         upars = {}
 
         for (ca, mg) in tqdm(unique, desc='Calculating MyAMI Constants', leave=False):
-            upars[(ca, mg)] = MyAMI_params(ca, mg)
-
             ind = (CaMg[:, 0] == ca) & (CaMg[:, 1] == mg)
 
-            pKs = MyAMI_pK_calc(t[ind], s[ind], upars[(ca, mg)])
+            pKs = MyAMI_pK_calc(t[ind], s[ind], ca, mg)
 
             pK1s[ind] = pKs['K1']
             pK2s[ind] = pKs['K2']
