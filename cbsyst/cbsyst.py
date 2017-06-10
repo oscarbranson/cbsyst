@@ -1,7 +1,7 @@
 import numpy as np
 from cbsyst.Bunch import Bunch
 from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi
-from cbsyst.zeebe_fns import *
+from cbsyst.carbon_fns import *
 from cbsyst.boron_fns import *
 
 
