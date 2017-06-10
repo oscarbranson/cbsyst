@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='cbsyst',
-      version='0.1-dev',
+      version='0.2-dev',
       description='Tools calculating ocean C and B chemistry.',
       url='https://github.com/oscarbranson/cbsyst',
       author='Oscar Branson',
