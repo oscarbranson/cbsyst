@@ -134,7 +134,12 @@ def Csys(pH=None, DIC=None, CO2=None,
     if ps.CO3 is None:
         ps.CO3 = cCO3(ps.H, ps.DIC, ps.Ks)
     if ps.TA is None:
-        ps.TA = cTA(ps.CO2, ps.H, ps.BT, ps.Ks)
+        try:
+            # necessary for use with CBsyst in special cases
+            # where BT is not known before Csys is run.
+            ps.TA = cTA(ps.CO2, ps.H, ps.BT, ps.Ks)
+        except TypeError:
+            pass
     if ps.pH is None:
         ps.pH = cp(ps.H)
 
@@ -435,6 +440,11 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None,
         # calculate Ca and Mg specific Ks
         ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
 
+    # if no B info provided, assume modern
+    nBspec = NnotNone([ps.BT, ps.BO3, ps.BO4])
+    if nBspec == 0:
+        ps.BT = 433.
+
     # This section works out the order that things should be calculated in.
     # Special case: if pH is missing, must have:
     #   a) two C
@@ -444,7 +454,6 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None,
 
     if ps.pH is None:
         nCspec = NnotNone([ps.DIC, ps.CO2, ps.HCO3, ps.CO3])
-        nBspec = NnotNone([ps.BT, ps.BO3, ps.BO4])
         # a) if there are 2 C species, or one C species and TA and BT
         if ((nCspec == 2) | ((nCspec == 1) & (NnotNone([ps.TA, ps.BT]) == 2))):
             ps.update(Csys(pdict=ps))  # calculate C first
@@ -465,6 +474,9 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None,
             #  with the same parameter set. As dicts are
             #  mutable, this has the added benefit of the
             #  parameters only being stored in memory once.
+            if ps.TA is None:
+                ps.TA = cTA(ps.CO2, ps.H, ps.BT, ps.Ks)
+                # necessary becayse TA in Csys fails if there's no BT
         # b) if there are 2 B species
         elif nBspec == 2:
             ps.update(Bsys(pdict=ps))  # calculate B first
