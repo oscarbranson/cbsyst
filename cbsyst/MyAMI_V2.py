@@ -21,8 +21,10 @@
 #
 # For general context on the calculations see Millero, 2007 (Chemical Reviews) and Millero and Pierrot, 1998 (Aquatic Geochemistry)
 
+import itertools
 import numpy as np
 from scipy.optimize import curve_fit
+from cbsyst.Bunch import Bunch
 
 
 # Functions from K_thermo_conditional.py
@@ -132,7 +134,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # definition of the function that takes (Temp, param) as input and returns the lnK at that temp
     #     def lnK_calcABC(T, paramABC):
     #         return paramABC[0] + paramABC[1] / T + paramABC[2] * T
-        # How to use:  ln_of_K_CaHPO4_at_18degC = lnK_calcABC(18, param_CaHPO4)
+    # How to use:  ln_of_K_CaHPO4_at_18degC = lnK_calcABC(18, param_CaHPO4)
 
     ################################################################################
     # PART 2 -- Pitzer equations (based on Millero and Pierrot (1998))
@@ -731,7 +733,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # OH - SO4 - K
     Phi_NNP[0, 6, 2] = -0.05
     Phi_NNP[6, 0, 2] = -0.05
-    
+
     return beta_0, beta_1, beta_2, C_phi, Theta_negative, Theta_positive, Phi_NNP, Phi_PPN, C1_HSO4
 
 
@@ -778,7 +780,7 @@ def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
     T = Tc + 273.15
     sqrtI = np.sqrt(I)
 
-    Z_cation = np.zeros((6,1,1))
+    Z_cation = np.zeros((6, 1, 1))
     Z_cation[0] = 1
     Z_cation[1] = 1
     Z_cation[2] = 1
@@ -786,7 +788,7 @@ def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
     Z_cation[4] = 2
     Z_cation[5] = 2
 
-    Z_anion = np.zeros((7,1,1))
+    Z_anion = np.zeros((7, 1, 1))
     Z_anion[0] = -1
     Z_anion[1] = -1
     Z_anion[2] = -1
@@ -829,7 +831,6 @@ def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
                 (-1 + (1 + (2 * sqrtI) + (2 * sqrtI)) * np.exp(-2 * sqrtI))
             CMX[cat, an] = C_phi[cat, an] / \
                 (2 * np.sqrt(-Z_anion[an] * Z_cation[cat]))
-
 
     # BMX* and CMX are calculated differently for 2:2 ion pairs, corrections
     # below  # § alpha2= 6 for borates ... see Simonson et al 1988
@@ -880,7 +881,6 @@ def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
     BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * I * I)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * I) *
                                                                    np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (18 * I)) * (-1 - (1 + 6 * sqrtI + 18 * I) * np.exp(-6 * sqrtI))
 
-
     # BMX* is calculated with T-dependent alpha for H-SO4; see Clegg et al.,
     # 1994 --- Millero and Pierrot are completly off for this ion pair
     xClegg = (2 - 1842.843 * (1 / T - 1 / 298.15)) * sqrtI
@@ -892,7 +892,7 @@ def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
     BMX_apostroph[0, 6] = beta_1[0, 6] / I * (np.exp(-xClegg) - gClegg)
 
     CMX[0, 6] = C_phi[0, 6] + 4 * C1_HSO4 * (6 - (6 + 2.5 * sqrtI * (6 + 3 * 2.5 * sqrtI + 2.5 * sqrtI * 2.5 * sqrtI)) *
-                                                   np.exp(-2.5 * sqrtI)) / (2.5 * sqrtI * 2.5 * sqrtI * 2.5 * sqrtI * 2.5 * sqrtI)  # w = 2.5 ... see Clegg et al., 1994
+                                             np.exp(-2.5 * sqrtI)) / (2.5 * sqrtI * 2.5 * sqrtI * 2.5 * sqrtI * 2.5 * sqrtI)  # w = 2.5 ... see Clegg et al., 1994
 
     # unusual alpha=1.7 for Na2SO4
     # BMX[1, 6] = beta_0[1, 6] + (beta_1[1, 6] / (2.89 * I)) * 2 * (1 - (1 + 1.7 * sqrtI) * np.exp(-1.7 * sqrtI))
@@ -939,7 +939,6 @@ def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
                 ln_gamma_anion[an] = ln_gamma_anion[an] + m_cation[cat] * m_cation[cat2] * Phi_PPN[cat, cat2, an]
                 if an == XX:
                     print (ln_gamma_anion[an], cat, cat2)
-
 
     gamma_cation = np.zeros((6, *Tc.shape))
     ln_gamma_cation = np.zeros((6, *Tc.shape))
@@ -1349,13 +1348,12 @@ fitfn_dict = {'K0': fitfunc_K0,
 
 # Main (new) functions
 # --------------------------------------
-def MyAMI_params(XmCa, XmMg):
+def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
     """
     Calculate equilibrium constant parameters using MyAMI model.
 
     Parameters
     ----------
-
     XmCa : float
         Ca concentration in mol/kgSW.
     XmMg : float
@@ -1402,7 +1400,7 @@ def MyAMI_params(XmCa, XmMg):
 
     maxfevN = 2000000  # number of optimiztion timesteps allowed to reach convergence
 
-    param_dict = {}
+    param_dict = Bunch()
     for k in fitfn_dict.keys():
         p0 = np.ones(len(start_params[k]))
         p, cov = curve_fit(fitfn_dict[k], (TempK_M.ravel(), Sal_M.ravel()), X_dict[k].ravel(), p0=p0, maxfev=maxfevN)
@@ -1412,7 +1410,7 @@ def MyAMI_params(XmCa, XmMg):
     return param_dict
 
 
-def MyAMI_K_calc(TempC, Sal, param_dict):
+def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, param_dict=None):
     """
     Calculate K constants at given salinities and temperatures.
 
@@ -1432,8 +1430,38 @@ def MyAMI_K_calc(TempC, Sal, param_dict):
     -------
     dict of K values
     """
+    if param_dict is None:
+        if Ca == 0.0102821 and Mg == 0.0528171:
+            # MyAMI parameters for s=35, t=25. Specified in full rather than
+            # calculated, for speed.
+            param_dict = {'K0': np.array([-6.02409000e+01, 9.34517000e+01, 2.33585000e+01,
+                                          2.35170000e-02, -2.36560000e-02, 4.70360000e-03]),
+                          'K1': np.array([6.12172000e+01, -3.63386000e+03, -9.67770000e+00,
+                                          1.15550000e-02, -1.15200000e-04]),
+                          'K2': np.array([-2.59290000e+01, -4.71780000e+02, 3.16967000e+00,
+                                          1.78100000e-02, -1.12200000e-04]),
+                          'KSO4': np.array([1.41328000e+02, -4.27610000e+03, -2.30930000e+01,
+                                            -1.38560000e+04, 3.24570000e+02, -4.79860000e+01,
+                                            3.54740000e+04, -7.71540000e+02, 1.14723000e+02,
+                                            -2.69800000e+03, 1.77600000e+03]),
+                          'Kb': np.array([1.48024800e+02, 1.37194200e+02, 1.62142000e+00,
+                                          -8.96690000e+03, -2.89053000e+03, -7.79420000e+01,
+                                          1.72800000e+00, -9.96000000e-02, -2.44344000e+01,
+                                          -2.50850000e+01, -2.47400000e-01, 5.31050000e-02]),
+                          'KspA': np.array([-1.71945000e+02, -7.79930000e-02, 2.90329300e+03,
+                                            7.15950000e+01, -6.83930000e-02, 1.72760000e-03,
+                                            8.81350000e+01, -1.00180000e-01, 5.94150000e-03]),
+                          'KspC': np.array([-1.71906500e+02, -7.79930000e-02, 2.83931900e+03,
+                                            7.15950000e+01, -7.77120000e-01, 2.84260000e-03,
+                                            1.78340000e+02, -7.71100000e-02, 4.12490000e-03]),
+                          'Kw': np.array([1.48965200e+02, -1.38472600e+04, -2.36521000e+01,
+                                          1.18670000e+02, -5.97700000e+00, 1.04950000e+00,
+                                          -1.61500000e-02])}
+        else:
+            param_dict = MyAMI_params(Ca, Mg)
+
     TempK = TempC + 273.15
-    Ks = {}
+    Ks = Bunch()
     for k in param_dict.keys():
         Ks[k] = fn_dict[k]((TempK, Sal),
                            *param_dict[k])
@@ -1441,7 +1469,63 @@ def MyAMI_K_calc(TempC, Sal, param_dict):
     return Ks
 
 
-def MyAMI_pK_calc(TempC, Sal, param_dict):
+def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171):
+    """
+    Calculate MyAMI equilibrium constants for multiple T, S and Mg and Ca conditions.
+
+    Inputs should be array-like or a single value. If more than one is array-like,
+    they should be the same length.
+
+    Parameters
+    ----------
+    XmCa : float or array-like
+        Ca concentration in mol/kgSW.
+    XmMg : float or array-like
+        Mg concentration in mol/kgSW
+
+    Returns
+    -------
+    dict of dicts of params, where keys are (Ca, Mg) pairs.
+    """
+    # package data in a bunch of 1D arrays.
+    d = Bunch()
+    d.T = np.array(T, ndmin=1)
+    d.S = np.array(S, ndmin=1)
+    d.Ca = np.array(Ca, ndmin=1)
+    d.Mg = np.array(Mg, ndmin=1)
+
+    # make all shorter arrays repeat to length of longest
+    mL = max(d, key=lambda k: d[k].size)  # ID longest array
+    L = d[mL].size  # get size of longest
+    for k, v in d.items():
+        if k != mL:
+            d[k] = itertools.cycle(v)  # turn all shorter arrays into itertools.cycle objects
+
+    zd = np.array(list(zip(d.T, d.S, d.Ca, d.Mg)))  # make a 4xL array of parameters
+
+    # identify Ca-Mg pairs
+    CaMg = set(zip(*zd[:, -2:].T))
+
+    # set up empty K Bunch
+    Ks = Bunch({k: np.zeros(L) for k in ['K0', 'K1', 'K2', 'KSO4', 'Kb', 'KspA', 'KspC', 'Kw']})
+
+    # calculate T and S specific Ks for each Ca-Mg pair.
+    for (ca, mg) in CaMg:
+        # par = MyAMI_params(ca, mg)  # calculate parameters for Ca-Mg conditions
+
+        ind = (zd[:, -2] == ca) & (zd[:, -1] == mg)
+        t = zd[ind, 0]
+        s = zd[ind, 1]
+
+        Ks_tmp = MyAMI_K_calc(t, s, ca, mg)
+
+        for k in Ks.keys():
+            Ks[k][ind] = Ks_tmp[k]
+
+    return Ks
+
+
+def MyAMI_pK_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, param_dict=None):
     """
     Calculate pK constants at given salinities and temperatures.
 
@@ -1461,8 +1545,37 @@ def MyAMI_pK_calc(TempC, Sal, param_dict):
     -------
     dict of pK values
     """
+    if param_dict is None:
+        if Ca == 0.0102821 and Mg == 0.0528171:
+            # MyAMI parameters for s=35, t=25. Specified in full rather than
+            # calculated, for speed.
+            param_dict = {'K0': np.array([-6.02409000e+01, 9.34517000e+01, 2.33585000e+01,
+                                          2.35170000e-02, -2.36560000e-02, 4.70360000e-03]),
+                          'K1': np.array([6.12172000e+01, -3.63386000e+03, -9.67770000e+00,
+                                          1.15550000e-02, -1.15200000e-04]),
+                          'K2': np.array([-2.59290000e+01, -4.71780000e+02, 3.16967000e+00,
+                                          1.78100000e-02, -1.12200000e-04]),
+                          'KSO4': np.array([1.41328000e+02, -4.27610000e+03, -2.30930000e+01,
+                                            -1.38560000e+04, 3.24570000e+02, -4.79860000e+01,
+                                            3.54740000e+04, -7.71540000e+02, 1.14723000e+02,
+                                            -2.69800000e+03, 1.77600000e+03]),
+                          'Kb': np.array([1.48024800e+02, 1.37194200e+02, 1.62142000e+00,
+                                          -8.96690000e+03, -2.89053000e+03, -7.79420000e+01,
+                                          1.72800000e+00, -9.96000000e-02, -2.44344000e+01,
+                                          -2.50850000e+01, -2.47400000e-01, 5.31050000e-02]),
+                          'KspA': np.array([-1.71945000e+02, -7.79930000e-02, 2.90329300e+03,
+                                            7.15950000e+01, -6.83930000e-02, 1.72760000e-03,
+                                            8.81350000e+01, -1.00180000e-01, 5.94150000e-03]),
+                          'KspC': np.array([-1.71906500e+02, -7.79930000e-02, 2.83931900e+03,
+                                            7.15950000e+01, -7.77120000e-01, 2.84260000e-03,
+                                            1.78340000e+02, -7.71100000e-02, 4.12490000e-03]),
+                          'Kw': np.array([1.48965200e+02, -1.38472600e+04, -2.36521000e+01,
+                                          1.18670000e+02, -5.97700000e+00, 1.04950000e+00,
+                                          -1.61500000e-02])}
+        else:
+            param_dict = MyAMI_params(Ca, Mg)
     TempK = TempC + 273.15
-    pKs = {}
+    pKs = Bunch()
     for k in param_dict.keys():
         pKs[k] = -np.log10(fn_dict[k]((TempK, Sal),
                                       *param_dict[k]))
@@ -1565,7 +1678,7 @@ def MyAMI_test():
 #         print(''.join(['{:<10.1e}'.format(Kd) for Kd in Kds]))
         print('\n')
 
-    def Kdcalc(params,V1_params, par):
+    def Kdcalc(params, V1_params, par):
         Kds = []
         for k in par:
             V1 = fn_dict[k](TKS, *V1_params[k])
