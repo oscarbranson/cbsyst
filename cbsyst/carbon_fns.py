@@ -19,8 +19,8 @@ def CO2_HCO3(CO2, HCO3, Ks):
     """
     Returns H
     """
-    L = lens(CO2, HCO3)
-    CO2, HCO3 = noms(CO2, HCO3)
+    L = lens(CO2, HCO3)  # find length of longest input
+    CO2, HCO3 = noms(CO2, HCO3)  # get nominal values of inputs
 
     def zero_CO2_HCO3(h, CO2, HCO3, Ks):
         LH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
