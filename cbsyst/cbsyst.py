@@ -23,6 +23,13 @@ def Csys(pH=None, DIC=None, CO2=None,
     Inputs must either be single values, arrays of equal length or a mixture of both.
     If you use arrays of unequal length, it won't work.
 
+    Error propagation:
+    If inputs are ufloat or uarray (from uncertainties package) errors will
+    be propagated through all calculations, but:
+
+    **WARNING** Error propagation NOT IMPLEMENTED for carbon system calculations
+    with zero-finders (i.e. when pH is not given; cases 2-5 and 10-15).
+
     Parameters
     ----------
     pH, DIC, CO2, HCO3, CO3, TA : array-like
@@ -171,6 +178,10 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
     Inputs must either be single values, arrays of equal length or a mixture of both.
     If you use arrays of unequal length, it won't work.
 
+    Error propagation:
+    If inputs are ufloat or uarray (from uncertainties package) errors will
+    be propagated through all calculations.
+
     Parameters
     ----------
     pH, BT, BO3, BO4 : array-like
@@ -268,6 +279,10 @@ def ABsys(pH=None,
 
     Inputs must either be single values, arrays of equal length or a mixture of both.
     If you use arrays of unequal length, it won't work.
+
+    Error propagation:
+    If inputs are ufloat or uarray (from uncertainties package) errors will
+    be propagated through all calculations.
 
     Parameters
     ----------
@@ -387,6 +402,13 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None,
 
     Isotopes will only be calculated if one of [ABT, ABO3, ABO4, dBT, dBO3, dBO4]
     is provided.
+
+    Error propagation:
+    If inputs are ufloat or uarray (from uncertainties package) errors will
+    be propagated through all calculations, but:
+
+    **WARNING** Error propagation NOT IMPLEMENTED for carbon system calculations
+    with zero-finders (i.e. when pH is not given; cases 2-5 and 10-15).
 
     Parameters
     ----------

@@ -4,6 +4,9 @@ import uncertainties.unumpy as unp
 from cbsyst.boron_fns import ch
 
 
+# Zero-finders: 2-5, 10-15
+# Algebraid: 1, 6-9
+
 # Zeebe & Wolf-Gladrow, Appendix B
 # 1. CO2 and pH given
 def CO2_pH(CO2, pH, Ks):
