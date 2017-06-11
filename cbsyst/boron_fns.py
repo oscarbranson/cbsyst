@@ -6,43 +6,43 @@ def BT_BO3(BT, BO3, Ks):
     """
     Returns H
     """
-    return Ks.Kb / (BT / BO3 - 1)
+    return Ks.KB / (BT / BO3 - 1)
 
 
 def BT_BO4(BT, BO4, Ks):
     """
     Returns H
     """
-    return Ks.Kb * (BT / BO4 - 1)
+    return Ks.KB * (BT / BO4 - 1)
 
 
 def pH_BO3(pH, BO3, Ks):
     """
     Returns BT
     """
-    H = 10**-pH
-    return BO3 * (1 + Ks.Kb / H)
+    H = ch(pH)
+    return BO3 * (1 + Ks.KB / H)
 
 
 def pH_BO4(pH, BO4, Ks):
     """
     Returns BT
     """
-    H = 10**-pH
-    return BO4 * (1 + H / Ks.Kb)
+    H = ch(pH)
+    return BO4 * (1 + H / Ks.KB)
 
 
 def cBO4(BT, H, Ks):
-    return BT / (1 + H / Ks.Kb)
+    return BT / (1 + H / Ks.KB)
 
 
 def cBO3(BT, H, Ks):
-    return BT / (1 + Ks.Kb / H)
+    return BT / (1 + Ks.KB / H)
 
 
 # B isotope fns
 def chiB_calc(H, Ks):
-    return 1 / (1 + Ks.Kb / H)
+    return 1 / (1 + Ks.KB / H)
 
 
 def alphaB_calc(TempC):
@@ -57,7 +57,7 @@ def pH_ABO3(pH, ABO3, Ks, alphaB):
     """
     Returns ABT
     """
-    H = 10**-pH
+    H = ch(pH)
     chiB = chiB_calc(H, Ks)
     return (ABO3 * (-ABO3 * alphaB * chiB +
                     ABO3 * chiB + alphaB *
@@ -70,7 +70,7 @@ def pH_ABO4(pH, ABO4, Ks, alphaB):
     """
     Returns ABT
     """
-    H = 10**-pH
+    H = ch(pH)
     chiB = chiB_calc(H, Ks)
     return (ABO4 * (-ABO4 * alphaB * chiB +
                     ABO4 * alphaB + ABO4 *
@@ -163,6 +163,8 @@ def R11_2_A11(R11):
 
 # pK <--> K converters
 def ch(x):
+    if not isinstance(x, np.ndarray):
+        x = np.array(x)
     return 10**-x
 
 

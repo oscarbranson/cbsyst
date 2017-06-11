@@ -1,5 +1,7 @@
 import scipy.optimize as opt
 import numpy as np
+import uncertainties.unumpy as unp
+from cbsyst.boron_fns import ch
 
 
 # Zeebe & Wolf-Gladrow, Appendix B
@@ -8,7 +10,7 @@ def CO2_pH(CO2, pH, Ks):
     """
     Returns DIC
     """
-    h = 10**-pH
+    h = ch(pH)
     return CO2 * (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h**2)
 
 
@@ -17,7 +19,8 @@ def CO2_HCO3(CO2, HCO3, Ks):
     """
     Returns H
     """
-    L = lens((CO2, HCO3))
+    L = lens(CO2, HCO3)
+    CO2, HCO3 = noms(CO2, HCO3)
 
     def zero_CO2_HCO3(h, CO2, HCO3, Ks):
         LH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
@@ -32,7 +35,8 @@ def CO2_CO3(CO2, CO3, Ks):
     """
     Returns H
     """
-    L = lens((CO2, CO3))
+    L = lens(CO2, CO3)
+    CO2, CO3 = noms(CO2, CO3)
 
     def zero_CO2_CO3(h, CO2, CO3, Ks):
         LH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
@@ -47,12 +51,13 @@ def CO2_TA(CO2, TA, BT, Ks):
     """
     Returns H
     """
-    L = lens((CO2, TA, BT))
+    L = lens(CO2, TA, BT)
+    CO2, TA, BT = noms(CO2, TA, BT)
 
     def zero_CO2_TA(h, CO2, TA, BT, Ks):
-        LH = TA * h**2 * (Ks.Kb + h)
-        RH = (CO2 * (Ks.Kb + h) * (Ks.K1 * h + 2 * Ks.K1 * Ks.K2) +
-              h**2 * Ks.Kb * BT + (Ks.Kb + h) * (Ks.Kw * h - h**3))
+        LH = TA * h**2 * (Ks.KB + h)
+        RH = (CO2 * (Ks.KB + h) * (Ks.K1 * h + 2 * Ks.K1 * Ks.K2) +
+              h**2 * Ks.KB * BT + (Ks.KB + h) * (Ks.KW * h - h**3))
         return LH - RH
     # Roots: one pos, one neg, 2 conj. complex. Use positive
     return opt.fsolve(zero_CO2_TA, [1] * L, args=(CO2, TA, BT, Ks), xtol=1e-12)
@@ -63,7 +68,8 @@ def CO2_DIC(CO2, DIC, Ks):
     """
     Returns H
     """
-    L = lens((CO2, DIC))
+    L = lens(CO2, DIC)
+    CO2, DIC = noms(CO2, DIC)
 
     def zero_CO2_DIC(h, CO2, DIC, Ks):
         LH = DIC * h**2
@@ -78,7 +84,7 @@ def pH_HCO3(pH, HCO3, Ks):
     """
     Returns DIC
     """
-    h = 10**-pH
+    h = ch(pH)
     return HCO3 * (1 + h / Ks.K1 + Ks.K2 / h)
 
 
@@ -87,7 +93,7 @@ def pH_CO3(pH, CO3, Ks):
     """
     Returns DIC
     """
-    h = 10**-pH
+    h = ch(pH)
     return CO3 * (1 + h / Ks.K2 + h**2 / (Ks.K1 * Ks.K2))
 
 
@@ -96,8 +102,8 @@ def pH_TA(pH, TA, BT, Ks):
     """
     Returns CO2
     """
-    h = 10**-pH
-    return ((TA - Ks.Kb * BT / (Ks.Kb + h) - Ks.Kw / h + h) /
+    h = ch(pH)
+    return ((TA - Ks.KB * BT / (Ks.KB + h) - Ks.KW / h + h) /
             (Ks.K1 / h + 2 * Ks.K1 * Ks.K2 / h**2))
 
 
@@ -106,7 +112,7 @@ def pH_DIC(pH, DIC, Ks):
     """
     Returns CO2
     """
-    h = 10**-pH
+    h = ch(pH)
     return DIC / (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h**2)
 
 
@@ -115,7 +121,8 @@ def HCO3_CO3(HCO3, CO3, Ks):
     """
     Returns H
     """
-    L = lens((HCO3, CO3))
+    L = lens(HCO3, CO3)
+    HCO3, CO3 = noms(HCO3, CO3)
 
     def zero_HCO3_CO3(h, HCO3, CO3, Ks):
         LH = HCO3 * (h + h**2 / Ks.K1 + Ks.K2)
@@ -130,13 +137,14 @@ def HCO3_TA(HCO3, TA, BT, Ks):
     """
     Returns H
     """
-    L = lens((HCO3, TA, BT))
+    L = lens(HCO3, TA, BT)
+    HCO3, TA, BT = noms(HCO3, TA, BT)
 
     def zero_HCO3_TA(h, HCO3, TA, BT, Ks):
-        LH = TA * (Ks.Kb + h) * (h**3 + Ks.K1 * h**2 + Ks.K1 * Ks.K2 * h)
-        RH = ((HCO3 * (h + h**2 / Ks.K1 + Ks.K2) * ((Ks.Kb + 2 * Ks.K2) * Ks.K1 * h + 2 * Ks.Kb * Ks.K1 * Ks.K2 + Ks.K1 * h**2)) +
+        LH = TA * (Ks.KB + h) * (h**3 + Ks.K1 * h**2 + Ks.K1 * Ks.K2 * h)
+        RH = ((HCO3 * (h + h**2 / Ks.K1 + Ks.K2) * ((Ks.KB + 2 * Ks.K2) * Ks.K1 * h + 2 * Ks.KB * Ks.K1 * Ks.K2 + Ks.K1 * h**2)) +
               ((h**2 + Ks.K1 * h + Ks.K1 * Ks.K2) *
-               (Ks.Kb * BT * h + Ks.Kw * Ks.Kb + Ks.Kw * h - Ks.Kb * h**2 - h**3)))
+               (Ks.KB * BT * h + Ks.KW * Ks.KB + Ks.KW * h - Ks.KB * h**2 - h**3)))
         return LH - RH
     # Roots: one pos, four neg. Use pos.
     return opt.fsolve(zero_HCO3_TA, [1] * L, args=(HCO3, TA, BT, Ks), xtol=1e-12)
@@ -147,7 +155,8 @@ def HCO3_DIC(HCO3, DIC, Ks):
     """
     Returns H
     """
-    L = lens((HCO3, DIC))
+    L = lens(HCO3, DIC)
+    HCO3, DIC = noms(HCO3, DIC)
 
     def zero_HCO3_DIC(h, HCO3, DIC, Ks):
         LH = HCO3 * (h + h**2 / Ks.K1 + Ks.K2)
@@ -162,14 +171,15 @@ def CO3_TA(CO3, TA, BT, Ks):
     """
     Returns H
     """
-    L = lens((CO3, TA, BT))
+    L = lens(CO3, TA, BT)
+    CO3, TA, BT = noms(CO3, TA, BT)
 
     def zero_CO3_TA(h, CO3, TA, BT, Ks):
-        LH = TA * (Ks.Kb + h) * (h**3 + Ks.K1 * h**2 + Ks.K1 * Ks.K2 * h)
+        LH = TA * (Ks.KB + h) * (h**3 + Ks.K1 * h**2 + Ks.K1 * Ks.K2 * h)
         RH = ((CO3 * (h + h**2 / Ks.K2 + h**3 / (Ks.K1 * Ks.K2)) *
-               (Ks.K1 * h**2 + Ks.K1 * h * (Ks.Kb + 2 * Ks.K2) + 2 * Ks.Kb * Ks.K1 * Ks.K2)) +
+               (Ks.K1 * h**2 + Ks.K1 * h * (Ks.KB + 2 * Ks.K2) + 2 * Ks.KB * Ks.K1 * Ks.K2)) +
               ((h**2 + Ks.K1 * h + Ks.K1 * Ks.K2) *
-               (Ks.Kb * BT * h + Ks.Kw * Ks.Kb + Ks.Kw * h - Ks.Kb * h**2 - h**3)))
+               (Ks.KB * BT * h + Ks.KW * Ks.KB + Ks.KW * h - Ks.KB * h**2 - h**3)))
         return LH - RH
     # Roots: three neg, two pos. Use larger pos.
     return opt.fsolve(zero_CO3_TA, [1] * L, args=(CO3, TA, BT, Ks), xtol=1e-12)
@@ -180,7 +190,8 @@ def CO3_DIC(CO3, DIC, Ks):
     """
     Returns H
     """
-    L = lens((CO3, DIC))
+    L = lens(CO3, DIC)
+    CO3, DIC = noms(CO3, DIC)
 
     def zero_CO3_DIC(h, CO3, DIC, Ks):
         LH = CO3 * (1 + h / Ks.K2 + h**2 / (Ks.K1 * Ks.K2))
@@ -195,14 +206,15 @@ def TA_DIC(TA, DIC, BT, Ks):
     """
     Returns H
     """
-    L = lens((TA, DIC, BT))
+    L = lens(TA, DIC, BT)
+    TA, DIC, BT = noms(TA, DIC, BT)
 
     def zero_TA_DIC(h, TA, DIC, BT, Ks):
-        LH = DIC * (Ks.Kb + h) * (Ks.K1 * h**2 + 2 * Ks.K1 * Ks.K2 * h)
-        RH = ((TA * (Ks.Kb + h) * h -
-               Ks.Kb * BT * h -
-               Ks.Kw * (Ks.Kb + h) +
-               (Ks.Kb + h) * h**2) *
+        LH = DIC * (Ks.KB + h) * (Ks.K1 * h**2 + 2 * Ks.K1 * Ks.K2 * h)
+        RH = ((TA * (Ks.KB + h) * h -
+               Ks.KB * BT * h -
+               Ks.KW * (Ks.KB + h) +
+               (Ks.KB + h) * h**2) *
               (h**2 +
                Ks.K1 * h +
                Ks.K1 * Ks.K2))
@@ -241,21 +253,32 @@ def cTA(CO2, H, BT, Ks):
     Returns TA
     """
     return (CO2 * (Ks.K1 / H + 2 * Ks.K1 * Ks.K2 / H**2) +
-            BT * Ks.Kb / (Ks.Kb + H) + Ks.Kw / H - H)
+            BT * Ks.KB / (Ks.KB + H) + Ks.KW / H - H)
 
 
-def lens(ps):
+# Helper functions
+def lens(*it):
     """
-    Calculate maximum length of items in ps.
-    
+    Calculate maximum length of provided items.
+
     Parameters
     ----------
-    ps : iterable
-        iterable of items of various lengths.
-    
+    *it : n objects with .size attribute
+        Items of various lengths.
+
     Returns
     -------
-    Length of longest item (int).
-    
+    Length of longest object (int).
     """
-    return max([np.size(p) for p in ps])
+    return max([np.size(i) for i in it])
+
+
+def noms(*it):
+    """
+    Return nominal_values for provided objects.
+
+    Parameters
+    ----------
+    *it : n objects
+    """
+    return [unp.nominal_values(i) for i in it]
