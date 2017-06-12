@@ -96,3 +96,29 @@ out
      'pH': array([ 8.1]),
      'pdict': None}
 ```
+
+## Whats is a `Bunch`?
+
+For code readability and convenience, I've used Bunch objects instead of traditional dicts.
+A [Bunch](cbsyst/helpers.py#L6) is a modification of a dict, which allows attribute access via the dot (.) operator.
+Apart from that, it works *exactly* like a normal dict (all the usual methods are available transparrently).
+
+**Example:**
+```
+from cbsyst.helpers import Bunch
+
+# Make a bunch
+bun = Bunch({'a': 1,
+             'b': 2})
+
+# Access items of bunch...
+# as a dict:
+bun['a']
+
+>>> 1
+
+# as a Bunch:
+bun.a
+
+>>> 1
+```
