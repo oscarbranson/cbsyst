@@ -1460,6 +1460,7 @@ def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, param_dict=None
         else:
             param_dict = MyAMI_params(Ca, Mg)
 
+    TempC, Sal = [np.array(p) for p in (TempC, Sal)]
     TempK = TempC + 273.15
     Ks = Bunch()
     for k in param_dict.keys():
