@@ -109,6 +109,15 @@ out
      'pCO2': array([ 345.78871573]),
      'pH': array([ 8.1]),
      'pdict': None}
+
+# All of the calculated output arrays will be the same length as the longest
+# input array.
+
+# Access individual parameters by:
+out.CO3
+
+>>> array([ 238.511253])
+
 ```
 
 ## Technical Note: Whats is a `Bunch`?
@@ -118,7 +127,7 @@ A [Bunch](cbsyst/helpers.py#L6) is a modification of a dict, which allows attrib
 Apart from that, it works *exactly* like a normal dict (all the usual methods are available transparrently).
 
 **Example:**
-```
+```python
 from cbsyst.helpers import Bunch
 
 # Make a bunch

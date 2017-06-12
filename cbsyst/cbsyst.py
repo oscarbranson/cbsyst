@@ -78,7 +78,8 @@ def Csys(pH=None, DIC=None, CO2=None,
              'nmol': 1e9,
              'pmol': 1e12,
              'fmol': 1e15}
-    ps.unit = udict[ps.unit]
+    if isinstance(ps.unit, str):
+        ps.unit = udict[ps.unit]
 
     # if neither Ca nor Mg provided, use MyAMI Ks for modern SW
     if isinstance(Ks, dict):
@@ -513,7 +514,8 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
              'nmol': 1e9,
              'pmol': 1e12,
              'fmol': 1e15}
-    ps.unit = udict[ps.unit]
+    if isinstance(ps.unit, str):
+        ps.unit = udict[ps.unit]
 
     # Calculate Ks
     # if neither Ca nor Mg provided, use MyAMI Ks for modern SW
