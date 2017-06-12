@@ -3,6 +3,7 @@ from cbsyst.helpers import Bunch
 from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi
 from cbsyst.carbon_fns import *
 from cbsyst.boron_fns import *
+from cbsyst.helpers import ch, cp, NnotNone
 
 
 # C Speciation
@@ -475,7 +476,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
         ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
 
     # if no B info provided, assume modern
-    nBspec = NnotNone([ps.BT, ps.BO3, ps.BO4])
+    nBspec = NnotNone(ps.BT, ps.BO3, ps.BO4)
     if nBspec == 0:
         ps.BT = 433.
 
@@ -487,9 +488,9 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
     #      (c not implemented!)
 
     if ps.pH is None:
-        nCspec = NnotNone([ps.DIC, ps.CO2, ps.HCO3, ps.CO3])
+        nCspec = NnotNone(ps.DIC, ps.CO2, ps.HCO3, ps.CO3)
         # a) if there are 2 C species, or one C species and TA and BT
-        if ((nCspec == 2) | ((nCspec == 1) & (NnotNone([ps.TA, ps.BT]) == 2))):
+        if ((nCspec == 2) | ((nCspec == 1) & (NnotNone(ps.TA, ps.BT) == 2))):
             ps.update(Csys(pdict=ps))  # calculate C first
             ps.update(Bsys(pdict=ps))  # then B
             # Note on the peculiar syntax here:
@@ -525,25 +526,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
         ps.update(Bsys(pdict=ps))  # calculate B first
         ps.update(Csys(pdict=ps))  # then C
 
-    if NnotNone([ps.ABT, ps.ABO3, ps.ABO4, ps.dBT, ps.dBO3, ps.dBO4]) != 0:
+    if NnotNone(ps.ABT, ps.ABO3, ps.ABO4, ps.dBT, ps.dBO3, ps.dBO4) != 0:
         ps.update(ABsys(pdict=ps))
 
     return ps
-
-
-# Helper Functions
-# ----------------
-def NnotNone(it):
-    """
-    Returns the number of elements of it tha are not None.
-
-    Parameters
-    ----------
-    it : iterable
-        iterable of elements that are either None, or not None
-
-    Returns
-    -------
-    int
-    """
-    return sum([i is not None for i in it])

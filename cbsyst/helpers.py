@@ -56,6 +56,22 @@ def cast_array(*it):
     return new
 
 
+def NnotNone(*it):
+    """
+    Returns the number of elements of it tha are not None.
+
+    Parameters
+    ----------
+    it : iterable
+        iterable of elements that are either None, or not None
+
+    Returns
+    -------
+    int
+    """
+    return sum([i is not None for i in it])
+
+
 # pK <--> K converters
 def ch(pK):
     """

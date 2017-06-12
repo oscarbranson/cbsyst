@@ -1,4 +1,5 @@
 import numpy as np
+from cbsyst.helpers import ch
 
 
 # B conc fns
