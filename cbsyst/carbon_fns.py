@@ -4,11 +4,17 @@ from cbsyst.helpers import ch, noms, cast_array
 from cbsyst.boron_fns import cBO4
 
 
-def _zero_wrapper(ps, fn, bounds=(0, 1)):
+def _zero_wrapper(ps, fn, bounds=(10**-14, 10**-1)):
     """
     Wrapper to handle zero finders.
     """
-    return opt.brentq(fn, *bounds, args=tuple(ps), xtol=1e-16)
+    try:
+        return opt.brentq(fn, *bounds, args=tuple(ps), xtol=1e-16)
+        # brentq is ~100 times faster.
+    except ValueError:
+        return opt.fsolve(fn, 1, args=tuple(ps))[0]
+        # but can be fragile if limits aren't right.
+
 
 # Function types
 # Zero-finders: 2-5, 10-15
