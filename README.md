@@ -4,11 +4,12 @@
 
 *Work in progress! Results not guaranteed. Use at your own risk.*
 
-Constants calculated from an adaptation of [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf).
+Constants calculated by an adaptation of [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf).
 
 ## Installation
 
-**Developed and tested in Python 3.5**. Should work in 2.7+, but can't guarantee.
+**Developed and tested in Python 3.5**. 
+Should work in 2.7+, but can't guarantee.
 
 ```bash
 pip install git+https://github.com/oscarbranson/cbsyst.git@master
