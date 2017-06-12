@@ -7,8 +7,7 @@
 ### Constants
 Constants calculated by an adaptation of [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf). 
 The [original MyAMI code](https://github.com/MathisHain/MyAMI) is available on GitHub.
-
-A stripped-down version of the code is [packaged with cbsyst](cbsyst/MyAMI_V2.py).
+A stripped-down version of MyAMI is [packaged with cbsyst](cbsyst/MyAMI_V2.py).
 It has been modified to make it faster (by vectorising) and more 'Pythonic'.
 All the Matlab interface code has been removed.
 
