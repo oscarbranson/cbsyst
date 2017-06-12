@@ -1,12 +1,27 @@
 # cbsyst
 
-**A Python module for calculating seawater carbon and B chemistry**
+**A Python module for calculating seawater carbon and boron chemistry**
 
-*Work in progress! Results not guaranteed. Use at your own risk.*
+*Work in progress! Tested against reference data, but results not guaranteed. Use at your own risk.*
 
+### Constants
 Constants calculated by an adaptation of [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf). 
 The [original MyAMI code](https://github.com/MathisHain/MyAMI) is available on GitHub.
-The modified code is [packaged with cbsyst](cbsyst/MyAMI_V2.py).
+
+A stripped-down version of the code is [packaged with cbsyst](cbsyst/MyAMI_V2.py).
+It has been modified to make it faster (by vectorising) and more 'Pythonic'.
+All the Matlab interface code has been removed.
+
+### Calculations
+Speciation calculations follow [Zeebe and Wolf-Gladrow (2001)](https://www.elsevier.com/books/co2-in-seawater-equilibrium-kinetics-isotopes/zeebe/978-0-444-50946-8).
+Carbon speciation calculations are described in Appendix B.
+Boron speciation calculations in Eqns. 3.4.43 - 3.4.46.
+
+Boron isotope are calculated in terms of fractional abundances (11A = 11B / (10B + 11B) = 11R / (1 + 11R)), instead of delta values.
+Delta values can be provided as an input, and are given as an output, but all calculations use A.
+Fractional abundances avoid the ~0.08% error inherent in performing mass-balance calcualtions with delta values ([Zeebe and Wolf-Gladrow (2001)](https://www.elsevier.com/books/co2-in-seawater-equilibrium-kinetics-isotopes/zeebe/978-0-444-50946-8), Section 3.1.5 and pg. 220), and should be used for any down-stream mixing calculations involving B isotopes.
+
+Convenience functions for converting between isotope notation are provided in [cbsyst.boron)fns](cbsyst/boron_fns.py#L114), and are directly accessible at the top level of the cbsyst module (e.g. `cb.A11_2_d11()`).
 
 ## Installation
 
@@ -97,7 +112,7 @@ out
      'pdict': None}
 ```
 
-## Whats is a `Bunch`?
+## Technical Note: Whats is a `Bunch`?
 
 For code readability and convenience, I've used Bunch objects instead of traditional dicts.
 A [Bunch](cbsyst/helpers.py#L6) is a modification of a dict, which allows attribute access via the dot (.) operator.
