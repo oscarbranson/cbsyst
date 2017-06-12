@@ -1,5 +1,5 @@
 import numpy as np
-from cbsyst.Bunch import Bunch
+from cbsyst.helpers import Bunch
 from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi
 from cbsyst.carbon_fns import *
 from cbsyst.boron_fns import *
@@ -9,6 +9,7 @@ from cbsyst.boron_fns import *
 # ------------
 def Csys(pH=None, DIC=None, CO2=None,
          HCO3=None, CO3=None, TA=None,
+         fCO2=None, pCO2=None,
          BT=433., T=25., S=35.,
          Ca=None, Mg=None,
          pdict=None):
@@ -73,6 +74,13 @@ def Csys(pH=None, DIC=None, CO2=None,
         # calculate Ca and Mg specific Ks
         ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
 
+    # if fCO2 is given but CO2 is not, calculate CO2
+    if ps.CO2 is None:
+        if ps.fCO2 is not None:
+            ps.CO2 = fCO2_to_CO2(ps.fCO2, ps.Ks)
+        elif ps.pCO2 is not None:
+            ps.CO2 = fCO2_to_CO2(pCO2_to_fCO2(ps.pCO2, ps.T), ps.Ks)
+
     # Carbon System Calculations (from Zeebe & Wolf-Gladrow, Appendix B)
     # 1. CO2 and pH
     if ps.CO2 is not None and ps.pH is not None:
@@ -136,6 +144,10 @@ def Csys(pH=None, DIC=None, CO2=None,
     # from DIC and H.
     if ps.CO2 is None:
         ps.CO2 = cCO2(ps.H, ps.DIC, ps.Ks)
+    if ps.fCO2 is None:
+        ps.fCO2 = CO2_to_fCO2(ps.CO2, ps.Ks)
+    if ps.pCO2 is None:
+        ps.pCO2 = fCO2_to_pCO2(ps.fCO2, ps.T)
     if ps.HCO3 is None:
         ps.HCO3 = cHCO3(ps.H, ps.DIC, ps.Ks)
     if ps.CO3 is None:
@@ -378,7 +390,7 @@ def ABsys(pH=None,
 
 # Whole C-B-Isotope System
 # ------------------------
-def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None,
+def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, pCO2=None,
           BT=None, BO3=None, BO4=None,
           ABT=None, ABO3=None, ABO4=None, dBT=None, dBO3=None, dBO4=None,
           alphaB=None, deltas=True,

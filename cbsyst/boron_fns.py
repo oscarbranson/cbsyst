@@ -159,14 +159,3 @@ def R11_2_A11(R11):
     Convert Ratio to Abundance notation.
     """
     return R11 / (1 + R11)
-
-
-# pK <--> K converters
-def ch(x):
-    if not isinstance(x, np.ndarray):
-        x = np.array(x)
-    return 10**-x
-
-
-def cp(x):
-    return -np.log10(x)

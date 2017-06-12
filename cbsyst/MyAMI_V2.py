@@ -24,7 +24,7 @@
 import itertools
 import numpy as np
 from scipy.optimize import curve_fit
-from cbsyst.Bunch import Bunch
+from cbsyst.helpers import Bunch
 
 
 # Functions from K_thermo_conditional.py

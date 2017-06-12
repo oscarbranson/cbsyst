@@ -1,7 +1,6 @@
 import scipy.optimize as opt
 import numpy as np
-import uncertainties.unumpy as unp
-from cbsyst.boron_fns import ch
+from cbsyst.helpers import ch
 
 
 # Zero-finders: 2-5, 10-15
@@ -22,7 +21,7 @@ def CO2_HCO3(CO2, HCO3, Ks):
     """
     Returns H
     """
-    L = lens(CO2, HCO3)  # find length of longest input
+    L = maxL(CO2, HCO3)  # find length of longest input
     CO2, HCO3 = noms(CO2, HCO3)  # get nominal values of inputs
 
     def zero_CO2_HCO3(h, CO2, HCO3, Ks):
@@ -38,7 +37,7 @@ def CO2_CO3(CO2, CO3, Ks):
     """
     Returns H
     """
-    L = lens(CO2, CO3)
+    L = maxL(CO2, CO3)
     CO2, CO3 = noms(CO2, CO3)
 
     def zero_CO2_CO3(h, CO2, CO3, Ks):
@@ -54,7 +53,7 @@ def CO2_TA(CO2, TA, BT, Ks):
     """
     Returns H
     """
-    L = lens(CO2, TA, BT)
+    L = maxL(CO2, TA, BT)
     CO2, TA, BT = noms(CO2, TA, BT)
 
     def zero_CO2_TA(h, CO2, TA, BT, Ks):
@@ -71,7 +70,7 @@ def CO2_DIC(CO2, DIC, Ks):
     """
     Returns H
     """
-    L = lens(CO2, DIC)
+    L = maxL(CO2, DIC)
     CO2, DIC = noms(CO2, DIC)
 
     def zero_CO2_DIC(h, CO2, DIC, Ks):
@@ -124,7 +123,7 @@ def HCO3_CO3(HCO3, CO3, Ks):
     """
     Returns H
     """
-    L = lens(HCO3, CO3)
+    L = maxL(HCO3, CO3)
     HCO3, CO3 = noms(HCO3, CO3)
 
     def zero_HCO3_CO3(h, HCO3, CO3, Ks):
@@ -140,7 +139,7 @@ def HCO3_TA(HCO3, TA, BT, Ks):
     """
     Returns H
     """
-    L = lens(HCO3, TA, BT)
+    L = maxL(HCO3, TA, BT)
     HCO3, TA, BT = noms(HCO3, TA, BT)
 
     def zero_HCO3_TA(h, HCO3, TA, BT, Ks):
@@ -158,7 +157,7 @@ def HCO3_DIC(HCO3, DIC, Ks):
     """
     Returns H
     """
-    L = lens(HCO3, DIC)
+    L = maxL(HCO3, DIC)
     HCO3, DIC = noms(HCO3, DIC)
 
     def zero_HCO3_DIC(h, HCO3, DIC, Ks):
@@ -174,7 +173,7 @@ def CO3_TA(CO3, TA, BT, Ks):
     """
     Returns H
     """
-    L = lens(CO3, TA, BT)
+    L = maxL(CO3, TA, BT)
     CO3, TA, BT = noms(CO3, TA, BT)
 
     def zero_CO3_TA(h, CO3, TA, BT, Ks):
@@ -193,7 +192,7 @@ def CO3_DIC(CO3, DIC, Ks):
     """
     Returns H
     """
-    L = lens(CO3, DIC)
+    L = maxL(CO3, DIC)
     CO3, DIC = noms(CO3, DIC)
 
     def zero_CO3_DIC(h, CO3, DIC, Ks):
@@ -209,7 +208,7 @@ def TA_DIC(TA, DIC, BT, Ks):
     """
     Returns H
     """
-    L = lens(TA, DIC, BT)
+    L = maxL(TA, DIC, BT)
     TA, DIC, BT = noms(TA, DIC, BT)
 
     def zero_TA_DIC(h, TA, DIC, BT, Ks):
@@ -224,6 +223,7 @@ def TA_DIC(TA, DIC, BT, Ks):
         return LH - RH
     # Roots: one pos, four neg. Use pos.
     return opt.fsolve(zero_TA_DIC, [1] * L, args=(TA, DIC, BT, Ks), xtol=1e-12)
+    ## iterate through each row individually - use cast_array and map?
 
 
 # 1.1.9
@@ -259,29 +259,45 @@ def cTA(CO2, H, BT, Ks):
             BT * Ks.KB / (Ks.KB + H) + Ks.KW / H - H)
 
 
-# Helper functions
-def lens(*it):
+# C.4.14
+def fCO2_to_CO2(fCO2, Ks):
     """
-    Calculate maximum length of provided items.
-
-    Parameters
-    ----------
-    *it : n objects with .size attribute
-        Items of various lengths.
-
-    Returns
-    -------
-    Length of longest object (int).
+    Calculate CO2 from fCO2
     """
-    return max([np.size(i) for i in it])
+    return fCO2 * Ks.K0
 
 
-def noms(*it):
+# C.4.14
+def CO2_to_fCO2(CO2, Ks):
     """
-    Return nominal_values for provided objects.
-
-    Parameters
-    ----------
-    *it : n objects
+    Calculate fCO2 from CO2
     """
-    return [unp.nominal_values(i) for i in it]
+    return CO2 / Ks.K0
+
+
+# 1.4.65
+def pCO2_to_fCO2(pCO2, Tc, atm=1):
+    """
+    Calculate fCO2 from pCO2
+    """
+    Tk = Tc + 273.15
+    p = atm * 101325.  # convert atm to Pa
+    R = 8.314  # Gas constant
+    B = (-1636.75 + 12.040 * Tk - 3.27957e-2 * Tk**2 + 3.16528e-5 * Tk**3) * 1e-6
+    delta = (57.7 - 0.118 * Tk) * 1e-6
+
+    return pCO2 * np.exp(p * (B + 2 * delta) / (R * Tk))
+
+
+# 1.4.65
+def fCO2_to_pCO2(fCO2, Tc, atm=1):
+    """
+    Calculate pCO2 from fCO2
+    """
+    Tk = Tc + 273.15
+    p = atm * 101325.  # convert atm to Pa
+    R = 8.314  # Gas constant
+    B = (-1636.75 + 12.040 * Tk - 3.27957e-2 * Tk**2 + 3.16528e-5 * Tk**3) * 1e-6
+    delta = (57.7 - 0.118 * Tk) * 1e-6
+
+    return fCO2 / np.exp(p * (B + 2 * delta) / (R * Tk))
