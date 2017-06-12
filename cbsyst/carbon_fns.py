@@ -1,6 +1,6 @@
 import scipy.optimize as opt
 import numpy as np
-from cbsyst.helpers import ch
+from cbsyst.helpers import ch, maxL, noms
 
 
 # Zero-finders: 2-5, 10-15
@@ -24,12 +24,14 @@ def CO2_HCO3(CO2, HCO3, Ks):
     L = maxL(CO2, HCO3)  # find length of longest input
     CO2, HCO3 = noms(CO2, HCO3)  # get nominal values of inputs
 
-    def zero_CO2_HCO3(h, CO2, HCO3, Ks):
-        LH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
-        RH = HCO3 * (h**2 + h**3 / Ks.K1 + Ks.K2 * h)
-        return LH - RH
-    # Roots: two negative, one positive - use positive.
     return opt.fsolve(zero_CO2_HCO3, [1] * L, args=(CO2, HCO3, Ks), xtol=1e-12)
+
+
+def zero_CO2_HCO3(h, CO2, HCO3, Ks):
+    # Roots: two negative, one positive - use positive.
+    LH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
+    RH = HCO3 * (h**2 + h**3 / Ks.K1 + Ks.K2 * h)
+    return LH - RH
 
 
 # 3. CO2 and CO3
@@ -40,12 +42,14 @@ def CO2_CO3(CO2, CO3, Ks):
     L = maxL(CO2, CO3)
     CO2, CO3 = noms(CO2, CO3)
 
-    def zero_CO2_CO3(h, CO2, CO3, Ks):
-        LH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
-        RH = CO3 * (h**2 + h**3 / Ks.K2 + h**4 / (Ks.K1 * Ks.K2))
-        return LH - RH
-    # Roots: one positive, three negative. Use positive.
     return opt.fsolve(zero_CO2_CO3, [1] * L, args=(CO2, CO3, Ks), xtol=1e-12)
+
+
+def zero_CO2_CO3(h, CO2, CO3, Ks):
+    # Roots: one positive, three negative. Use positive.
+    LH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
+    RH = CO3 * (h**2 + h**3 / Ks.K2 + h**4 / (Ks.K1 * Ks.K2))
+    return LH - RH
 
 
 # 4. CO2 and TA
@@ -56,13 +60,15 @@ def CO2_TA(CO2, TA, BT, Ks):
     L = maxL(CO2, TA, BT)
     CO2, TA, BT = noms(CO2, TA, BT)
 
-    def zero_CO2_TA(h, CO2, TA, BT, Ks):
-        LH = TA * h**2 * (Ks.KB + h)
-        RH = (CO2 * (Ks.KB + h) * (Ks.K1 * h + 2 * Ks.K1 * Ks.K2) +
-              h**2 * Ks.KB * BT + (Ks.KB + h) * (Ks.KW * h - h**3))
-        return LH - RH
-    # Roots: one pos, one neg, 2 conj. complex. Use positive
     return opt.fsolve(zero_CO2_TA, [1] * L, args=(CO2, TA, BT, Ks), xtol=1e-12)
+
+
+def zero_CO2_TA(h, CO2, TA, BT, Ks):
+    # Roots: one pos, one neg, 2 conj. complex. Use positive
+    LH = TA * h**2 * (Ks.KB + h)
+    RH = (CO2 * (Ks.KB + h) * (Ks.K1 * h + 2 * Ks.K1 * Ks.K2) +
+          h**2 * Ks.KB * BT + (Ks.KB + h) * (Ks.KW * h - h**3))
+    return LH - RH
 
 
 # 5. CO2 and DIC
@@ -73,12 +79,14 @@ def CO2_DIC(CO2, DIC, Ks):
     L = maxL(CO2, DIC)
     CO2, DIC = noms(CO2, DIC)
 
-    def zero_CO2_DIC(h, CO2, DIC, Ks):
-        LH = DIC * h**2
-        RH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
-        return LH - RH
-    # Roots: one positive, one negative. Use positive.
     return opt.fsolve(zero_CO2_DIC, [1] * L, args=(CO2, DIC, Ks), xtol=1e-12)
+
+
+def zero_CO2_DIC(h, CO2, DIC, Ks):
+    # Roots: one positive, one negative. Use positive.
+    LH = DIC * h**2
+    RH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
+    return LH - RH
 
 
 # 6. pH and HCO3
@@ -126,12 +134,14 @@ def HCO3_CO3(HCO3, CO3, Ks):
     L = maxL(HCO3, CO3)
     HCO3, CO3 = noms(HCO3, CO3)
 
-    def zero_HCO3_CO3(h, HCO3, CO3, Ks):
-        LH = HCO3 * (h + h**2 / Ks.K1 + Ks.K2)
-        RH = CO3 * (h + h**2 / Ks.K2 + h**3 / (Ks.K1 * Ks.K2))
-        return LH - RH
-    # Roots: one pos, two neg. Use pos.
     return opt.fsolve(zero_HCO3_CO3, [1] * L, args=(HCO3, CO3, Ks), xtol=1e-12)
+
+
+def zero_HCO3_CO3(h, HCO3, CO3, Ks):
+    # Roots: one pos, two neg. Use pos.
+    LH = HCO3 * (h + h**2 / Ks.K1 + Ks.K2)
+    RH = CO3 * (h + h**2 / Ks.K2 + h**3 / (Ks.K1 * Ks.K2))
+    return LH - RH
 
 
 # 11. HCO3 and TA
@@ -142,14 +152,18 @@ def HCO3_TA(HCO3, TA, BT, Ks):
     L = maxL(HCO3, TA, BT)
     HCO3, TA, BT = noms(HCO3, TA, BT)
 
-    def zero_HCO3_TA(h, HCO3, TA, BT, Ks):
-        LH = TA * (Ks.KB + h) * (h**3 + Ks.K1 * h**2 + Ks.K1 * Ks.K2 * h)
-        RH = ((HCO3 * (h + h**2 / Ks.K1 + Ks.K2) * ((Ks.KB + 2 * Ks.K2) * Ks.K1 * h + 2 * Ks.KB * Ks.K1 * Ks.K2 + Ks.K1 * h**2)) +
-              ((h**2 + Ks.K1 * h + Ks.K1 * Ks.K2) *
-               (Ks.KB * BT * h + Ks.KW * Ks.KB + Ks.KW * h - Ks.KB * h**2 - h**3)))
-        return LH - RH
-    # Roots: one pos, four neg. Use pos.
     return opt.fsolve(zero_HCO3_TA, [1] * L, args=(HCO3, TA, BT, Ks), xtol=1e-12)
+
+
+def zero_HCO3_TA(h, HCO3, TA, BT, Ks):
+    # Roots: one pos, four neg. Use pos.
+    LH = TA * (Ks.KB + h) * (h**3 + Ks.K1 * h**2 + Ks.K1 * Ks.K2 * h)
+    RH = ((HCO3 * (h + h**2 / Ks.K1 + Ks.K2) *
+           ((Ks.KB + 2 * Ks.K2) * Ks.K1 * h +
+            2 * Ks.KB * Ks.K1 * Ks.K2 + Ks.K1 * h**2)) +
+          ((h**2 + Ks.K1 * h + Ks.K1 * Ks.K2) *
+           (Ks.KB * BT * h + Ks.KW * Ks.KB + Ks.KW * h - Ks.KB * h**2 - h**3)))
+    return LH - RH
 
 
 # 12. HCO3 amd DIC
@@ -160,12 +174,14 @@ def HCO3_DIC(HCO3, DIC, Ks):
     L = maxL(HCO3, DIC)
     HCO3, DIC = noms(HCO3, DIC)
 
-    def zero_HCO3_DIC(h, HCO3, DIC, Ks):
-        LH = HCO3 * (h + h**2 / Ks.K1 + Ks.K2)
-        RH = h * DIC
-        return LH - RH
-    # Roots: two pos. Use smaller.
     return opt.fsolve(zero_HCO3_DIC, [0] * L, args=(HCO3, DIC, Ks), xtol=1e-12)
+
+
+def zero_HCO3_DIC(h, HCO3, DIC, Ks):
+    # Roots: two pos. Use smaller.
+    LH = HCO3 * (h + h**2 / Ks.K1 + Ks.K2)
+    RH = h * DIC
+    return LH - RH
 
 
 # 13. CO3 and TA
@@ -176,15 +192,17 @@ def CO3_TA(CO3, TA, BT, Ks):
     L = maxL(CO3, TA, BT)
     CO3, TA, BT = noms(CO3, TA, BT)
 
-    def zero_CO3_TA(h, CO3, TA, BT, Ks):
-        LH = TA * (Ks.KB + h) * (h**3 + Ks.K1 * h**2 + Ks.K1 * Ks.K2 * h)
-        RH = ((CO3 * (h + h**2 / Ks.K2 + h**3 / (Ks.K1 * Ks.K2)) *
-               (Ks.K1 * h**2 + Ks.K1 * h * (Ks.KB + 2 * Ks.K2) + 2 * Ks.KB * Ks.K1 * Ks.K2)) +
-              ((h**2 + Ks.K1 * h + Ks.K1 * Ks.K2) *
-               (Ks.KB * BT * h + Ks.KW * Ks.KB + Ks.KW * h - Ks.KB * h**2 - h**3)))
-        return LH - RH
-    # Roots: three neg, two pos. Use larger pos.
     return opt.fsolve(zero_CO3_TA, [1] * L, args=(CO3, TA, BT, Ks), xtol=1e-12)
+
+
+def zero_CO3_TA(h, CO3, TA, BT, Ks):
+    # Roots: three neg, two pos. Use larger pos.
+    LH = TA * (Ks.KB + h) * (h**3 + Ks.K1 * h**2 + Ks.K1 * Ks.K2 * h)
+    RH = ((CO3 * (h + h**2 / Ks.K2 + h**3 / (Ks.K1 * Ks.K2)) *
+           (Ks.K1 * h**2 + Ks.K1 * h * (Ks.KB + 2 * Ks.K2) + 2 * Ks.KB * Ks.K1 * Ks.K2)) +
+          ((h**2 + Ks.K1 * h + Ks.K1 * Ks.K2) *
+           (Ks.KB * BT * h + Ks.KW * Ks.KB + Ks.KW * h - Ks.KB * h**2 - h**3)))
+    return LH - RH
 
 
 # 14. CO3 and DIC
@@ -195,12 +213,14 @@ def CO3_DIC(CO3, DIC, Ks):
     L = maxL(CO3, DIC)
     CO3, DIC = noms(CO3, DIC)
 
-    def zero_CO3_DIC(h, CO3, DIC, Ks):
-        LH = CO3 * (1 + h / Ks.K2 + h**2 / (Ks.K1 * Ks.K2))
-        RH = DIC
-        return LH - RH
-    # Roots: one pos, one neg. Use neg.
     return opt.fsolve(zero_CO3_DIC, [1] * L, args=(CO3, DIC, Ks), xtol=1e-12)
+
+
+def zero_CO3_DIC(h, CO3, DIC, Ks):
+    # Roots: one pos, one neg. Use neg.
+    LH = CO3 * (1 + h / Ks.K2 + h**2 / (Ks.K1 * Ks.K2))
+    RH = DIC
+    return LH - RH
 
 
 # 15. TA and DIC
@@ -211,19 +231,21 @@ def TA_DIC(TA, DIC, BT, Ks):
     L = maxL(TA, DIC, BT)
     TA, DIC, BT = noms(TA, DIC, BT)
 
-    def zero_TA_DIC(h, TA, DIC, BT, Ks):
-        LH = DIC * (Ks.KB + h) * (Ks.K1 * h**2 + 2 * Ks.K1 * Ks.K2 * h)
-        RH = ((TA * (Ks.KB + h) * h -
-               Ks.KB * BT * h -
-               Ks.KW * (Ks.KB + h) +
-               (Ks.KB + h) * h**2) *
-              (h**2 +
-               Ks.K1 * h +
-               Ks.K1 * Ks.K2))
-        return LH - RH
-    # Roots: one pos, four neg. Use pos.
     return opt.fsolve(zero_TA_DIC, [1] * L, args=(TA, DIC, BT, Ks), xtol=1e-12)
-    ## iterate through each row individually - use cast_array and map?
+    # iterate through each row individually - use cast_array and map?
+
+
+def zero_TA_DIC(h, TA, DIC, BT, Ks):
+    # Roots: one pos, four neg. Use pos.
+    LH = DIC * (Ks.KB + h) * (Ks.K1 * h**2 + 2 * Ks.K1 * Ks.K2 * h)
+    RH = ((TA * (Ks.KB + h) * h -
+           Ks.KB * BT * h -
+           Ks.KW * (Ks.KB + h) +
+           (Ks.KB + h) * h**2) *
+          (h**2 +
+           Ks.K1 * h +
+           Ks.K1 * Ks.K2))
+    return LH - RH
 
 
 # 1.1.9
@@ -301,3 +323,4 @@ def fCO2_to_pCO2(fCO2, Tc, atm=1):
     delta = (57.7 - 0.118 * Tk) * 1e-6
 
     return fCO2 / np.exp(p * (B + 2 * delta) / (R * Tk))
+
