@@ -1,6 +1,7 @@
 import scipy.optimize as opt
 import numpy as np
 from cbsyst.helpers import ch, noms, cast_array
+from cbsyst.boron_fns import cBO4
 
 
 def _zero_wrapper(ps, fn, bounds=(0, 1)):
@@ -281,6 +282,15 @@ def cTA(CO2, H, BT, Ks):
     """
     return (CO2 * (Ks.K1 / H + 2 * Ks.K1 * Ks.K2 / H**2) +
             BT * Ks.KB / (Ks.KB + H) + Ks.KW / H - H)
+
+
+# # 1.2.28
+# def cTA(HCO3, CO3, BT, H, Ks):
+#     """
+#     Total Alkalinity
+#     """
+#     OH = Ks.KW / H
+#     return HCO3 + 2 * CO3 + cBO4(BT, H, Ks) + OH - H
 
 
 # C.4.14
