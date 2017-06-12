@@ -1,10 +1,18 @@
 import scipy.optimize as opt
 import numpy as np
-from cbsyst.helpers import ch, maxL, noms
+from cbsyst.helpers import ch, noms, cast_array
 
 
+def _zero_wrapper(ps, fn, bounds=(0, 1)):
+    """
+    Wrapper to handle zero finders.
+    """
+    return opt.brentq(fn, *bounds, args=tuple(ps))
+
+# Function types
 # Zero-finders: 2-5, 10-15
-# Algebraid: 1, 6-9
+# Algebraic: 1, 6-9
+
 
 # Zeebe & Wolf-Gladrow, Appendix B
 # 1. CO2 and pH given
@@ -21,16 +29,16 @@ def CO2_HCO3(CO2, HCO3, Ks):
     """
     Returns H
     """
-    L = maxL(CO2, HCO3)  # find length of longest input
     CO2, HCO3 = noms(CO2, HCO3)  # get nominal values of inputs
+    par = cast_array(CO2, HCO3, Ks.K1, Ks.K2)  # cast parameters into array
 
-    return opt.fsolve(zero_CO2_HCO3, [1] * L, args=(CO2, HCO3, Ks), xtol=1e-12)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_HCO3)
 
 
-def zero_CO2_HCO3(h, CO2, HCO3, Ks):
+def zero_CO2_HCO3(h, CO2, HCO3, K1, K2):
     # Roots: two negative, one positive - use positive.
-    LH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
-    RH = HCO3 * (h**2 + h**3 / Ks.K1 + Ks.K2 * h)
+    LH = CO2 * (h**2 + K1 * h + K1 * K2)
+    RH = HCO3 * (h**2 + h**3 / K1 + K2 * h)
     return LH - RH
 
 
@@ -39,16 +47,16 @@ def CO2_CO3(CO2, CO3, Ks):
     """
     Returns H
     """
-    L = maxL(CO2, CO3)
     CO2, CO3 = noms(CO2, CO3)
+    par = cast_array(CO2, CO3, Ks.K1, Ks.K2)  # cast parameters into array
 
-    return opt.fsolve(zero_CO2_CO3, [1] * L, args=(CO2, CO3, Ks), xtol=1e-12)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_CO3)
 
 
-def zero_CO2_CO3(h, CO2, CO3, Ks):
+def zero_CO2_CO3(h, CO2, CO3, K1, K2):
     # Roots: one positive, three negative. Use positive.
-    LH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
-    RH = CO3 * (h**2 + h**3 / Ks.K2 + h**4 / (Ks.K1 * Ks.K2))
+    LH = CO2 * (h**2 + K1 * h + K1 * K2)
+    RH = CO3 * (h**2 + h**3 / K2 + h**4 / (K1 * K2))
     return LH - RH
 
 
@@ -57,17 +65,17 @@ def CO2_TA(CO2, TA, BT, Ks):
     """
     Returns H
     """
-    L = maxL(CO2, TA, BT)
-    CO2, TA, BT = noms(CO2, TA, BT)
+    CO2, TA, BT = noms(CO2, TA, BT)  # get nominal values of inputs
+    par = cast_array(CO2, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
 
-    return opt.fsolve(zero_CO2_TA, [1] * L, args=(CO2, TA, BT, Ks), xtol=1e-12)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_TA)
 
 
-def zero_CO2_TA(h, CO2, TA, BT, Ks):
+def zero_CO2_TA(h, CO2, TA, BT, K1, K2, KB, KW):
     # Roots: one pos, one neg, 2 conj. complex. Use positive
-    LH = TA * h**2 * (Ks.KB + h)
-    RH = (CO2 * (Ks.KB + h) * (Ks.K1 * h + 2 * Ks.K1 * Ks.K2) +
-          h**2 * Ks.KB * BT + (Ks.KB + h) * (Ks.KW * h - h**3))
+    LH = TA * h**2 * (KB + h)
+    RH = (CO2 * (KB + h) * (K1 * h + 2 * K1 * K2) +
+          h**2 * KB * BT + (KB + h) * (KW * h - h**3))
     return LH - RH
 
 
@@ -76,16 +84,16 @@ def CO2_DIC(CO2, DIC, Ks):
     """
     Returns H
     """
-    L = maxL(CO2, DIC)
-    CO2, DIC = noms(CO2, DIC)
+    CO2, DIC = noms(CO2, DIC)  # get nominal values of inputs
+    par = cast_array(CO2, DIC, Ks.K1, Ks.K2)  # cast parameters into array
 
-    return opt.fsolve(zero_CO2_DIC, [1] * L, args=(CO2, DIC, Ks), xtol=1e-12)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_DIC)
 
 
-def zero_CO2_DIC(h, CO2, DIC, Ks):
+def zero_CO2_DIC(h, CO2, DIC, K1, K2):
     # Roots: one positive, one negative. Use positive.
     LH = DIC * h**2
-    RH = CO2 * (h**2 + Ks.K1 * h + Ks.K1 * Ks.K2)
+    RH = CO2 * (h**2 + K1 * h + K1 * K2)
     return LH - RH
 
 
@@ -131,16 +139,16 @@ def HCO3_CO3(HCO3, CO3, Ks):
     """
     Returns H
     """
-    L = maxL(HCO3, CO3)
-    HCO3, CO3 = noms(HCO3, CO3)
+    HCO3, CO3 = noms(HCO3, CO3)  # get nominal values of inputs
+    par = cast_array(HCO3, CO3, Ks.K1, Ks.K2)  # cast parameters into array
 
-    return opt.fsolve(zero_HCO3_CO3, [1] * L, args=(HCO3, CO3, Ks), xtol=1e-12)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_CO3)
 
 
-def zero_HCO3_CO3(h, HCO3, CO3, Ks):
+def zero_HCO3_CO3(h, HCO3, CO3, K1, K2):
     # Roots: one pos, two neg. Use pos.
-    LH = HCO3 * (h + h**2 / Ks.K1 + Ks.K2)
-    RH = CO3 * (h + h**2 / Ks.K2 + h**3 / (Ks.K1 * Ks.K2))
+    LH = HCO3 * (h + h**2 / K1 + K2)
+    RH = CO3 * (h + h**2 / K2 + h**3 / (K1 * K2))
     return LH - RH
 
 
@@ -149,20 +157,20 @@ def HCO3_TA(HCO3, TA, BT, Ks):
     """
     Returns H
     """
-    L = maxL(HCO3, TA, BT)
-    HCO3, TA, BT = noms(HCO3, TA, BT)
+    HCO3, TA, BT = noms(HCO3, TA, BT)  # get nominal values of inputs
+    par = cast_array(HCO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
 
-    return opt.fsolve(zero_HCO3_TA, [1] * L, args=(HCO3, TA, BT, Ks), xtol=1e-12)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_TA)
 
 
-def zero_HCO3_TA(h, HCO3, TA, BT, Ks):
+def zero_HCO3_TA(h, HCO3, TA, BT, K1, K2, KB, KW):
     # Roots: one pos, four neg. Use pos.
-    LH = TA * (Ks.KB + h) * (h**3 + Ks.K1 * h**2 + Ks.K1 * Ks.K2 * h)
-    RH = ((HCO3 * (h + h**2 / Ks.K1 + Ks.K2) *
-           ((Ks.KB + 2 * Ks.K2) * Ks.K1 * h +
-            2 * Ks.KB * Ks.K1 * Ks.K2 + Ks.K1 * h**2)) +
-          ((h**2 + Ks.K1 * h + Ks.K1 * Ks.K2) *
-           (Ks.KB * BT * h + Ks.KW * Ks.KB + Ks.KW * h - Ks.KB * h**2 - h**3)))
+    LH = TA * (KB + h) * (h**3 + K1 * h**2 + K1 * K2 * h)
+    RH = ((HCO3 * (h + h**2 / K1 + K2) *
+           ((KB + 2 * K2) * K1 * h +
+            2 * KB * K1 * K2 + K1 * h**2)) +
+          ((h**2 + K1 * h + K1 * K2) *
+           (KB * BT * h + KW * KB + KW * h - KB * h**2 - h**3)))
     return LH - RH
 
 
@@ -171,15 +179,15 @@ def HCO3_DIC(HCO3, DIC, Ks):
     """
     Returns H
     """
-    L = maxL(HCO3, DIC)
-    HCO3, DIC = noms(HCO3, DIC)
+    HCO3, DIC = noms(HCO3, DIC)  # get nominal values of inputs
+    par = cast_array(HCO3, DIC, Ks.K1, Ks.K2)  # cast parameters into array
 
-    return opt.fsolve(zero_HCO3_DIC, [0] * L, args=(HCO3, DIC, Ks), xtol=1e-12)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_DIC)
 
 
-def zero_HCO3_DIC(h, HCO3, DIC, Ks):
+def zero_HCO3_DIC(h, HCO3, DIC, K1, K2):
     # Roots: two pos. Use smaller.
-    LH = HCO3 * (h + h**2 / Ks.K1 + Ks.K2)
+    LH = HCO3 * (h + h**2 / K1 + K2)
     RH = h * DIC
     return LH - RH
 
@@ -189,19 +197,19 @@ def CO3_TA(CO3, TA, BT, Ks):
     """
     Returns H
     """
-    L = maxL(CO3, TA, BT)
-    CO3, TA, BT = noms(CO3, TA, BT)
+    CO3, TA, BT = noms(CO3, TA, BT)  # get nominal values of inputs
+    par = cast_array(CO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
 
-    return opt.fsolve(zero_CO3_TA, [1] * L, args=(CO3, TA, BT, Ks), xtol=1e-12)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO3_TA)
 
 
-def zero_CO3_TA(h, CO3, TA, BT, Ks):
+def zero_CO3_TA(h, CO3, TA, BT, K1, K2, KB, KW):
     # Roots: three neg, two pos. Use larger pos.
-    LH = TA * (Ks.KB + h) * (h**3 + Ks.K1 * h**2 + Ks.K1 * Ks.K2 * h)
-    RH = ((CO3 * (h + h**2 / Ks.K2 + h**3 / (Ks.K1 * Ks.K2)) *
-           (Ks.K1 * h**2 + Ks.K1 * h * (Ks.KB + 2 * Ks.K2) + 2 * Ks.KB * Ks.K1 * Ks.K2)) +
-          ((h**2 + Ks.K1 * h + Ks.K1 * Ks.K2) *
-           (Ks.KB * BT * h + Ks.KW * Ks.KB + Ks.KW * h - Ks.KB * h**2 - h**3)))
+    LH = TA * (KB + h) * (h**3 + K1 * h**2 + K1 * K2 * h)
+    RH = ((CO3 * (h + h**2 / K2 + h**3 / (K1 * K2)) *
+           (K1 * h**2 + K1 * h * (KB + 2 * K2) + 2 * KB * K1 * K2)) +
+          ((h**2 + K1 * h + K1 * K2) *
+           (KB * BT * h + KW * KB + KW * h - KB * h**2 - h**3)))
     return LH - RH
 
 
@@ -210,15 +218,15 @@ def CO3_DIC(CO3, DIC, Ks):
     """
     Returns H
     """
-    L = maxL(CO3, DIC)
-    CO3, DIC = noms(CO3, DIC)
+    CO3, DIC = noms(CO3, DIC)  # get nominal values of inputs
+    par = cast_array(CO3, DIC, Ks.K1, Ks.K2)  # cast parameters into array
 
-    return opt.fsolve(zero_CO3_DIC, [1] * L, args=(CO3, DIC, Ks), xtol=1e-12)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO3_DIC)
 
 
-def zero_CO3_DIC(h, CO3, DIC, Ks):
+def zero_CO3_DIC(h, CO3, DIC, K1, K2):
     # Roots: one pos, one neg. Use neg.
-    LH = CO3 * (1 + h / Ks.K2 + h**2 / (Ks.K1 * Ks.K2))
+    LH = CO3 * (1 + h / K2 + h**2 / (K1 * K2))
     RH = DIC
     return LH - RH
 
@@ -228,23 +236,17 @@ def TA_DIC(TA, DIC, BT, Ks):
     """
     Returns H
     """
-    L = maxL(TA, DIC, BT)
-    TA, DIC, BT = noms(TA, DIC, BT)
+    TA, DIC, BT = noms(TA, DIC, BT)  # get nominal values of inputs
+    par = cast_array(TA, DIC, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
 
-    return opt.fsolve(zero_TA_DIC, [1] * L, args=(TA, DIC, BT, Ks), xtol=1e-12)
-    # iterate through each row individually - use cast_array and map?
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_TA_DIC)
 
 
-def zero_TA_DIC(h, TA, DIC, BT, Ks):
+def zero_TA_DIC(h, TA, DIC, BT, K1, K2, KB, KW):
     # Roots: one pos, four neg. Use pos.
-    LH = DIC * (Ks.KB + h) * (Ks.K1 * h**2 + 2 * Ks.K1 * Ks.K2 * h)
-    RH = ((TA * (Ks.KB + h) * h -
-           Ks.KB * BT * h -
-           Ks.KW * (Ks.KB + h) +
-           (Ks.KB + h) * h**2) *
-          (h**2 +
-           Ks.K1 * h +
-           Ks.K1 * Ks.K2))
+    LH = DIC * (KB + h) * (K1 * h**2 + 2 * K1 * K2 * h)
+    RH = ((TA * (KB + h) * h - KB * BT * h - KW * (KB + h) +
+           (KB + h) * h**2) * (h**2 + K1 * h + K1 * K2))
     return LH - RH
 
 
