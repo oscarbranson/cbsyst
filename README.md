@@ -25,8 +25,8 @@ Convenience functions for converting between isotope notation are provided in [c
 
 ## Installation
 
-**Developed and tested in Python 3.5**. 
-Should work in 2.7+, but can't guarantee.
+**Requires Python 3.5+**. 
+Does *not* work in 2.7. Sorry.
 
 ```bash
 pip install git+https://github.com/oscarbranson/cbsyst.git@master
