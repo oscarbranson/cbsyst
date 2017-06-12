@@ -9,7 +9,7 @@ if sys.version_info[0] < 3:
 
 setup(name='cbsyst',
       version='0.2.2',
-      description='Tools calculating ocean C and B chemistry.',
+      description='Tools for calculating ocean C and B chemistry.',
       url='https://github.com/oscarbranson/cbsyst',
       author='Oscar Branson',
       author_email='oscarbranson@gmail.com',
