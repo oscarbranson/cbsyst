@@ -20,6 +20,6 @@ setup(name='cbsyst',
                    'Programming Language :: Python :: 3',
                    ],
       install_requires=['numpy',
-                        'tqdm'],
+                        'scipy'],
       package_data={'cbsyst': ['test_data/*']},
-      zip_safe=False)
+      zip_safe=True)
