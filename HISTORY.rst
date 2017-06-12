@@ -7,3 +7,9 @@ Release History
 ++++++++++++++++++
 
 * Initial Pypi Release
+
+
+0.2.1 (2017-06-13)
+++++++++++++++++++
+
+* Fixed missing dependency that made Pypi install fail.
