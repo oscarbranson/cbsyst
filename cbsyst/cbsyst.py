@@ -13,7 +13,7 @@ def Csys(pH=None, DIC=None, CO2=None,
          fCO2=None, pCO2=None,
          BT=433., T=25., S=35.,
          Ca=None, Mg=None,
-         pdict=None):
+         Ks=None, pdict=None):
     """
     Calculate the carbon chemistry of seawater from a minimal parameter set.
 
@@ -44,6 +44,10 @@ def Csys(pH=None, DIC=None, CO2=None,
     Ca, Mg : arra-like
         The [Ca] and [Mg] of the seawater, in mol / kg.
         Used in calculating MyAMI constants.
+    Ks : dict
+        A dictionary of constants. Must contain keys
+        'K1', 'K2', 'KB' and 'KW'.
+        If None, Ks are calculated using MyAMI model.
     pdict : dict
         Optionally, you can provide some or all parameters as a dict,
         with keys the same as the parameter names above. Any parameters
@@ -62,25 +66,28 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.update(pdict)
 
     # if neither Ca nor Mg provided, use MyAMI Ks for modern SW
-    if ps.Ca is None and ps.Mg is None:
-        ps.Ca = 0.0102821
-        ps.Mg = 0.0528171
-        ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+    if isinstance(Ks, dict):
+        ps.Ks = Bunch(Ks)
     else:
-        # if only Ca or Mg provided, fill in other with modern
-        if ps.Mg is None:
-            ps.Mg = 0.0528171
-        if ps.Ca is None:
+        if ps.Ca is None and ps.Mg is None:
             ps.Ca = 0.0102821
-        # calculate Ca and Mg specific Ks
-        ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
+            ps.Mg = 0.0528171
+            ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+        else:
+            # if only Ca or Mg provided, fill in other with modern
+            if ps.Mg is None:
+                ps.Mg = 0.0528171
+            if ps.Ca is None:
+                ps.Ca = 0.0102821
+            # calculate Ca and Mg specific Ks
+            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
 
-    # if fCO2 is given but CO2 is not, calculate CO2
-    if ps.CO2 is None:
-        if ps.fCO2 is not None:
-            ps.CO2 = fCO2_to_CO2(ps.fCO2, ps.Ks)
-        elif ps.pCO2 is not None:
-            ps.CO2 = fCO2_to_CO2(pCO2_to_fCO2(ps.pCO2, ps.T), ps.Ks)
+        # if fCO2 is given but CO2 is not, calculate CO2
+        if ps.CO2 is None:
+            if ps.fCO2 is not None:
+                ps.CO2 = fCO2_to_CO2(ps.fCO2, ps.Ks)
+            elif ps.pCO2 is not None:
+                ps.CO2 = fCO2_to_CO2(pCO2_to_fCO2(ps.pCO2, ps.T), ps.Ks)
 
     # Carbon System Calculations (from Zeebe & Wolf-Gladrow, Appendix B)
     # 1. CO2 and pH
@@ -179,7 +186,7 @@ def Csys(pH=None, DIC=None, CO2=None,
 def Bsys(pH=None, BT=None, BO3=None, BO4=None,
          T=25., S=35.,
          Ca=None, Mg=None,
-         pdict=None):
+         Ks=None, pdict=None):
     """
     Calculate the boron chemistry of seawater from a minimal parameter set.
 
@@ -205,6 +212,10 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
     Ca, Mg : arra-like
         The [Ca] and [Mg] of the seawater, in mol / kg.
         Used in calculating MyAMI constants.
+    Ks : dict
+        A dictionary of constants. Must contain keys
+        'K1', 'K2', 'KB' and 'KW'.
+        If None, Ks are calculated using MyAMI model.
     pdict : dict
         Optionally, you can provide some or all parameters as a dict,
         with keys the same as the parameter names above. Any parameters
@@ -223,18 +234,21 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
         ps.update(pdict)
 
     # if neither Ca nor Mg provided, use default Ks
-    if ps.Ca is None and ps.Mg is None:
-        ps.Ca = 0.0102821
-        ps.Mg = 0.0528171
-        ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+    if isinstance(Ks, dict):
+        ps.Ks = Bunch(Ks)
     else:
-        # if only Ca or Mg provided, fill in other
-        if ps.Mg is None:
-            ps.Mg = 0.0528171
-        if ps.Ca is None:
+        if ps.Ca is None and ps.Mg is None:
             ps.Ca = 0.0102821
-        # calculate Ca and Mg specific Ks
-        ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
+            ps.Mg = 0.0528171
+            ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+        else:
+            # if only Ca or Mg provided, fill in other
+            if ps.Mg is None:
+                ps.Mg = 0.0528171
+            if ps.Ca is None:
+                ps.Ca = 0.0102821
+            # calculate Ca and Mg specific Ks
+            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
 
     # B system calculations
     if ps.pH is not None and ps.BT is not None:
@@ -281,7 +295,7 @@ def ABsys(pH=None,
           dBT=None, dBO3=None, dBO4=None,
           alphaB=None, T=25., S=35.,
           Ca=None, Mg=None,
-          pdict=None, deltas=True):
+          Ks=None, pdict=None, deltas=True):
     """
     Calculate the boron isotope chemistry of seawater from a minimal parameter set.
 
@@ -315,6 +329,10 @@ def ABsys(pH=None,
     deltas : bool
         If False, deltas are not calculated. Defaults to True.
         Only worth turning off if you REALLY care about efficiency.
+    Ks : dict
+        A dictionary of constants. Must contain keys
+        'K1', 'K2', 'KB' and 'KW'.
+        If None, Ks are calculated using MyAMI model.
     pdict : dict
         Optionally, you can provide some or all parameters as a dict,
         with keys the same as the parameter names above. Any parameters
@@ -333,18 +351,21 @@ def ABsys(pH=None,
         ps.update(pdict)
 
     # if neither Ca nor Mg provided, use default Ks
-    if ps.Ca is None and ps.Mg is None:
-        ps.Ca = 0.0102821
-        ps.Mg = 0.0528171
-        ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+    if isinstance(Ks, dict):
+        ps.Ks = Bunch(Ks)
     else:
-        # if only Ca or Mg provided, fill in other
-        if ps.Mg is None:
-            ps.Mg = 0.0528171
-        if ps.Ca is None:
+        if ps.Ca is None and ps.Mg is None:
             ps.Ca = 0.0102821
-        # calculate Ca and Mg specific Ks
-        ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
+            ps.Mg = 0.0528171
+            ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+        else:
+            # if only Ca or Mg provided, fill in other
+            if ps.Mg is None:
+                ps.Mg = 0.0528171
+            if ps.Ca is None:
+                ps.Ca = 0.0102821
+            # calculate Ca and Mg specific Ks
+            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
 
     # if deltas provided, calculate corresponding As
     if ps.dBT is not None:
@@ -396,7 +417,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
           ABT=None, ABO3=None, ABO4=None, dBT=None, dBO3=None, dBO4=None,
           alphaB=None, deltas=True,
           T=25., S=35., Ca=None, Mg=None,
-          pdict=None):
+          Ks=None, pdict=None):
     """
     Calculate carbon, boron and boron isotope chemistry of seawater from a minimal parameter set.
 
@@ -443,6 +464,10 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
     Ca, Mg : arra-like
         The [Ca] and [Mg] of the seawater, in mol / kg.
         Used in calculating MyAMI constants.
+    Ks : dict
+        A dictionary of constants. Must contain keys
+        'K1', 'K2', 'KB' and 'KW'.
+        If None, Ks are calculated using MyAMI model.
     pdict : dict
         Optionally, you can provide some or all parameters as a dict,
         with keys the same as the parameter names above. Any parameters
@@ -462,18 +487,21 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
 
     # Calculate Ks
     # if neither Ca nor Mg provided, use MyAMI Ks for modern SW
-    if ps.Ca is None and ps.Mg is None:
-        ps.Ca = 0.0102821
-        ps.Mg = 0.0528171
-        ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+    if isinstance(Ks, dict):
+        ps.Ks = Bunch(Ks)
     else:
-        # if only Ca or Mg provided, fill in other with modern
-        if ps.Mg is None:
-            ps.Mg = 0.0528171
-        if ps.Ca is None:
+        if ps.Ca is None and ps.Mg is None:
             ps.Ca = 0.0102821
-        # calculate Ca and Mg specific Ks
-        ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
+            ps.Mg = 0.0528171
+            ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+        else:
+            # if only Ca or Mg provided, fill in other with modern
+            if ps.Mg is None:
+                ps.Mg = 0.0528171
+            if ps.Ca is None:
+                ps.Ca = 0.0102821
+            # calculate Ca and Mg specific Ks
+            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
 
     # if no B info provided, assume modern
     nBspec = NnotNone(ps.BT, ps.BO3, ps.BO4)
