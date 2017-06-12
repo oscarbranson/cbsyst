@@ -276,12 +276,12 @@ def cCO3(H, DIC, Ks):
 
 
 # 1.5.80
-def cTA(CO2, H, BT, Ks):
+def cTA(CO2, H, BT, Ks, unit=1e6):
     """
     Returns TA
     """
     return (CO2 * (Ks.K1 / H + 2 * Ks.K1 * Ks.K2 / H**2) +
-            BT * Ks.KB / (Ks.KB + H) + Ks.KW / H - H)
+            BT * Ks.KB / (Ks.KB + H) + unit * Ks.KW / H - H * unit)
 
 
 # # 1.2.28

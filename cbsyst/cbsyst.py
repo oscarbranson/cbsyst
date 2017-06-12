@@ -13,7 +13,7 @@ def Csys(pH=None, DIC=None, CO2=None,
          fCO2=None, pCO2=None,
          BT=433., T=25., S=35.,
          Ca=None, Mg=None,
-         Ks=None, pdict=None):
+         Ks=None, pdict=None, unit='umol'):
     """
     Calculate the carbon chemistry of seawater from a minimal parameter set.
 
@@ -44,6 +44,11 @@ def Csys(pH=None, DIC=None, CO2=None,
     Ca, Mg : arra-like
         The [Ca] and [Mg] of the seawater, in mol / kg.
         Used in calculating MyAMI constants.
+    unit : str
+        Concentration units of C and B parameters (all must be in
+        the same units).
+        Can be 'mol', 'mmol', 'umol', 'nmol', 'pmol' or 'fmol'.
+        Used in calculating Alkalinity. Default is 'umol'.
     Ks : dict
         A dictionary of constants. Must contain keys
         'K1', 'K2', 'KB' and 'KW'.
@@ -64,6 +69,16 @@ def Csys(pH=None, DIC=None, CO2=None,
     ps = Bunch(locals())
     if isinstance(pdict, dict):
         ps.update(pdict)
+
+    # convert unit to multiplier
+    udict = {'mol': 1,
+             'mmol': 1e3,
+             'umol': 1e6,
+             'µmol': 1e6,
+             'nmol': 1e9,
+             'pmol': 1e12,
+             'fmol': 1e15}
+    ps.unit = udict[ps.unit]
 
     # if neither Ca nor Mg provided, use MyAMI Ks for modern SW
     if isinstance(Ks, dict):
@@ -164,7 +179,7 @@ def Csys(pH=None, DIC=None, CO2=None,
         try:
             # necessary for use with CBsyst in special cases
             # where BT is not known before Csys is run.
-            ps.TA = cTA(ps.CO2, ps.H, ps.BT, ps.Ks)
+            ps.TA = cTA(ps.CO2, ps.H, ps.BT, ps.Ks, unit=ps.unit)
         except TypeError:
             pass
     if ps.pH is None:
@@ -417,7 +432,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
           ABT=None, ABO3=None, ABO4=None, dBT=None, dBO3=None, dBO4=None,
           alphaB=None, deltas=True,
           T=25., S=35., Ca=None, Mg=None,
-          Ks=None, pdict=None):
+          Ks=None, pdict=None, unit='umol'):
     """
     Calculate carbon, boron and boron isotope chemistry of seawater from a minimal parameter set.
 
@@ -461,8 +476,13 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
     T, S : array-like
         Temperature in Celcius and Salinity in PSU.
         Used in calculating MyAMI constants
+    unit : str
+        Concentration units of C and B parameters (all must be in
+        the same units).
+        Can be 'mol', 'mmol', 'umol', 'nmol', 'pmol' or 'fmol'.
+        Used in calculating Alkalinity. Default is 'umol'.
     Ca, Mg : arra-like
-        The [Ca] and [Mg] of the seawater, in mol / kg.
+        The [Ca] and [Mg] of the seawater, * in mol / kg *.
         Used in calculating MyAMI constants.
     Ks : dict
         A dictionary of constants. Must contain keys
@@ -484,6 +504,16 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
     ps = Bunch(locals())
     if isinstance(pdict, dict):
         ps.update(pdict)
+
+    # convert unit to multiplier
+    udict = {'mol': 1,
+             'mmol': 1e3,
+             'umol': 1e6,
+             'µmol': 1e6,
+             'nmol': 1e9,
+             'pmol': 1e12,
+             'fmol': 1e15}
+    ps.unit = udict[ps.unit]
 
     # Calculate Ks
     # if neither Ca nor Mg provided, use MyAMI Ks for modern SW
@@ -538,7 +568,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
             #  mutable, this has the added benefit of the
             #  parameters only being stored in memory once.
             if ps.TA is None:
-                ps.TA = cTA(ps.CO2, ps.H, ps.BT, ps.Ks)
+                ps.TA = cTA(ps.CO2, ps.H, ps.BT, ps.Ks, unit=ps.unit)
                 # necessary becayse TA in Csys fails if there's no BT
         # b) if there are 2 B species
         elif nBspec == 2:
