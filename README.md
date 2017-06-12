@@ -4,7 +4,9 @@
 
 *Work in progress! Results not guaranteed. Use at your own risk.*
 
-Constants calculated by an adaptation of [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf).
+Constants calculated by an adaptation of [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf). 
+Modified code is packaged with cbsyst in github/oscarbranson/cbsyst/cbsyst/MyAMI_V2.py.
+Original MyAMI code is also available at github/MathisHain/MyAMI.
 
 ## Installation
 
