@@ -6,7 +6,7 @@
 
 Constants calculated by an adaptation of [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf). 
 The [original MyAMI code](https://github.com/MathisHain/MyAMI) is available on GitHub.
-The modified code is [packaged with cbsyst](MyAMI_V2.py).
+The modified code is [packaged with cbsyst](cbsyst/MyAMI_V2.py).
 
 ## Installation
 
