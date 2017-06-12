@@ -28,7 +28,7 @@ Convenience functions for converting between isotope notation are provided in [c
 Does *not* work in 2.7. Sorry.
 
 ```bash
-pip install git+https://github.com/oscarbranson/cbsyst.git@master
+pip install cbsyst
 ```
 
 ## Example Usage
