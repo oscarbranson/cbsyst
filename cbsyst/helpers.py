@@ -77,9 +77,7 @@ def ch(pK):
     """
     Convert pK to K
     """
-    if not isinstance(pK, np.ndarray):
-        pK = np.array(pK)
-    return 10**-pK
+    return np.power(10, -pK)
 
 
 def cp(K):
