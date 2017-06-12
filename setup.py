@@ -21,6 +21,7 @@ setup(name='cbsyst',
                    'Programming Language :: Python :: 3 :: Only',
                    ],
       install_requires=['numpy',
-                        'scipy'],
+                        'scipy',
+                        'uncertainties'],
       package_data={'cbsyst': ['test_data/*']},
       zip_safe=True)
