@@ -8,7 +8,7 @@ def _zero_wrapper(ps, fn, bounds=(0, 1)):
     """
     Wrapper to handle zero finders.
     """
-    return opt.brentq(fn, *bounds, args=tuple(ps))
+    return opt.brentq(fn, *bounds, args=tuple(ps), xtol=1e-16)
 
 # Function types
 # Zero-finders: 2-5, 10-15
