@@ -11,6 +11,7 @@ def GLODAPv2_comparison(figdir='.'):
     print("Generating GLODAPv2 Comparison Plots")
     print("********************************************")
 
+    # if the data file is missing, get it.
     if not os.path.exists('./GLODAPv2_pH_DIC_ALK_subset.csv'):
         print('Getting GLODAPv2 Data...')
         from get_GLODAP_data import get_GLODAP
