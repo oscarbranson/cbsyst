@@ -25,6 +25,12 @@ def prescorr(P, Tc, a0, a1, a2, b0, b1):
 
 
 def get_Ks(ps):
+    """
+    Helper function to calculate Ks.
+
+    If ps.Ks is a dict, those Ks are used
+    transparrently, with no pressure modification.
+    """
     if isinstance(ps.Ks, dict):
         Ks = Bunch(ps.Ks)
     else:
@@ -41,6 +47,7 @@ def get_Ks(ps):
             # calculate Ca and Mg specific Ks
             Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
 
+        # Pressure correction
         if ps.P is not None:
             # parameters from Table 5 of Millero 2007 (doi:10.1021/cr0503557)
             ppar = {'K1': [-25.50, 0.1271, 0, -3.08, 0.0877],

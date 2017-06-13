@@ -24,26 +24,21 @@ def GLODAPv2_comparison(figdir='.'):
                       'salinity', 'tco2', 'talk', 'pressure'], inplace=True)
     gd.pressure /= 10  # convert pressure to bar
 
-    # bin pressure data
-    bins = np.linspace(gd.pressure.min(), gd.pressure.max(), 200)
-    centers = bins[:-1] + np.diff(bins)
-    gd.binpressure = pd.cut(gd.pressure, bins, labels=centers, include_lowest=True)
-
     # Do the work...
     print('Calculating pH from DIC and TA...')
-    cpH = cb.Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity, P=gd.binpressure)
+    cpH = cb.Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity, P=gd.pressure)
     print('   Making plots...')
     fig, axs = cplot(gd.phtsinsitutp, cpH.pH, 'pH', 'Depth', gd.depth)
     fig.savefig(figdir + '/Figures/pH_comparison.png', dpi=200)
 
     print('Calculating TA from pH and DIC...')
-    cTA = cb.Csys(pH=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity, P=gd.binpressure)
+    cTA = cb.Csys(pH=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity, P=gd.pressure)
     print('   Making plots...')
     fig, ax = cplot(gd.talk, cTA.TA, 'Alk', 'Depth', gd.depth)
     fig.savefig('Figures/TA_comparison.png', dpi=200)
 
     print('Calculating DIC from pH and TA...')
-    cDIC = cb.Csys(pH=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity, P=gd.binpressure)
+    cDIC = cb.Csys(pH=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity, P=gd.pressure)
     print('   Making plots...')
     fig, ax = cplot(gd.tco2, cDIC.DIC, 'DIC', 'Depth', gd.depth)
     fig.savefig('Figures/DIC_comparison.png', dpi=200)
