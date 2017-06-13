@@ -23,22 +23,22 @@ Fractional abundances avoid the ~0.08% error inherent in performing mass-balance
 Convenience functions for converting between isotope notation are provided in [cbsyst.boron)fns](cbsyst/boron_fns.py#L114), and are directly accessible at the top level of the cbsyst module (e.g. `cb.A11_2_d11()`).
 
 ### Current State
-I have used the [GLODAPv2 data set](cbsyst/test_data/GLODAPv2/Olsen_et_al-2016_GLODAPv2.pdf) to test how well `cbsyst` works with modern seawater.
+I have used the [GLODAPv2 data set](cbsyst/test_data/GLODAP_data/Olsen_et_al-2016_GLODAPv2.pdf) to test how well `cbsyst` works with modern seawater.
 
 **Method:** 
-Import the entire GLODAPv2 data set, remove all data where `flag != 2` (2 = good data), and exclude all rows that don't have all of (salinity, temperature, tco2, talk, and phtsinsitutp) - i.e. salinity, temperature and at least two carbonate parameters. The code used to process the raw GLODAPv2 data is available [here](cbsyst/test_data/GLODAPv2/get_GLODAP_data.py).
+Import the entire GLODAPv2 data set, remove all data where `flag != 2` (2 = good data), and exclude all rows that don't have all of (salinity, temperature, tco2, talk, and phtsinsitutp) - i.e. salinity, temperature and at least two carbonate parameters. The code used to process the raw GLODAPv2 data is available [here](cbsyst/test_data/GLODAP_data/get_GLODAP_data.py).
 
-Next, calcululate the carbonate system from sets of two of the measured carbonate parameters, and compare the calculated third parameter to the measured third parameter (i.e. calculate Alkalinity from pH and DIC, then compared calculated vs. measured Alkalinities). The code for making these comparison plots is [here](cbsyst/test_data/GLODAPv2/get_GLODAP_data.py).
+Next, calcululate the carbonate system from sets of two of the measured carbonate parameters, and compare the calculated third parameter to the measured third parameter (i.e. calculate Alkalinity from pH and DIC, then compared calculated vs. measured Alkalinities). The code for making these comparison plots is [here](cbsyst/test_data/GLODAP_data/get_GLODAP_data.py).
 
 **Results:**
 Predicted pH (from DIC and Alkalinity) is offset from measured values by -0.036 (-0.18/+0.06).
-![Calculated vs Measured pH](cbsyst/test_data/GLODAPv2/Figures/pH_comparison.png)
+![Calculated vs Measured pH](cbsyst/test_data/GLODAP_data/Figures/pH_comparison.png)
 
 Predicted Alkalinity (from pH and DIC) is offset from measured values by 13 (-25/+57) umol/kg.
-![Calculated vs Measured TA](cbsyst/test_data/GLODAPv2/Figures/TA_comparison.png)
+![Calculated vs Measured TA](cbsyst/test_data/GLODAP_data/Figures/TA_comparison.png)
 
 Predicted DIC (from pH and Alkalinity) is offset from measured values by -12 (-57/+24) umol/kg.
-![Calculated vs Measured DIC](cbsyst/test_data/GLODAPv2/Figures/DIC_comparison.png)
+![Calculated vs Measured DIC](cbsyst/test_data/GLODAP_data/Figures/DIC_comparison.png)
 
 **Conclusions:**
 The largest errors are clearly attributable to `cbsyst` not accounting for pressure variability.
