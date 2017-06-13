@@ -77,7 +77,7 @@ def ch(pK):
     """
     Convert pK to K
     """
-    return np.power(10, -pK)
+    return np.power(10., np.multiply(pK, -1.))
 
 
 def cp(K):
