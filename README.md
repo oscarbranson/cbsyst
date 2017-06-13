@@ -46,7 +46,8 @@ Reported statistics are median ±95% confidence intervals extracted from the res
 
 There is a slight negative trend in the DIC residuals. Uncertain of the cause.
 There are some small, outlying clusters where pH is under-estimated by ~0.1, DIC is under-estimated by 40-50 and Alk is over-estimated by ~70.
-The cause for these outliers is unclear, as they are not isolated by any available parameter in the dataset.
+All these data points are from cruise 270.
+Suspect a data problem from that cruise, as the outliers are not identified by any available parameter in the dataset.
 
 #### Conclusions:
 `cbsyst` does a good job of fitting the GLODAPv2 dataset within the noise of the data!
