@@ -33,22 +33,24 @@ The code used to process the raw GLODAPv2 data is available [here](cbsyst/test_d
 Next, calcululate the carbonate system from sets of two of the measured carbonate parameters, and compare the calculated third parameter to the measured third parameter (i.e. calculate Alkalinity from pH and DIC, then compared calculated vs. measured Alkalinities). The code for making these comparison plots is [here](cbsyst/test_data/GLODAP_data/plot_GLODAPv2_comparison.py).
 
 #### Results:
-Predicted pH (from DIC and Alkalinity) is offset from measured values by -0.0021 (-0.032/+0.035).
+**Predicted pH** (from DIC and Alkalinity) is offset from measured values by -0.0021 (-0.032/+0.035).
 ![Calculated vs Measured pH](cbsyst/test_data/GLODAP_data/Figures/pH_comparison.png)
 
-Predicted Alkalinity (from pH and DIC) is offset from measured values by 0.82 (-16/+11) umol/kg.
+**Predicted Alkalinity** (from pH and DIC) is offset from measured values by 0.82 (-16/+11) umol/kg.
 ![Calculated vs Measured TA](cbsyst/test_data/GLODAP_data/Figures/TA_comparison.png)
 
-Predicted DIC (from pH and Alkalinity) is offset from measured values by -0.80 (-11/+15) umol/kg.
+**Predicted DIC** (from pH and Alkalinity) is offset from measured values by -0.80 (-11/+15) umol/kg.
 ![Calculated vs Measured DIC](cbsyst/test_data/GLODAP_data/Figures/DIC_comparison.png)
 
 Reported statistics are median ±95% confidence intervals extracted from the residuals (n = 97,963).
 
-#### Conclusions:
-`cbsyst` does a good job of fitting the GLODAPv2 dataset within the noise of the data.
-There is a slight negative trend in the DIC residuals, with uncertain cause.
-There are some outlying clusters where pH is under-estimated by ~0.1, DIC is under-estimated by 40-50 and Alk is over-estimated by ~70.
+There is a slight negative trend in the DIC residuals. Uncertain of the cause.
+There are some small, outlying clusters where pH is under-estimated by ~0.1, DIC is under-estimated by 40-50 and Alk is over-estimated by ~70.
 The cause for these outliers is unclear, as they are not isolated by any available parameter in the dataset.
+
+#### Conclusions:
+`cbsyst` does a good job of fitting the GLODAPv2 dataset within the noise of the data!
+
 
 ## Installation
 
