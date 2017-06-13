@@ -6,13 +6,70 @@ from cbsyst.boron_fns import *
 from cbsyst.helpers import ch, cp, NnotNone
 
 
+# Helper functions
+# ----------------
+def prescorr(P, Tc, a0, a1, a2, b0, b1):
+    """
+    Calculate pressore correction factor for thermodynamic Ks.
+
+    From Millero et al (2007, doi:10.1021/cr0503557)
+    Eqns 38-40
+
+    K_corr / K_orig = [output]
+    Kcorr = [output] * K_orig
+    """
+    dV = a0 + a1 * Tc + a2 * Tc**2
+    dk = (b0 + b1 * Tc) / 1000  # factor of 1000 not mentioned in Millero, but used in CO2SYS
+    RT = 83.131 * (Tc + 273.15)
+    return np.exp((-dV + 0.5 * dk * P) * P / RT)
+
+
+def get_Ks(ps):
+    if isinstance(ps.Ks, dict):
+        Ks = Bunch(ps.Ks)
+    else:
+        if ps.Ca is None and ps.Mg is None:
+            ps.Ca = 0.0102821
+            ps.Mg = 0.0528171
+            Ks = MyAMI_K_calc(ps.T, ps.S)
+        else:
+            # if only Ca or Mg provided, fill in other with modern
+            if ps.Mg is None:
+                ps.Mg = 0.0528171
+            if ps.Ca is None:
+                ps.Ca = 0.0102821
+            # calculate Ca and Mg specific Ks
+            Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
+
+        if ps.P is not None:
+            # parameters from Table 5 of Millero 2007 (doi:10.1021/cr0503557)
+            ppar = {'K1': [-25.50, 0.1271, 0, -3.08, 0.0877],
+                    'K2': [-15.82, -0.0219, 0, 1.13, -0.1475],
+                    'KB': [-29.48, 0.1622, 2.608e-3, -2.84, 0],
+                    'KW': [-25.60, 0.2324, -3.6246e-3, -5.13, 0.0794],
+                    'KSO4': [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
+                    'KHF': [-9.78, -0.0090, -0.942e-3, -3.91, 0.054],
+                    'KH2S': [-14.80, 0.0020, -0.400e-3, 2.89, 0.054],
+                    'KNH4': [-26.43, 0.0889, -0.905e-3, -5.03, 0.0814],
+                    'KH3PO4': [-14.51, 0.1211, -0.321e-3, -2.67, 0.0427],
+                    'KH2PO4': [-23.12, 0.1758, -2.647e-3, -5.15, 0.09],
+                    'KHPO42': [-26.57, 0.2020, -3.042e-3, -4.08, 0.0714],
+                    'KspC': [-48.76, 0.5304, 0, -11.76, 0.3692],
+                    'KspA': [-35, 0.5304, 0, -11.76, 0.3692]}
+
+            for k in ['K1', 'K2', 'KW', 'KB', 'KspA', 'KspC', 'KSO4']:
+                Ks[k] *= prescorr(ps.P, ps.T, *ppar[k])
+
+    return Ks
+
+
 # C Speciation
 # ------------
 def Csys(pH=None, DIC=None, CO2=None,
          HCO3=None, CO3=None, TA=None,
          fCO2=None, pCO2=None,
          BT=433., Ca=None, Mg=None,
-         T=25., S=35., P=0.,
+         T=25., S=35., P=None,
          Ks=None, pdict=None, unit='umol'):
     """
     Calculate the carbon chemistry of seawater from a minimal parameter set.
@@ -84,29 +141,14 @@ def Csys(pH=None, DIC=None, CO2=None,
     if isinstance(ps.unit, str):
         ps.unit = udict[ps.unit]
 
-    # if neither Ca nor Mg provided, use MyAMI Ks for modern SW
-    if isinstance(Ks, dict):
-        ps.Ks = Bunch(Ks)
-    else:
-        if ps.Ca is None and ps.Mg is None and isinstance(ps.P, (float, int)):
-            ps.Ca = 0.0102821
-            ps.Mg = 0.0528171
-            ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)
-        else:
-            # if only Ca or Mg provided, fill in other with modern
-            if ps.Mg is None:
-                ps.Mg = 0.0528171
-            if ps.Ca is None:
-                ps.Ca = 0.0102821
-            # calculate Ca and Mg specific Ks
-            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg, ps.P)
+    ps.Ks = get_Ks(ps)
 
-        # if fCO2 is given but CO2 is not, calculate CO2
-        if ps.CO2 is None:
-            if ps.fCO2 is not None:
-                ps.CO2 = fCO2_to_CO2(ps.fCO2, ps.Ks)
-            elif ps.pCO2 is not None:
-                ps.CO2 = fCO2_to_CO2(pCO2_to_fCO2(ps.pCO2, ps.T), ps.Ks)
+    # if fCO2 is given but CO2 is not, calculate CO2
+    if ps.CO2 is None:
+        if ps.fCO2 is not None:
+            ps.CO2 = fCO2_to_CO2(ps.fCO2, ps.Ks)
+        elif ps.pCO2 is not None:
+            ps.CO2 = fCO2_to_CO2(pCO2_to_fCO2(ps.pCO2, ps.T), ps.Ks)
 
     # Carbon System Calculations (from Zeebe & Wolf-Gladrow, Appendix B)
     # 1. CO2 and pH
@@ -222,7 +264,7 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
          ABT=None, ABO3=None, ABO4=None,
          dBT=None, dBO3=None, dBO4=None,
          alphaB=None,
-         T=25., S=35., P=0.,
+         T=25., S=35., P=None,
          Ca=None, Mg=None,
          Ks=None, pdict=None):
     """
@@ -275,21 +317,7 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
         ps.update(pdict)
 
     # if neither Ca nor Mg provided, use default Ks
-    if isinstance(Ks, dict):
-        ps.Ks = Bunch(Ks)
-    else:
-        if ps.Ca is None and ps.Mg is None and isinstance(ps.P, (float, int)):
-            ps.Ca = 0.0102821
-            ps.Mg = 0.0528171
-            ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)
-        else:
-            # if only Ca or Mg provided, fill in other
-            if ps.Mg is None:
-                ps.Mg = 0.0528171
-            if ps.Ca is None:
-                ps.Ca = 0.0102821
-            # calculate Ca and Mg specific Ks
-            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg, ps.P)
+    ps.Ks = get_Ks(ps)
 
     # B system calculations
     if ps.pH is not None and ps.BT is not None:
@@ -338,7 +366,7 @@ def ABsys(pH=None,
           ABT=None, ABO3=None, ABO4=None,
           dBT=None, dBO3=None, dBO4=None,
           alphaB=None,
-          T=25., S=35., P=0.,
+          T=25., S=35., P=None,
           Ca=None, Mg=None,
           Ks=None, pdict=None):
     """
@@ -396,21 +424,7 @@ def ABsys(pH=None,
         ps.update(pdict)
 
     # if neither Ca nor Mg provided, use default Ks
-    if isinstance(Ks, dict):
-        ps.Ks = Bunch(Ks)
-    else:
-        if ps.Ca is None and ps.Mg is None and isinstance(ps.P, (float, int)):
-            ps.Ca = 0.0102821
-            ps.Mg = 0.0528171
-            ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)
-        else:
-            # if only Ca or Mg provided, fill in other
-            if ps.Mg is None:
-                ps.Mg = 0.0528171
-            if ps.Ca is None:
-                ps.Ca = 0.0102821
-            # calculate Ca and Mg specific Ks
-            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg, ps.P)
+    ps.Ks = get_Ks(ps)
 
     # if deltas provided, calculate corresponding As
     if ps.dBT is not None:
@@ -461,7 +475,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
           BT=None, BO3=None, BO4=None,
           ABT=None, ABO3=None, ABO4=None, dBT=None, dBO3=None, dBO4=None,
           alphaB=None,
-          T=25., S=35., P=0.,
+          T=25., S=35., P=None,
           Ca=None, Mg=None,
           Ks=None, pdict=None, unit='umol'):
     """
@@ -552,21 +566,14 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
 
     # Calculate Ks
     # if neither Ca nor Mg provided, use MyAMI Ks for modern SW
-    if isinstance(Ks, dict):
-        ps.Ks = Bunch(Ks)
-    else:
-        if ps.Ca is None and ps.Mg is None and isinstance(ps.P, (float, int)):
-            ps.Ca = 0.0102821
-            ps.Mg = 0.0528171
-            ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)
-        else:
-            # if only Ca or Mg provided, fill in other with modern
-            if ps.Mg is None:
-                ps.Mg = 0.0528171
-            if ps.Ca is None:
-                ps.Ca = 0.0102821
-            # calculate Ca and Mg specific Ks
-            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg, ps.P)
+    ps.Ks = get_Ks(ps)
+
+    # if fCO2 is given but CO2 is not, calculate CO2
+    if ps.CO2 is None:
+        if ps.fCO2 is not None:
+            ps.CO2 = fCO2_to_CO2(ps.fCO2, ps.Ks)
+        elif ps.pCO2 is not None:
+            ps.CO2 = fCO2_to_CO2(pCO2_to_fCO2(ps.pCO2, ps.T), ps.Ks)
 
     # if no B info provided, assume modern
     nBspec = NnotNone(ps.BT, ps.BO3, ps.BO4)
