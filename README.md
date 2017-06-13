@@ -25,12 +25,12 @@ Convenience functions for converting between isotope notation are provided in [c
 ### Current State
 I have used the [GLODAPv2 data set](cbsyst/test_data/GLODAP_data/Olsen_et_al-2016_GLODAPv2.pdf) to test how well `cbsyst` works with modern seawater.
 
-**Method:** 
+#### Method:*
 Import the entire GLODAPv2 data set, remove all data where `flag != 2` (2 = good data), and exclude all rows that don't have all of (salinity, temperature, tco2, talk, and phtsinsitutp) - i.e. salinity, temperature and at least two carbonate parameters. The code used to process the raw GLODAPv2 data is available [here](cbsyst/test_data/GLODAP_data/get_GLODAP_data.py).
 
 Next, calcululate the carbonate system from sets of two of the measured carbonate parameters, and compare the calculated third parameter to the measured third parameter (i.e. calculate Alkalinity from pH and DIC, then compared calculated vs. measured Alkalinities). The code for making these comparison plots is [here](cbsyst/test_data/GLODAP_data/get_GLODAP_data.py).
 
-**Results:**
+#### Results:
 Predicted pH (from DIC and Alkalinity) is offset from measured values by -0.036 (-0.18/+0.06).
 ![Calculated vs Measured pH](cbsyst/test_data/GLODAP_data/Figures/pH_comparison.png)
 
@@ -40,8 +40,10 @@ Predicted Alkalinity (from pH and DIC) is offset from measured values by 13 (-25
 Predicted DIC (from pH and Alkalinity) is offset from measured values by -12 (-57/+24) umol/kg.
 ![Calculated vs Measured DIC](cbsyst/test_data/GLODAP_data/Figures/DIC_comparison.png)
 
-**Conclusions:**
-The largest errors are clearly attributable to `cbsyst` not accounting for pressure variability.
+#### Conclusions:
+`cbsyst` performs well in shallow waters, but deviates significantly from measured values at depth.
+This is because I haven't yet implemented pressure correction in `cbsyst`.
+
 **Do not use cbsyst for deep water samples until pressure correction is implemented!**
 
 ## Installation

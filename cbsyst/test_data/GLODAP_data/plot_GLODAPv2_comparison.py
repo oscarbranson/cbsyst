@@ -72,7 +72,7 @@ def cplot(obs, pred, var, cvar, c, alpha=0.4, pclims=[.05, 99.95]):
     ax1.set_xlabel('GLODAPv2 Measured')
     ax1.set_ylabel('cbsyst predicted')
 
-    ax1.text(.05, .95, var, transform=ax1.transAxes,
+    ax1.text(.05, .95, 'GLODAPv2 ' + var, transform=ax1.transAxes,
              ha='left', va='top', fontsize=14, weight='bold', color=(.4, .4, .4))
 
     # Measured vs Difference
