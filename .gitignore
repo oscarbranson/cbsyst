@@ -18,3 +18,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+GLODAPv2 Merged Master File.csv.zip
+GLODAPv2_pH_DIC_ALK_subset.csv
+cbsyst/test_data/GLODAP_data/__pycache__
+Data_Source_CCHDO.webloc
