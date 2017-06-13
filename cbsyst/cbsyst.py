@@ -88,7 +88,7 @@ def Csys(pH=None, DIC=None, CO2=None,
     if isinstance(Ks, dict):
         ps.Ks = Bunch(Ks)
     else:
-        if ps.Ca is None and ps.Mg is None:
+        if ps.Ca is None and ps.Mg is None and isinstance(ps.P, (float, int)):
             ps.Ca = 0.0102821
             ps.Mg = 0.0528171
             ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)
@@ -278,7 +278,7 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
     if isinstance(Ks, dict):
         ps.Ks = Bunch(Ks)
     else:
-        if ps.Ca is None and ps.Mg is None:
+        if ps.Ca is None and ps.Mg is None and isinstance(ps.P, (float, int)):
             ps.Ca = 0.0102821
             ps.Mg = 0.0528171
             ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)
@@ -399,7 +399,7 @@ def ABsys(pH=None,
     if isinstance(Ks, dict):
         ps.Ks = Bunch(Ks)
     else:
-        if ps.Ca is None and ps.Mg is None:
+        if ps.Ca is None and ps.Mg is None and isinstance(ps.P, (float, int)):
             ps.Ca = 0.0102821
             ps.Mg = 0.0528171
             ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)
@@ -555,7 +555,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
     if isinstance(Ks, dict):
         ps.Ks = Bunch(Ks)
     else:
-        if ps.Ca is None and ps.Mg is None:
+        if ps.Ca is None and ps.Mg is None and isinstance(ps.P, (float, int)):
             ps.Ca = 0.0102821
             ps.Mg = 0.0528171
             ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)

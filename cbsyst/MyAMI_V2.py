@@ -23,6 +23,7 @@
 
 import itertools
 import numpy as np
+from tqdm import tqdm
 from scipy.optimize import curve_fit
 from cbsyst.helpers import Bunch
 
@@ -1471,7 +1472,10 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171, P=0.):
     param_dict = Bunch()
     for k in fitfn_dict.keys():
         p0 = np.ones(len(start_params[k]))
-        p, cov = curve_fit(fitfn_dict[k], (TempK_M.ravel(), Sal_M.ravel()), X_dict[k].ravel(), p0=p0, maxfev=maxfevN)
+        p, cov = curve_fit(fitfn_dict[k],
+                           (TempK_M.ravel(), Sal_M.ravel()),
+                           X_dict[k].ravel(),
+                           p0=p0, maxfev=maxfevN)
 
         param_dict[k] = p * start_params[k]
 
@@ -1592,7 +1596,7 @@ def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=0.):
     Ks = Bunch({k: np.zeros(L) for k in ['K0', 'K1', 'K2', 'KSO4', 'KB', 'KspA', 'KspC', 'KW']})
 
     # calculate T and S specific Ks for each Ca-Mg pair.
-    for (ca, mg, p) in CaMgP:
+    for (ca, mg, p) in tqdm(CaMgP, desc='Calculating MyAMI Constants'):
         # par = MyAMI_params(ca, mg)  # calculate parameters for Ca-Mg conditions
 
         ind = (zd[:, -3] == ca) & (zd[:, -2] == mg) & (zd[:, -1] == p)

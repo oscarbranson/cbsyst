@@ -22,6 +22,7 @@ setup(name='cbsyst',
                    ],
       install_requires=['numpy',
                         'scipy',
-                        'uncertainties'],
+                        'uncertainties',
+                        'tqdm'],
       package_data={'cbsyst': ['test_data/*']},
       zip_safe=True)
