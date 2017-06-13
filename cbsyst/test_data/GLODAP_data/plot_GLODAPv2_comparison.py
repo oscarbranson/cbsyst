@@ -21,23 +21,29 @@ def GLODAPv2_comparison(figdir='.'):
     print('Importing GLODAPv2 Data...')
     gd = pd.read_csv('./GLODAPv2_pH_DIC_ALK_subset.csv')
     gd.dropna(subset=['phtsinsitutp', 'temperature',
-                      'salinity', 'tco2', 'talk'], inplace=True)
+                      'salinity', 'tco2', 'talk', 'pressure'], inplace=True)
+    gd.pressure /= 10  # convert pressure to bar
+
+    # bin pressure data
+    bins = np.linspace(gd.pressure.min(), gd.pressure.max(), 200)
+    centers = bins[:-1] + np.diff(bins)
+    gd.binpressure = pd.cut(gd.pressure, bins, labels=centers, include_lowest=True)
 
     # Do the work...
     print('Calculating pH from DIC and TA...')
-    cpH = cb.Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity)
+    cpH = cb.Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity, P=gd.binpressure)
     print('   Making plots...')
     fig, axs = cplot(gd.phtsinsitutp, cpH.pH, 'pH', 'Depth', gd.depth)
     fig.savefig(figdir + '/Figures/pH_comparison.png', dpi=200)
 
     print('Calculating TA from pH and DIC...')
-    cTA = cb.Csys(pH=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity)
+    cTA = cb.Csys(pH=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity, P=gd.binpressure)
     print('   Making plots...')
     fig, ax = cplot(gd.talk, cTA.TA, 'Alk', 'Depth', gd.depth)
     fig.savefig('Figures/TA_comparison.png', dpi=200)
 
     print('Calculating DIC from pH and TA...')
-    cDIC = cb.Csys(pH=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity)
+    cDIC = cb.Csys(pH=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity, P=gd.binpressure)
     print('   Making plots...')
     fig, ax = cplot(gd.tco2, cDIC.DIC, 'DIC', 'Depth', gd.depth)
     fig.savefig('Figures/DIC_comparison.png', dpi=200)
@@ -108,7 +114,10 @@ def cplot(obs, pred, var, cvar, c, alpha=0.4, pclims=[.05, 99.95]):
     ax2.text(.03, .97, 'Median Offset: {:.1e}'.format(median) + '\n95% Limits: {:.1e} / +{:.1e}'.format(*(pc95 - median)),
              transform=ax2.transAxes, va='top', ha='left', backgroundcolor=(1, 1, 1, 0.5))
 
-    fig.colorbar(cm, cax=cax, label=cvar)
+    if not isinstance(c, str):
+        fig.colorbar(cm, cax=cax, label=cvar)
+    else:
+        cax.set_visible(False)
 
     return fig, (ax1, ax2, hax, cax)
 
