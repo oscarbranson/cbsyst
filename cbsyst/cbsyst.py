@@ -11,8 +11,8 @@ from cbsyst.helpers import ch, cp, NnotNone
 def Csys(pH=None, DIC=None, CO2=None,
          HCO3=None, CO3=None, TA=None,
          fCO2=None, pCO2=None,
-         BT=433., T=25., S=35.,
-         Ca=None, Mg=None,
+         BT=433., Ca=None, Mg=None,
+         T=25., S=35., P=0.,
          Ks=None, pdict=None, unit='umol'):
     """
     Calculate the carbon chemistry of seawater from a minimal parameter set.
@@ -38,11 +38,14 @@ def Csys(pH=None, DIC=None, CO2=None,
         Carbon system parameters. Two of these must be provided.
     BT : array-like
         Total B, used in Alkalinity calculations.
-    T, S : array-like
-        Temperature in Celcius and Salinity in PSU.
-        Used in calculating MyAMI constants
     Ca, Mg : arra-like
         The [Ca] and [Mg] of the seawater, in mol / kg.
+        Used in calculating MyAMI constants.
+    T, S : array-like
+        Temperature in Celcius and Salinity in PSU.
+        Used in calculating MyAMI constants.
+    P : array-like
+        Pressure in Bar.
         Used in calculating MyAMI constants.
     unit : str
         Concentration units of C and B parameters (all must be in
@@ -88,7 +91,7 @@ def Csys(pH=None, DIC=None, CO2=None,
         if ps.Ca is None and ps.Mg is None:
             ps.Ca = 0.0102821
             ps.Mg = 0.0528171
-            ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+            ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)
         else:
             # if only Ca or Mg provided, fill in other with modern
             if ps.Mg is None:
@@ -96,7 +99,7 @@ def Csys(pH=None, DIC=None, CO2=None,
             if ps.Ca is None:
                 ps.Ca = 0.0102821
             # calculate Ca and Mg specific Ks
-            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
+            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg, ps.P)
 
         # if fCO2 is given but CO2 is not, calculate CO2
         if ps.CO2 is None:
@@ -219,7 +222,7 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
          ABT=None, ABO3=None, ABO4=None,
          dBT=None, dBO3=None, dBO4=None,
          alphaB=None,
-         T=25., S=35.,
+         T=25., S=35., P=0.,
          Ca=None, Mg=None,
          Ks=None, pdict=None):
     """
@@ -243,7 +246,10 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
         Boron system parameters. Two of these must be provided.
     T, S : array-like
         Temperature in Celcius and Salinity in PSU.
-        Used in calculating MyAMI constants
+        Used in calculating MyAMI constants.
+    P : array-like
+        Pressure in Bar.
+        Used in calculating MyAMI constants.
     Ca, Mg : arra-like
         The [Ca] and [Mg] of the seawater, in mol / kg.
         Used in calculating MyAMI constants.
@@ -275,7 +281,7 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
         if ps.Ca is None and ps.Mg is None:
             ps.Ca = 0.0102821
             ps.Mg = 0.0528171
-            ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+            ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)
         else:
             # if only Ca or Mg provided, fill in other
             if ps.Mg is None:
@@ -283,7 +289,7 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
             if ps.Ca is None:
                 ps.Ca = 0.0102821
             # calculate Ca and Mg specific Ks
-            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
+            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg, ps.P)
 
     # B system calculations
     if ps.pH is not None and ps.BT is not None:
@@ -331,7 +337,8 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
 def ABsys(pH=None,
           ABT=None, ABO3=None, ABO4=None,
           dBT=None, dBO3=None, dBO4=None,
-          alphaB=None, T=25., S=35.,
+          alphaB=None,
+          T=25., S=35., P=0.,
           Ca=None, Mg=None,
           Ks=None, pdict=None):
     """
@@ -360,7 +367,10 @@ def ABsys(pH=None,
         sensitive formulation of Hönisch et al (2008)
     T, S : array-like
         Temperature in Celcius and Salinity in PSU.
-        Used in calculating MyAMI constants
+        Used in calculating MyAMI constants.
+    P : array-like
+        Pressure in Bar.
+        Used in calculating MyAMI constants.
     Ca, Mg : arra-like
         The [Ca] and [Mg] of the seawater, in mol / kg.
         Used in calculating MyAMI constants.
@@ -392,7 +402,7 @@ def ABsys(pH=None,
         if ps.Ca is None and ps.Mg is None:
             ps.Ca = 0.0102821
             ps.Mg = 0.0528171
-            ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+            ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)
         else:
             # if only Ca or Mg provided, fill in other
             if ps.Mg is None:
@@ -400,7 +410,7 @@ def ABsys(pH=None,
             if ps.Ca is None:
                 ps.Ca = 0.0102821
             # calculate Ca and Mg specific Ks
-            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
+            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg, ps.P)
 
     # if deltas provided, calculate corresponding As
     if ps.dBT is not None:
@@ -451,7 +461,8 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
           BT=None, BO3=None, BO4=None,
           ABT=None, ABO3=None, ABO4=None, dBT=None, dBO3=None, dBO4=None,
           alphaB=None,
-          T=25., S=35., Ca=None, Mg=None,
+          T=25., S=35., P=0.,
+          Ca=None, Mg=None,
           Ks=None, pdict=None, unit='umol'):
     """
     Calculate carbon, boron and boron isotope chemistry of seawater from a minimal parameter set.
@@ -495,7 +506,10 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
         sensitive formulation of Hönisch et al (2008)
     T, S : array-like
         Temperature in Celcius and Salinity in PSU.
-        Used in calculating MyAMI constants
+        Used in calculating MyAMI constants.
+    P : array-like
+        Pressure in Bar.
+        Used in calculating MyAMI constants.
     unit : str
         Concentration units of C and B parameters (all must be in
         the same units).
@@ -544,7 +558,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
         if ps.Ca is None and ps.Mg is None:
             ps.Ca = 0.0102821
             ps.Mg = 0.0528171
-            ps.Ks = MyAMI_K_calc(ps.T, ps.S)
+            ps.Ks = MyAMI_K_calc(ps.T, ps.S, ps.P)
         else:
             # if only Ca or Mg provided, fill in other with modern
             if ps.Mg is None:
@@ -552,7 +566,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
             if ps.Ca is None:
                 ps.Ca = 0.0102821
             # calculate Ca and Mg specific Ks
-            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
+            ps.Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg, ps.P)
 
     # if no B info provided, assume modern
     nBspec = NnotNone(ps.BT, ps.BO3, ps.BO4)
