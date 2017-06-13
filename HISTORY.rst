@@ -15,7 +15,7 @@ Release History
 * Fixed missing dependency that made Pypi install fail.
 
 
-0.2.3 (2017-06-14)
+0.3.0 (2017-06-14)
 ++++++++++++++++++
 
 * Comparison to GLODAPv2 dataset.
