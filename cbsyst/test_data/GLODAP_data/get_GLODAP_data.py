@@ -1,0 +1,73 @@
+import os
+import zipfile
+import requests
+
+import pandas as pd
+import numpy as np
+
+from tqdm import tqdm
+
+
+def get_GLODAP(leave_zip=True):
+    if not os.path.exists('./GLODAPv2 Merged Master File.csv.zip'):
+        print('Fetching GLODAPv2 Data (Olsen et al, 2016)...')
+
+        GLODAP_url = 'http://cdiac.ornl.gov/ftp/oceans/GLODAPv2/Data_Products/data_product/GLODAPv2%20Merged%20Master%20File.csv.zip'
+
+        # open URL
+        file = requests.get(GLODAP_url, stream=True)
+        total_size = int(file.headers.get('content-length', 0))
+
+        # Download data
+        with open('./GLODAPv2 Merged Master File.csv.zip', 'wb') as f:
+            for data in tqdm(file.iter_content(1024), total=total_size / (1024), unit='KB', unit_scale=True):
+                f.write(data)
+    else:
+        print('Found GLODAPv2 Data (Olsen et al, 2016)...')
+
+    print('Reading data...')
+    # open zip
+    zf = zipfile.ZipFile('./GLODAPv2 Merged Master File.csv.zip')
+
+    # read data into pandas
+    gd = pd.read_csv(zf.open('GLODAPv2 Merged Master File.csv'))
+
+    # replace missing values with nan
+    gd.replace(-9999, np.nan, inplace=True)
+
+    print("Selecting 'good' (flag == 2) data...")
+    # isolate good data only (flag = 2)
+    gd.loc[gd.phts25p0f != 2, 'phts25p0'] = np.nan
+    gd.loc[gd.phtsinsitutpf != 2, 'phtsinsitutp'] = np.nan
+    gd.loc[gd.tco2f != 2, 'tco2'] = np.nan
+    gd.loc[gd.talkf != 2, 'talk'] = np.nan
+    gd.loc[gd.salinityf != 2, 'salinity'] = np.nan
+
+    # Identify rows where ph, dic, talk and sal are present
+    phind = ~gd.phtsinsitutp.isnull()
+    dicind = ~gd.tco2.isnull()
+    alkind = ~gd.talk.isnull()
+    salind = ~gd.salinity.isnull()
+
+    print('Saving data subset...')
+    # Isolate those data
+    gds = gd.loc[phind & dicind & alkind & salind, ['phts25p0', 'phtsinsitutp', 'tco2', 'talk', 'temperature', 'salinity',
+                                                    'cruise', 'station', 'cast', 'year', 'month', 'day', 'hour',
+                                                    'latitude', 'longitude', 'bottomdepth', 'maxsampdepth', 'bottle',
+                                                    'pressure', 'depth', 'theta', 'silicate', 'phosphate']]
+
+    gds.to_csv('./GLODAPv2_pH_DIC_ALK_subset.csv', index=False)
+
+    if not leave_zip:
+        os.remove('./GLODAPv2 Merged Master File.csv.zip')
+
+    return
+
+
+if __name__ == '__main__':
+    print("\n********************************************")
+    print("Get GLODAPv2 carbon data for cbsyst testing.")
+    print("********************************************")
+    get_GLODAP()
+    print('Done.')
+    print("********************************************\n")
