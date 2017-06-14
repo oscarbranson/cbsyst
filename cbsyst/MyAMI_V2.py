@@ -31,7 +31,7 @@ from cbsyst.helpers import Bunch
 # Functions from K_thermo_conditional.py
 # --------------------------------------
 # definition of the function that takes (Temp) as input and returns the K at that temp
-def CalculateKcond(Tc, Sal, P=None):
+def CalculateKcond(Tc, Sal):
     """
     Calculate thermodynamic Ks adjusted for salinity.
 
@@ -84,32 +84,6 @@ def CalculateKcond(Tc, Sal, P=None):
                         param_HSO4_cond[8] * np.log(T)) +
                        param_HSO4_cond[9] / T * I * np.sqrt(I) +
                        param_HSO4_cond[10] / T * I**2 + np.log(1 - 0.001005 * Sal))
-
-    if P is not None:
-        # parameters from Table 5 of Millero 2007 (doi:10.1021/cr0503557)
-        ppar = {'K1': [-25.50, 0.1271, 0, -3.08, 0.0877],
-                'K2': [-15.82, -0.0219, 0, 1.13, -0.1475],
-                'KB': [-29.48, 0.1622, 2.608e-3, -2.84, 0],
-                'KW': [-25.60, 0.2324, -3.6246e-3, -5.13, 0.0794],
-                'KHSO4': [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
-                'KHF': [-9.78, -0.0090, -0.942e-3, -3.91, 0.054],
-                'KH2S': [-14.80, 0.0020, -0.400e-3, 2.89, 0.054],
-                'KNH4': [-26.43, 0.0889, -0.905e-3, -5.03, 0.0814],
-                'KH3PO4': [-14.51, 0.1211, -0.321e-3, -2.67, 0.0427],
-                'KH2PO4': [-23.12, 0.1758, -2.647e-3, -5.15, 0.09],
-                'KHPO42': [-26.57, 0.2020, -3.042e-3, -4.08, 0.0714],
-                'KspC': [-48.76, 0.5304, 0, -11.76, 0.3692],
-                'KspA': [-35, 0.5304, 0, -11.76, 0.3692]}
-
-        KspCcond *= prescorr(P, Tc, *ppar['KspC'])
-        K1cond *= prescorr(P, Tc, *ppar['K1'])
-        K2cond *= prescorr(P, Tc, *ppar['K2'])
-        KWcond *= prescorr(P, Tc, *ppar['KW'])
-        KBcond *= prescorr(P, Tc, *ppar['KB'])
-        KspAcond *= prescorr(P, Tc, *ppar['KspA'])
-        # K0cond *= prescorr(P, Tc, *ppar['K0'])
-        # No pressure effect on K0 - always at surface!
-        KHSO4cond *= prescorr(P, Tc, *ppar['KHSO4'])
 
     return KspCcond, K1cond, K2cond, KWcond, KBcond, KspAcond, K0cond, KHSO4cond
 
@@ -796,7 +770,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
 
 # Functions from K_HSO4_thermo.py
 # --------------------------------------
-def supplyKHSO4(T, I, P=None):
+def supplyKHSO4(T, I):
     """
     Calculate KHSO4 for given temperature and salinity
     """
@@ -825,24 +799,18 @@ def supplyKHSO4(T, I, P=None):
                          param_HSO4_cond[9] / T * I * np.sqrt(I) +
                          param_HSO4_cond[10] / T * I * I)
 
-    if P is not None:
-        K_HSO4_cond *= prescorr(P, (T - 273.15), *[-18.03, 0.0466, 0.316e-3, -4.53, 0.0900])
     return [K_HSO4_cond, K_HSO4]
 
 
 # Functions from K_HF_cond.py
 # --------------------------------------
-def supplyKHF(T, sqrtI, P=None):
-    if P is not None:
-        f = prescorr(P, (T - 273.15), *[-9.78, -0.0090, -0.942e-3, -3.91, 0.054])
-    else:
-        f = 1
-    return f * np.exp(1590.2 / T - 12.641 + 1.525 * sqrtI)
+def supplyKHF(T, sqrtI):
+    return np.exp(1590.2 / T - 12.641 + 1.525 * sqrtI)
 
 
 # Functions from gammaANDalpha.py
 # --------------------------------------
-def CalculateGammaAndAlphas(Tc, S, I, P, m_cation, m_anion):
+def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
     # Testbed case T=25C, I=0.7, seawatercomposition
     T = Tc + 273.15
     sqrtI = np.sqrt(I)
@@ -1046,12 +1014,12 @@ def CalculateGammaAndAlphas(Tc, S, I, P, m_cation, m_anion):
     # so far gamma_H is the [H]F activity coefficient (= free-H pH-scale)
     # thus, conversion is required
     # * (gamma_anion[4] / gamma_anion[6] / gamma_cation[0])
-    [K_HSO4_conditional, K_HSO4] = supplyKHSO4(T, I, P)
+    [K_HSO4_conditional, K_HSO4] = supplyKHSO4(T, I)
     # print (K_HSO4_conditional)
     # print (gamma_anion[4], gamma_anion[6], gamma_cation[0])
     # alpha_H = 1 / (1+ m_anion[6] / K_HSO4_conditional + 0.0000683 / (7.7896E-4 * 1.1 / 0.3 / gamma_cation[0]))
     alpha_Hsws = 1 / (1 + m_anion[6] / K_HSO4_conditional +
-                      0.0000683 / (supplyKHF(T, sqrtI, P)))
+                      0.0000683 / (supplyKHF(T, sqrtI)))
     alpha_Ht = 1 / (1 + m_anion[6] / K_HSO4_conditional)
     # alpha_H = 1 / (1+ m_anion[6] / K_HSO4_conditional)
 
@@ -1160,38 +1128,38 @@ def gammaCO2_fn(Tc, m_an, m_cat):
 
 # Functions from pKs.py
 # --------------------------------------
-def calculate_gKs(Tc, Sal, mCa, mMg, P=0.):
+def calculate_gKs(Tc, Sal, mCa, mMg):
     I = 19.924 * Sal / (1000 - 1.005 * Sal)
 
     m_cation = np.zeros((6, *Tc.shape))
-    m_cation[0] = (0.00000001 * Sal / 35)  # H ion; pH of about 8
+    m_cation[0] = (0.00000001 * Sal / 35.)  # H ion; pH of about 8
     # Na Millero et al., 2008; Dickson OA-guide
-    m_cation[1] = (0.4689674 * Sal / 35)
+    m_cation[1] = (0.4689674 * Sal / 35.)
     # K Millero et al., 2008; Dickson OA-guide
-    m_cation[2] = (0.0102077 * Sal / 35)
-    m_cation[3] = (mMg * Sal / 35)  # Mg Millero et al., 2008; Dickson OA-guide
-    m_cation[4] = (mCa * Sal / 35)  # Ca Millero et al., 2008; Dickson OA-guide
+    m_cation[2] = (0.0102077 * Sal / 35.)
+    m_cation[3] = (mMg * Sal / 35.)  # Mg Millero et al., 2008; Dickson OA-guide
+    m_cation[4] = (mCa * Sal / 35.)  # Ca Millero et al., 2008; Dickson OA-guide
     # Sr Millero et al., 2008; Dickson OA-guide
-    m_cation[5] = (0.0000907 * Sal / 35)
+    m_cation[5] = (0.0000907 * Sal / 35.)
 
     m_anion = np.zeros((7, *Tc.shape))
-    m_anion[0] = (0.0000010 * Sal / 35)  # OH ion; pH of about 8
+    m_anion[0] = (0.0000010 * Sal / 35.)  # OH ion; pH of about 8
     # Cl Millero et al., 2008; Dickson OA-guide
-    m_anion[1] = (0.5458696 * Sal / 35)
+    m_anion[1] = (0.5458696 * Sal / 35.)
     # BOH4 Millero et al., 2008; Dickson OA-guide; pH of about 8 -- borate,
     # not Btotal
-    m_anion[2] = (0.0001008 * Sal / 35)
+    m_anion[2] = (0.0001008 * Sal / 35.)
     # HCO3 Millero et al., 2008; Dickson OA-guide
-    m_anion[3] = (0.0017177 * Sal / 35)
+    m_anion[3] = (0.0017177 * Sal / 35.)
     # HSO4 Millero et al., 2008; Dickson OA-guide
-    m_anion[4] = (0.0282352 * 1e-6 * Sal / 35)
+    m_anion[4] = (0.0282352 * 1e-6 * Sal / 35.)
     # CO3 Millero et al., 2008; Dickson OA-guide
-    m_anion[5] = (0.0002390 * Sal / 35)
+    m_anion[5] = (0.0002390 * Sal / 35.)
     # SO4 Millero et al., 2008; Dickson OA-guide
-    m_anion[6] = (0.0282352 * Sal / 35)
+    m_anion[6] = (0.0282352 * Sal / 35.)
 
     [gamma_cation, gamma_anion, alpha_Hsws, alpha_Ht, alpha_OH,
-        alpha_CO3] = CalculateGammaAndAlphas(Tc, Sal, I, P, m_cation, m_anion)
+        alpha_CO3] = CalculateGammaAndAlphas(Tc, Sal, I, m_cation, m_anion)
 
     gammaT_OH = gamma_anion[0] * alpha_OH
     gammaT_BOH4 = gamma_anion[2]
@@ -1415,7 +1383,7 @@ fitfn_dict = {'K0': fitfunc_K0,
 
 # Main (new) functions
 # --------------------------------------
-def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171, P=0.):
+def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
     """
     Calculate equilibrium constant parameters using MyAMI model.
 
@@ -1451,11 +1419,11 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171, P=0.):
     TempK_M = TempC_M + 273.15
 
     # Calculate K's for modern seawater composition
-    KspC_mod, K1_mod, K2_mod, KW_mod, KB_mod, KspA_mod, K0_mod, KSO4_mod = CalculateKcond(TempC_M, Sal_M, P)
+    KspC_mod, K1_mod, K2_mod, KW_mod, KB_mod, KspA_mod, K0_mod, KSO4_mod = CalculateKcond(TempC_M, Sal_M)
 
     # Calculate gK's for modern (mod) and experimental (x) seawater composition
-    gKspC_mod, gK1_mod, gK2_mod, gKW_mod, gKB_mod, gKspA_mod, gK0_mod, gKSO4_mod = calculate_gKs(TempC_M, Sal_M, MmCa, MmMg, P)
-    gKspC_X, gK1_X, gK2_X, gKW_X, gKB_X, gKspA_X, gK0_X, gKSO4_X = calculate_gKs(TempC_M, Sal_M, XmCa, XmMg, P)
+    gKspC_mod, gK1_mod, gK2_mod, gKW_mod, gKB_mod, gKspA_mod, gK0_mod, gKSO4_mod = calculate_gKs(TempC_M, Sal_M, MmCa, MmMg)
+    gKspC_X, gK1_X, gK2_X, gKW_X, gKB_X, gKspA_X, gK0_X, gKSO4_X = calculate_gKs(TempC_M, Sal_M, XmCa, XmMg)
 
     # Calculate conditional K's predicted for seawater composition X
     X_dict = {'K0': K0_mod * gK0_X / gK0_mod,
@@ -1482,7 +1450,7 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171, P=0.):
     return param_dict
 
 
-def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=0., param_dict=None):
+def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None, param_dict=None):
     """
     Calculate K constants at given salinities and temperatures.
 
@@ -1509,7 +1477,7 @@ def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=0., param_dic
     dict of K values
     """
     if param_dict is None:
-        if Ca == 0.0102821 and Mg == 0.0528171 and P == 0.:
+        if Ca == 0.0102821 and Mg == 0.0528171:
             # MyAMI parameters for s=35, t=25. Specified in full rather than
             # calculated, for speed.
             param_dict = {'K0': np.array([-6.02409000e+01, 9.34517000e+01, 2.33585000e+01,
@@ -1536,7 +1504,7 @@ def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=0., param_dic
                                           1.18670000e+02, -5.97700000e+00, 1.04950000e+00,
                                           -1.61500000e-02])}
         else:
-            param_dict = MyAMI_params(Ca, Mg, P)
+            param_dict = MyAMI_params(Ca, Mg)
 
     TempC, Sal = [np.array(p) for p in (TempC, Sal)]
     TempK = TempC + 273.15
@@ -1545,10 +1513,30 @@ def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=0., param_dic
         Ks[k] = fn_dict[k]((TempK, Sal),
                            *param_dict[k])
 
+    # Pressure correction
+    if P is not None:
+        # parameters from Table 5 of Millero 2007 (doi:10.1021/cr0503557)
+        ppar = {'K1': [-25.50, 0.1271, 0, -3.08, 0.0877],
+                'K2': [-15.82, -0.0219, 0, 1.13, -0.1475],
+                'KB': [-29.48, 0.1622, 2.608e-3, -2.84, 0],
+                'KW': [-25.60, 0.2324, -3.6246e-3, -5.13, 0.0794],
+                'KSO4': [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
+                'KHF': [-9.78, -0.0090, -0.942e-3, -3.91, 0.054],
+                'KH2S': [-14.80, 0.0020, -0.400e-3, 2.89, 0.054],
+                'KNH4': [-26.43, 0.0889, -0.905e-3, -5.03, 0.0814],
+                'KH3PO4': [-14.51, 0.1211, -0.321e-3, -2.67, 0.0427],
+                'KH2PO4': [-23.12, 0.1758, -2.647e-3, -5.15, 0.09],
+                'KHPO42': [-26.57, 0.2020, -3.042e-3, -4.08, 0.0714],
+                'KspC': [-48.76, 0.5304, 0, -11.76, 0.3692],
+                'KspA': [-35, 0.5304, 0, -11.76, 0.3692]}
+
+        for k in ['K1', 'K2', 'KW', 'KB', 'KspA', 'KspC', 'KSO4']:
+            Ks[k] *= prescorr(P, TempC, *ppar[k])
+
     return Ks
 
 
-def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=0.):
+def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=None):
     """
     Calculate MyAMI equilibrium constants for multiple T, S and Mg and Ca conditions.
 
@@ -1587,21 +1575,22 @@ def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=0.):
         if k != mL:
             d[k] = itertools.cycle(v)  # turn all shorter arrays into itertools.cycle objects
 
-    zd = np.array(list(zip(d.T, d.S, d.Ca, d.Mg, d.P)))  # make a 4xL array of parameters
+    zd = np.array(list(zip(d.T, d.S, d.P, d.Ca, d.Mg)))  # make a 4xL array of parameters
 
     # identify Ca-Mg-P triplets
-    CaMgP = set(zip(*zd[:, -3:].T))
+    CaMg = set(zip(*zd[:, -2:].T))
 
     # set up empty K Bunch
     Ks = Bunch({k: np.zeros(L) for k in ['K0', 'K1', 'K2', 'KSO4', 'KB', 'KspA', 'KspC', 'KW']})
 
     # calculate T and S specific Ks for each Ca-Mg pair.
-    for (ca, mg, p) in tqdm(CaMgP, desc='Calculating MyAMI Constants'):
+    for (ca, mg) in tqdm(CaMg, desc='Calculating MyAMI Constants'):
         # par = MyAMI_params(ca, mg)  # calculate parameters for Ca-Mg conditions
 
-        ind = (zd[:, -3] == ca) & (zd[:, -2] == mg) & (zd[:, -1] == p)
+        ind = (zd[:, -2] == ca) & (zd[:, -1] == mg)
         t = zd[ind, 0]
         s = zd[ind, 1]
+        p = zd[ind, 2]
 
         Ks_tmp = MyAMI_K_calc(t, s, ca, mg, p)
 
@@ -1637,40 +1626,10 @@ def MyAMI_pK_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=0., param_di
     -------
     dict of pK values
     """
-    if param_dict is None:
-        if Ca == 0.0102821 and Mg == 0.0528171 and P == 0.:
-            # MyAMI parameters for s=35, t=25. Specified in full rather than
-            # calculated, for speed.
-            param_dict = {'K0': np.array([-6.02409000e+01, 9.34517000e+01, 2.33585000e+01,
-                                          2.35170000e-02, -2.36560000e-02, 4.70360000e-03]),
-                          'K1': np.array([6.12172000e+01, -3.63386000e+03, -9.67770000e+00,
-                                          1.15550000e-02, -1.15200000e-04]),
-                          'K2': np.array([-2.59290000e+01, -4.71780000e+02, 3.16967000e+00,
-                                          1.78100000e-02, -1.12200000e-04]),
-                          'KSO4': np.array([1.41328000e+02, -4.27610000e+03, -2.30930000e+01,
-                                            -1.38560000e+04, 3.24570000e+02, -4.79860000e+01,
-                                            3.54740000e+04, -7.71540000e+02, 1.14723000e+02,
-                                            -2.69800000e+03, 1.77600000e+03]),
-                          'KB': np.array([1.48024800e+02, 1.37194200e+02, 1.62142000e+00,
-                                          -8.96690000e+03, -2.89053000e+03, -7.79420000e+01,
-                                          1.72800000e+00, -9.96000000e-02, -2.44344000e+01,
-                                          -2.50850000e+01, -2.47400000e-01, 5.31050000e-02]),
-                          'KspA': np.array([-1.71945000e+02, -7.79930000e-02, 2.90329300e+03,
-                                            7.15950000e+01, -6.83930000e-02, 1.72760000e-03,
-                                            8.81350000e+01, -1.00180000e-01, 5.94150000e-03]),
-                          'KspC': np.array([-1.71906500e+02, -7.79930000e-02, 2.83931900e+03,
-                                            7.15950000e+01, -7.77120000e-01, 2.84260000e-03,
-                                            1.78340000e+02, -7.71100000e-02, 4.12490000e-03]),
-                          'KW': np.array([1.48965200e+02, -1.38472600e+04, -2.36521000e+01,
-                                          1.18670000e+02, -5.97700000e+00, 1.04950000e+00,
-                                          -1.61500000e-02])}
-        else:
-            param_dict = MyAMI_params(Ca, Mg, P)
-    TempK = TempC + 273.15
+    Ks = MyAMI_K_calc(TempC, Sal, Ca, Mg, P, param_dict)
     pKs = Bunch()
-    for k in param_dict.keys():
-        pKs[k] = -np.log10(fn_dict[k]((TempK, Sal),
-                                      *param_dict[k]))
+    for k, v in Ks.items():
+        pKs[k] = -np.log10(v)
     return pKs
 
 

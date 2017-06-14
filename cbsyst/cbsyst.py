@@ -37,7 +37,7 @@ def get_Ks(ps):
         if ps.Ca is None and ps.Mg is None:
             ps.Ca = 0.0102821
             ps.Mg = 0.0528171
-            Ks = MyAMI_K_calc(ps.T, ps.S)
+            Ks = MyAMI_K_calc(ps.T, ps.S, P=ps.P)
         else:
             # if only Ca or Mg provided, fill in other with modern
             if ps.Mg is None:
@@ -45,27 +45,7 @@ def get_Ks(ps):
             if ps.Ca is None:
                 ps.Ca = 0.0102821
             # calculate Ca and Mg specific Ks
-            Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg)
-
-        # Pressure correction
-        if ps.P is not None:
-            # parameters from Table 5 of Millero 2007 (doi:10.1021/cr0503557)
-            ppar = {'K1': [-25.50, 0.1271, 0, -3.08, 0.0877],
-                    'K2': [-15.82, -0.0219, 0, 1.13, -0.1475],
-                    'KB': [-29.48, 0.1622, 2.608e-3, -2.84, 0],
-                    'KW': [-25.60, 0.2324, -3.6246e-3, -5.13, 0.0794],
-                    'KSO4': [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
-                    'KHF': [-9.78, -0.0090, -0.942e-3, -3.91, 0.054],
-                    'KH2S': [-14.80, 0.0020, -0.400e-3, 2.89, 0.054],
-                    'KNH4': [-26.43, 0.0889, -0.905e-3, -5.03, 0.0814],
-                    'KH3PO4': [-14.51, 0.1211, -0.321e-3, -2.67, 0.0427],
-                    'KH2PO4': [-23.12, 0.1758, -2.647e-3, -5.15, 0.09],
-                    'KHPO42': [-26.57, 0.2020, -3.042e-3, -4.08, 0.0714],
-                    'KspC': [-48.76, 0.5304, 0, -11.76, 0.3692],
-                    'KspA': [-35, 0.5304, 0, -11.76, 0.3692]}
-
-            for k in ['K1', 'K2', 'KW', 'KB', 'KspA', 'KspC', 'KSO4']:
-                Ks[k] *= prescorr(ps.P, ps.T, *ppar[k])
+            Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg, ps.P)
 
     return Ks
 
