@@ -4,6 +4,15 @@
 
 *Work in progress! Tested against reference data, but results not guaranteed. Use at your own risk.*
 
+### Still To Do...
+- [ ] [Nutrient alkalinity](https://github.com/oscarbranson/cbsyst/issues/5)
+- [ ] [Different pH scales](https://github.com/oscarbranson/cbsyst/issues/7)
+- [ ] [Separate input / output conditions](https://github.com/oscarbranson/cbsyst/issues/3)
+- [ ] [Ravelle factor reporting](https://github.com/oscarbranson/cbsyst/issues/8)
+- [ ] [Compare to CO2SYS](https://github.com/oscarbranson/cbsyst/issues/6), a la [Orr et al (2015)](http://www.biogeosciences.net/12/1483/2015/bg-12-1483-2015.pdf)?
+
+If anyone wants to help with any of this, please do contribute!
+
 ### Constants
 Constants calculated by an adaptation of [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf). 
 The [original MyAMI code](https://github.com/MathisHain/MyAMI) is available on GitHub.
