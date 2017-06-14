@@ -158,6 +158,13 @@ out.CO3
 
 >>> array([ 238.511253])
 
+# Output data for external use:
+df = cb.data_out(out, 'example_export.csv')
+
+# This returns a pandas.DataFrame object with all C and B parameters.
+# It also saves the data to the specified file. The extension of the
+# file determined the format it is saved in (see data_out docstring).
+
 ```
 
 ## Technical Note: Whats is a `Bunch`?
