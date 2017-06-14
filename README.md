@@ -4,7 +4,7 @@
 
 *Work in progress! Tested against reference data, but results not guaranteed. Use at your own risk.*
 
-### Still To Do...
+## Still To Do...
 - [ ] [Nutrient alkalinity](https://github.com/oscarbranson/cbsyst/issues/5)
 - [ ] [Different pH scales](https://github.com/oscarbranson/cbsyst/issues/7)
 - [ ] [Separate input / output conditions](https://github.com/oscarbranson/cbsyst/issues/3)
@@ -13,14 +13,14 @@
 
 If anyone wants to help with any of this, please do contribute!
 
-### Constants
+## Constants
 Constants calculated by an adaptation of [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf). 
 The [original MyAMI code](https://github.com/MathisHain/MyAMI) is available on GitHub.
 A stripped-down version of MyAMI is [packaged with cbsyst](cbsyst/MyAMI_V2.py).
 It has been modified to make it faster (by vectorising) and more 'Pythonic'.
 All the Matlab interface code has been removed.
 
-### Calculations
+## Calculations
 Speciation calculations follow [Zeebe and Wolf-Gladrow (2001)](https://www.elsevier.com/books/co2-in-seawater-equilibrium-kinetics-isotopes/zeebe/978-0-444-50946-8).
 Carbon speciation calculations are described in Appendix B.
 Boron speciation calculations in Eqns. 3.4.43 - 3.4.46.
@@ -31,17 +31,17 @@ Fractional abundances avoid the ~0.08% error inherent in performing mass-balance
 
 Convenience functions for converting between isotope notation are provided in [cbsyst.boron)fns](cbsyst/boron_fns.py#L114), and are directly accessible at the top level of the cbsyst module (e.g. `cb.A11_2_d11()`).
 
-### Current State
+## Current State
 I have used the [GLODAPv2 data set](cbsyst/test_data/GLODAP_data/Olsen_et_al-2016_GLODAPv2.pdf) to test how well `cbsyst` works with modern seawater.
 
-#### Method:
+### Method:
 Import the entire GLODAPv2 data set, remove all data where `flag != 2` (2 = good data), and exclude all rows that don't have all of (salinity, temperature, pressure, tco2, talk, and phtsinsitutp) - i.e. salinity, temperature, pressure and all three measured carbonate parameters.
 The resulting dataset contains 97,963 bottle samples. 
 The code used to process the raw GLODAPv2 data is available [here](cbsyst/test_data/GLODAP_data/get_GLODAP_data.py).
 
 Next, calculate the carbonate system from sets of two of the measured carbonate parameters, and compare the calculated third parameter to the measured third parameter (i.e. calculate Alkalinity from pH and DIC, then compared calculated vs. measured Alkalinities). The code for making these comparison plots is [here](cbsyst/test_data/GLODAP_data/plot_GLODAPv2_comparison.py).
 
-#### Results:
+### Results:
 **Predicted pH** (from DIC and Alkalinity) is offset from measured values by -0.0021 (-0.032/+0.035).
 ![Calculated vs Measured pH](cbsyst/test_data/GLODAP_data/Figures/pH_comparison.png)
 
@@ -58,11 +58,11 @@ There are some small, outlying clusters where pH is under-estimated by ~0.1, DIC
 All these data points are from cruise 270.
 Suspect a data problem from that cruise, as the outliers are not identified by any available parameter in the dataset.
 
-#### Conclusions:
+### Conclusions:
 `cbsyst` does a good job of fitting the GLODAPv2 dataset within the noise of the data!
 
 
-## Installation
+# Installation
 
 **Requires Python 3.5+**. 
 Does *not* work in 2.7. Sorry.
