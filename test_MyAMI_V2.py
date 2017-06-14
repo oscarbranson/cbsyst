@@ -105,21 +105,30 @@ class MyAMIConsistency(unittest.TestCase):
                               MyAMI_lowMglowCa), msg='Low Mg, Low Ca params')
 
     def test_CompareToDickson2007(self):
-        # log10(K) values from Dickson, Sabine & Christian (2007) Chapter 5
-        Dickson_ref = {'K0': -np.log10(np.exp(-3.5617)),
-                       'K1': 5.8472,
-                       'K2': 8.9660,
-                       'KB': -np.log10(np.exp(-19.7964)),
-                       'KW': -np.log10(np.exp(-30.434)),
-                       'KSO4': -np.log10(np.exp(-2.3))}
+        # Check params @ 25ºC and 35 PSU
 
-        pKs = MyAMI_pK_calc()
+        # Parameters are from Dickson, Sabine & Christian
+        # (Guide to best practises for ocean CO2 measurements, 
+        # PICES Special Publication, 2007), Chapter 5.7.2 (seawater).
 
-        diffs = []
-        for k, p in Dickson_ref.items():
-            diffs.append(p - pKs[k])
+        # Except KspC and KspA, which are from from Zeebe &
+        # Wolf-Gladrow, 2001, Appendix A.10
 
-        self.assertTrue(all(abs(np.array(diffs)) < 1e-3))
+        K_ckeck = {'K0': np.exp(-3.5617),
+                   'K1': 10**(-5.8472),
+                   'K2': 10**(-8.9660),
+                   'KB': np.exp(-19.7964),
+                   'KW': np.exp(-30.434),
+                   'KSO4': np.exp(-2.30),
+                   'KspC': 10**-6.3693,
+                   'KspA': 10**-6.1883}
+
+        Ks = MyAMI_K_calc()
+
+        for k, p in K_ckeck.items():
+            self.assertAlmostEqual(Ks[k] / p, 1,
+                                   places=3,
+                                   msg='failed on ' + k)
 
 
 if __name__ == '__main__':

@@ -101,7 +101,9 @@ def prescorr(P, Tc, a0, a1, a2, b0, b1):
     Kcorr = [output] * K_orig
     """
     dV = a0 + a1 * Tc + a2 * Tc**2
-    dk = (b0 + b1 * Tc) / 1000  # factor of 1000 not mentioned in Millero, but used in CO2SYS
+    dk = (b0 + b1 * Tc) / 1000
+    # factor of 1000 not mentioned in Millero,
+     # but present in Zeebe book, and used in CO2SYS
     RT = 83.131 * (Tc + 273.15)
     return np.exp((-dV + 0.5 * dk * P) * P / RT)
 
@@ -1214,6 +1216,7 @@ start_params = {'K0': np.array([-60.2409, 93.4517, 23.3585, 0.023517,
 
 
 # K Functions
+# Unless otherwise stated, all are from Dickson, Sabine and Christian 2007 handbook.
 def func_K0(TKS, a, b, c, d, e, f):
     TempK, Sal = TKS
     return np.exp(a +
@@ -1272,21 +1275,21 @@ def func_KW(TKS, a, b, c, d, e, f, g):
                   g * Sal)
 
 
+# From Zeebe and Wolf-Gladrow, Appendix A.10.
 def func_KspC(TKS, a, b, c, d, e, f, g, h, i):
     TempK, Sal = TKS
-    sqrtSal = np.sqrt(Sal)
     log10TempK = np.log10(TempK)
     return np.power(10, (a +
                          b * TempK +
                          c / TempK +
-                         d * log10TempK + sqrtSal *
+                         d * log10TempK + Sal**0.5 *
                          (e +
                           f * TempK +
                           g / TempK) +
                          h * Sal +
-                         i * Sal * sqrtSal))
+                         i * Sal**1.5))
 
-
+# From Zeebe and Wolf-Gladrow, Appendix A.10.
 def func_KspA(TKS, a, b, c, d, e, f, g, h, i):
     TempK, Sal = TKS
     sqrtSal = np.sqrt(Sal)
@@ -1294,12 +1297,12 @@ def func_KspA(TKS, a, b, c, d, e, f, g, h, i):
     return np.power(10, (a +
                          b * TempK +
                          c / TempK +
-                         d * log10TempK + sqrtSal *
+                         d * log10TempK + Sal**0.5 *
                          (e +
                           f * TempK +
                           g / TempK) +
                          h * Sal +
-                         i * Sal * sqrtSal))
+                         i * Sal**1.5))
 
 
 def func_KSO4(TKS, a, b, c, d, e, f, g, h, i, j, k):

@@ -26,11 +26,11 @@ Convenience functions for converting between isotope notation are provided in [c
 I have used the [GLODAPv2 data set](cbsyst/test_data/GLODAP_data/Olsen_et_al-2016_GLODAPv2.pdf) to test how well `cbsyst` works with modern seawater.
 
 #### Method:
-Import the entire GLODAPv2 data set, remove all data where `flag != 2` (2 = good data), and exclude all rows that don't have all of (salinity, temperature, tco2, talk, and phtsinsitutp) - i.e. salinity, temperature and at least two carbonate parameters. 
+Import the entire GLODAPv2 data set, remove all data where `flag != 2` (2 = good data), and exclude all rows that don't have all of (salinity, temperature, pressure, tco2, talk, and phtsinsitutp) - i.e. salinity, temperature, pressure and all three measured carbonate parameters.
 The resulting dataset contains 97,963 bottle samples. 
 The code used to process the raw GLODAPv2 data is available [here](cbsyst/test_data/GLODAP_data/get_GLODAP_data.py).
 
-Next, calcululate the carbonate system from sets of two of the measured carbonate parameters, and compare the calculated third parameter to the measured third parameter (i.e. calculate Alkalinity from pH and DIC, then compared calculated vs. measured Alkalinities). The code for making these comparison plots is [here](cbsyst/test_data/GLODAP_data/plot_GLODAPv2_comparison.py).
+Next, calculate the carbonate system from sets of two of the measured carbonate parameters, and compare the calculated third parameter to the measured third parameter (i.e. calculate Alkalinity from pH and DIC, then compared calculated vs. measured Alkalinities). The code for making these comparison plots is [here](cbsyst/test_data/GLODAP_data/plot_GLODAPv2_comparison.py).
 
 #### Results:
 **Predicted pH** (from DIC and Alkalinity) is offset from measured values by -0.0021 (-0.032/+0.035).
