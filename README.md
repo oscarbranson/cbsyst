@@ -28,7 +28,7 @@ Boron speciation calculations in Eqns. 3.4.43 - 3.4.46.
 Boron isotopes are calculated in terms of fractional abundances instead of delta values, as outlines [here](cbsyst/docs/B_systematics.pdf).
 Delta values can be provided as an input, and are given as an output.
 
-Pressure corrections are applied to the calculated MyAMI constants following Eqns. 38-40 of [Millero et al (2007)](cbsyst/docs/Millero_2007_Chemical Review.pdf), using constants in their Table 5.
+Pressure corrections are applied to the calculated MyAMI constants following Eqns. 38-40 of [Millero et al (2007)](cbsyst/docs/Millero_2007_ChemicalReview.pdf), using constants in their Table 5.
 
 ## Data Comparison
 I have used the [GLODAPv2 data set](cbsyst/test_data/GLODAP_data/Olsen_et_al-2016_GLODAPv2.pdf) to test how well `cbsyst` works with modern seawater.
