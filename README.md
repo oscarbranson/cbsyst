@@ -25,13 +25,12 @@ Speciation calculations follow [Zeebe and Wolf-Gladrow (2001)](https://www.elsev
 Carbon speciation calculations are described in Appendix B.
 Boron speciation calculations in Eqns. 3.4.43 - 3.4.46.
 
-Boron isotope are calculated in terms of fractional abundances (11A = 11B / (10B + 11B) = 11R / (1 + 11R)), instead of delta values.
-Delta values can be provided as an input, and are given as an output, but all calculations use A.
-Fractional abundances avoid the ~0.08% error inherent in performing mass-balance calcualtions with delta values ([Zeebe and Wolf-Gladrow (2001)](https://www.elsevier.com/books/co2-in-seawater-equilibrium-kinetics-isotopes/zeebe/978-0-444-50946-8), Section 3.1.5 and pg. 220), and should be used for any down-stream mixing calculations involving B isotopes.
+Boron isotopes are calculated in terms of fractional abundances instead of delta values, as outlines [here](cbsyst/docs/B_systematics.pdf).
+Delta values can be provided as an input, and are given as an output.
 
-Convenience functions for converting between isotope notation are provided in [cbsyst.boron)fns](cbsyst/boron_fns.py#L114), and are directly accessible at the top level of the cbsyst module (e.g. `cb.A11_2_d11()`).
+Pressure corrections are applied to the calculated MyAMI constants following Eqns. 38-40 of [Millero et al (2007)](cbsyst/docs/Millero - 2007 - Chemical Review.pdf), using constants in their Table 5.
 
-## Current State
+## Data Comparison
 I have used the [GLODAPv2 data set](cbsyst/test_data/GLODAP_data/Olsen_et_al-2016_GLODAPv2.pdf) to test how well `cbsyst` works with modern seawater.
 
 ### Method:
