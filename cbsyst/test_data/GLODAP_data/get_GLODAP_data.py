@@ -1,11 +1,28 @@
 import os
 import zipfile
-import requests
+import urllib.request as ureq
 
 import pandas as pd
 import numpy as np
 
 from tqdm import tqdm
+
+
+# Progress Bar
+class TqdmUpTo(tqdm):
+    """Provides `update_to(n)` which uses `tqdm.update(delta_n)`."""
+    def update_to(self, b=1, bsize=1, tsize=None):
+        """
+        b  : int, optional
+            Number of blocks transferred so far [default: 1].
+        bsize  : int, optional
+            Size of each block (in tqdm units) [default: 1].
+        tsize  : int, optional
+            Total size (in tqdm units). If [default: None] remains unchanged.
+        """
+        if tsize is not None:
+            self.total = tsize
+        self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
 def get_GLODAP(leave_zip=True):
@@ -14,14 +31,20 @@ def get_GLODAP(leave_zip=True):
 
         GLODAP_url = 'http://cdiac.ornl.gov/ftp/oceans/GLODAPv2/Data_Products/data_product/GLODAPv2%20Merged%20Master%20File.csv.zip'
 
-        # open URL
-        file = requests.get(GLODAP_url, stream=True)
-        total_size = int(file.headers.get('content-length', 0))
+        # download GLODAP data
+        with TqdmUpTo(unit='B', unit_scale=True, miniters=1,
+                      desc='Downloading GLODAPv2') as t:
+            ureq.urlretrieve(GLODAP_url, './GLODAPv2 Merged Master File.csv.zip',
+                             reporthook=t.update_to)
 
-        # Download data
-        with open('./GLODAPv2 Merged Master File.csv.zip', 'wb') as f:
-            for data in tqdm(file.iter_content(1024), total=total_size / (1024), unit='KB', unit_scale=True):
-                f.write(data)
+        # # open URL
+        # file = requests.get(GLODAP_url, stream=True)
+        # total_size = int(file.headers.get('content-length', 0))
+
+        # # Download data
+        # with open('./GLODAPv2 Merged Master File.csv.zip', 'wb') as f:
+        #     for data in tqdm(file.iter_content(1024), total=total_size / (1024), unit='KB', unit_scale=True):
+        #         f.write(data)
     else:
         print('Found GLODAPv2 Data (Olsen et al, 2016)...')
 
