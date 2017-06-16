@@ -25,7 +25,7 @@ import itertools
 import numpy as np
 from tqdm import tqdm
 from scipy.optimize import curve_fit
-from cbsyst.helpers import Bunch
+from cbsyst.helpers import Bunch, prescorr
 
 
 # Functions from K_thermo_conditional.py
@@ -1431,25 +1431,6 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
         param_dict[k] = p * start_params[k]
 
     return param_dict
-
-
-# New Function : Pressure Correction
-def prescorr(P, Tc, a0, a1, a2, b0, b1):
-    """
-    Calculate pressore correction factor for thermodynamic Ks.
-
-    From Millero et al (2007, doi:10.1021/cr0503557)
-    Eqns 38-40
-
-    K_corr / K_orig = [output]
-    Kcorr = [output] * K_orig
-    """
-    dV = a0 + a1 * Tc + a2 * Tc**2
-    dk = (b0 + b1 * Tc) / 1000
-    # factor of 1000 not mentioned in Millero,
-     # but present in Zeebe book, and used in CO2SYS
-    RT = 83.131 * (Tc + 273.15)
-    return np.exp((-dV + 0.5 * dk * P) * P / RT)
 
 
 def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None, param_dict=None):
