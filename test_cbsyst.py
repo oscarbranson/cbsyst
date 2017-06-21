@@ -1,5 +1,6 @@
 import unittest
 import pandas as pd
+import numpy as np
 import cbsyst.carbon_fns as cf
 import cbsyst.boron_fns as bf
 from cbsyst.cbsyst import Csys
@@ -280,10 +281,10 @@ class ReferenceDataTestCase(unittest.TestCase):
                    'DIC': 2141.94,
                    'pH': 7.5541}
 
-        pH = [batch_A['pH'], batch_B['pH']]
-        TA = [batch_A['TA'], batch_B['TA']]
-        DIC = [batch_A['DIC'], batch_B['DIC']]
-        S = [batch_A['S'], batch_B['S']]
+        pH = np.array([batch_A['pH'], batch_B['pH']])
+        TA = np.array([batch_A['TA'], batch_B['TA']])
+        DIC = np.array([batch_A['DIC'], batch_B['DIC']])
+        S = np.array([batch_A['S'], batch_B['S']])
         BT = 433.
 
         # Csys calculations
