@@ -1,7 +1,7 @@
 import scipy.optimize as opt
 import numpy as np
 from cbsyst.helpers import ch, noms, cast_array, maxL
-from cbsyst.boron_fns import cBO4
+# from cbsyst.boron_fns import cBO4
 
 
 def _zero_wrapper(ps, fn, bounds=(10**-14, 10**-1)):
@@ -408,10 +408,11 @@ def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode='multi'):
     PAlk = TP * PhosTop / PhosBot
     SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
     # positive
-    HSO4 = TS / (1 + Ks.KSO4 / H)
-    HF = TF / (1 + Ks.KF / H)
+    Hfree = H / (1 + TS / Ks.KSO4)
+    HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+    HF = TF / (1 + Ks.KF / Hfree)
 
-    TA = CAlk + BAlk + OH + PAlk + SiAlk - H - HSO4 - HF
+    TA = CAlk + BAlk + OH + PAlk + SiAlk - Hfree - HSO4 - HF
 
     if mode == 'multi':
         return TA, CAlk, PAlk, SiAlk, OH
