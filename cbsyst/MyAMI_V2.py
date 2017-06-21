@@ -47,7 +47,7 @@ def CalculateKcond(Tc, Sal):
     sqrtSal = np.sqrt(Sal)
     T = Tc + 273.15
     lnT = np.log(T)
-    I = 19.924 * Sal / (1000 - 1.005 * Sal)  # Ionic strength after Dickson 1990a; see Dickson et al 2007
+    Istr = 19.924 * Sal / (1000 - 1.005 * Sal)  # Ionic strength after Dickson 1990a; see Dickson et al 2007
 
     KspCcond = np.power(10, (-171.9065 - 0.077993 * T + 2839.319 / T + 71.595 *
                              np.log10(T) + (-0.77712 + 0.0028426 * T + 178.34 / T) *
@@ -75,15 +75,15 @@ def CalculateKcond(Tc, Sal):
 
     KHSO4cond = np.exp(param_HSO4_cond[0] +
                        param_HSO4_cond[1] / T +
-                       param_HSO4_cond[2] * np.log(T) + np.sqrt(I) *
+                       param_HSO4_cond[2] * np.log(T) + np.sqrt(Istr) *
                        (param_HSO4_cond[3] +
                         param_HSO4_cond[4] / T +
-                        param_HSO4_cond[5] * np.log(T)) + I *
+                        param_HSO4_cond[5] * np.log(T)) + Istr *
                        (param_HSO4_cond[6] +
                         param_HSO4_cond[7] / T +
                         param_HSO4_cond[8] * np.log(T)) +
-                       param_HSO4_cond[9] / T * I * np.sqrt(I) +
-                       param_HSO4_cond[10] / T * I**2 + np.log(1 - 0.001005 * Sal))
+                       param_HSO4_cond[9] / T * Istr * np.sqrt(Istr) +
+                       param_HSO4_cond[10] / T * Istr**2 + np.log(1 - 0.001005 * Sal))
 
     return KspCcond, K1cond, K2cond, KWcond, KBcond, KspAcond, K0cond, KHSO4cond
 
@@ -752,11 +752,11 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
 
 # Functions from K_HSO4_thermo.py
 # --------------------------------------
-def supplyKHSO4(T, I):
+def supplyKHSO4(T, Istr):
     """
     Calculate KHSO4 for given temperature and salinity
     """
-    I = pow(I, 1)
+    Istr = pow(Istr, 1)
     # param_HSO4 = np.array([562.69486, -13273.75, -102.5154, 0.2477538, -1.117033e-4]) #Clegg et al. 1994
     # K_HSO4 = np.power(10,param_HSO4[0] + param_HSO4[1]/T + param_HSO4[2]*np.log(T) + param_HSO4[3]*T + param_HSO4[4]*T*T)
 
@@ -771,15 +771,15 @@ def supplyKHSO4(T, I):
     param_HSO4_cond = np.array([141.328, -4276.1, -23.093, 324.57, -13856, -47.986, -771.54, 35474, 114.723, -2698, 1776])  # Dickson 1990
     K_HSO4_cond = np.exp(param_HSO4_cond[0] +
                          param_HSO4_cond[1] / T +
-                         param_HSO4_cond[2] * np.log(T) + np.sqrt(I) *
+                         param_HSO4_cond[2] * np.log(T) + np.sqrt(Istr) *
                          (param_HSO4_cond[3] +
                           param_HSO4_cond[4] / T +
-                          param_HSO4_cond[5] * np.log(T)) + I *
+                          param_HSO4_cond[5] * np.log(T)) + Istr *
                          (param_HSO4_cond[6] +
                           param_HSO4_cond[7] / T +
                           param_HSO4_cond[8] * np.log(T)) +
-                         param_HSO4_cond[9] / T * I * np.sqrt(I) +
-                         param_HSO4_cond[10] / T * I * I)
+                         param_HSO4_cond[9] / T * Istr * np.sqrt(Istr) +
+                         param_HSO4_cond[10] / T * Istr * Istr)
 
     return [K_HSO4_cond, K_HSO4]
 
@@ -792,10 +792,10 @@ def supplyKHF(T, sqrtI):
 
 # Functions from gammaANDalpha.py
 # --------------------------------------
-def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
+def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     # Testbed case T=25C, I=0.7, seawatercomposition
     T = Tc + 273.15
-    sqrtI = np.sqrt(I)
+    sqrtI = np.sqrt(Istr)
 
     Z_cation = np.zeros((6, 1, 1))
     Z_cation[0] = 1
@@ -842,9 +842,9 @@ def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
             BMX_phi[cat, an] = beta_0[cat, an] + \
                 beta_1[cat, an] * np.exp(-2 * sqrtI)
             BMX[cat, an] = beta_0[cat, an] + \
-                (beta_1[cat, an] / (2 * I)) * \
+                (beta_1[cat, an] / (2 * Istr)) * \
                 (1 - (1 + 2 * sqrtI) * np.exp(-2 * sqrtI))
-            BMX_apostroph[cat, an] = (beta_1[cat, an] / (2 * I * I)) * \
+            BMX_apostroph[cat, an] = (beta_1[cat, an] / (2 * Istr * Istr)) * \
                 (-1 + (1 + (2 * sqrtI) + (2 * sqrtI)) * np.exp(-2 * sqrtI))
             CMX[cat, an] = C_phi[cat, an] / \
                 (2 * np.sqrt(-Z_anion[an] * Z_cation[cat]))
@@ -855,48 +855,48 @@ def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
     an = 2  # MgBOH42
     BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * \
         np.exp(-1.4 * sqrtI) + beta_2[cat, an] * np.exp(-6 * sqrtI)
-    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * I)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
-        beta_2[cat, an] / (18 * I)) * (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI))
-    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * I * I)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * I) *
-                                                                   np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (18 * I)) * (-1 - (1 + 6 * sqrtI + 18 * I) * np.exp(-6 * sqrtI))
+    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
+        beta_2[cat, an] / (18 * Istr)) * (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI))
+    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr * Istr)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) *
+                                                                   np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (18 * Istr)) * (-1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI))
     cat = 3
     an = 6  # MgSO4
     BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * \
         np.exp(-1.4 * sqrtI) + beta_2[cat, an] * np.exp(-12 * sqrtI)
-    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * I)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
-        beta_2[cat, an] / (72 * I)) * (1 - (1 + 12 * sqrtI) * np.exp(-12 * sqrtI))
-    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * I * I)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * I) * np.exp(-1.4 * sqrtI)
-                                                                   ) + (beta_2[cat, an] / (72 * I * I)) * (-1 - (1 + 12 * sqrtI + 72 * I) * np.exp(-12 * sqrtI))
-    # BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * I)) * (-1 + (1 + 1.4
-    # * sqrtI + 0.98 * I) * np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (72 *
-    # I)) * (-1-(1 + 12 * sqrtI + 72 * I) * np.exp(-12 * sqrtI)) # not 1 /
-    # (0.98 * I * I) ... compare M&P98 equation A17 with Pabalan and Pitzer
+    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
+        beta_2[cat, an] / (72 * Istr)) * (1 - (1 + 12 * sqrtI) * np.exp(-12 * sqrtI))
+    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr * Istr)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) * np.exp(-1.4 * sqrtI)
+                                                                   ) + (beta_2[cat, an] / (72 * Istr * Istr)) * (-1 - (1 + 12 * sqrtI + 72 * Istr) * np.exp(-12 * sqrtI))
+    # BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr)) * (-1 + (1 + 1.4
+    # * sqrtI + 0.98 * Istr) * np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (72 *
+    # Istr)) * (-1-(1 + 12 * sqrtI + 72 * Istr) * np.exp(-12 * sqrtI)) # not 1 /
+    # (0.98 * Istr * Istr) ... compare M&P98 equation A17 with Pabalan and Pitzer
     # 1987 equation 15c / 16b
     cat = 4
     an = 2  # CaBOH42
     BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * \
         np.exp(-1.4 * sqrtI) + beta_2[cat, an] * np.exp(-6 * sqrtI)
-    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * I)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
-        beta_2[cat, an] / (18 * I)) * (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI))
-    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * I * I)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * I) *
-                                                                   np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (18 * I)) * (-1 - (1 + 6 * sqrtI + 18 * I) * np.exp(-6 * sqrtI))
+    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
+        beta_2[cat, an] / (18 * Istr)) * (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI))
+    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr * Istr)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) *
+                                                                   np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (18 * Istr)) * (-1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI))
     cat = 4
     an = 6  # CaSO4
     BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * \
         np.exp(-1.4 * sqrtI) + beta_2[cat, an] * np.exp(-12 * sqrtI)
-    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * I)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
-        beta_2[cat, an] / (72 * I)) * (1 - (1 + 12 * sqrtI) * np.exp(-12 * sqrtI))
-    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * I * I)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * I) * np.exp(-1.4 * sqrtI)
-                                                                   ) + (beta_2[cat, an] / (72 * I)) * (-1 - (1 + 12 * sqrtI + 72 * I) * np.exp(-12 * sqrtI))
+    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
+        beta_2[cat, an] / (72 * Istr)) * (1 - (1 + 12 * sqrtI) * np.exp(-12 * sqrtI))
+    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr * Istr)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) * np.exp(-1.4 * sqrtI)
+                                                                   ) + (beta_2[cat, an] / (72 * Istr)) * (-1 - (1 + 12 * sqrtI + 72 * Istr) * np.exp(-12 * sqrtI))
 
     cat = 5
     an = 2  # SrBOH42
     BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * \
         np.exp(-1.4 * sqrtI) + beta_2[cat, an] * np.exp(-6 * sqrtI)
-    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * I)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
-        beta_2[cat, an] / (18 * I)) * (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI))
-    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * I * I)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * I) *
-                                                                   np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (18 * I)) * (-1 - (1 + 6 * sqrtI + 18 * I) * np.exp(-6 * sqrtI))
+    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
+        beta_2[cat, an] / (18 * Istr)) * (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI))
+    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr * Istr)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) *
+                                                                   np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (18 * Istr)) * (-1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI))
 
     # BMX* is calculated with T-dependent alpha for H-SO4; see Clegg et al.,
     # 1994 --- Millero and Pierrot are completly off for this ion pair
@@ -906,14 +906,14 @@ def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
     # alpha = (2 - 1842.843 * (1 / T - 1 / 298.15)) see Table 6 in Clegg et al
     # 1994
     BMX[0, 6] = beta_0[0, 6] + beta_1[0, 6] * gClegg
-    BMX_apostroph[0, 6] = beta_1[0, 6] / I * (np.exp(-xClegg) - gClegg)
+    BMX_apostroph[0, 6] = beta_1[0, 6] / Istr * (np.exp(-xClegg) - gClegg)
 
     CMX[0, 6] = C_phi[0, 6] + 4 * C1_HSO4 * (6 - (6 + 2.5 * sqrtI * (6 + 3 * 2.5 * sqrtI + 2.5 * sqrtI * 2.5 * sqrtI)) *
                                              np.exp(-2.5 * sqrtI)) / (2.5 * sqrtI * 2.5 * sqrtI * 2.5 * sqrtI * 2.5 * sqrtI)  # w = 2.5 ... see Clegg et al., 1994
 
     # unusual alpha=1.7 for Na2SO4
-    # BMX[1, 6] = beta_0[1, 6] + (beta_1[1, 6] / (2.89 * I)) * 2 * (1 - (1 + 1.7 * sqrtI) * np.exp(-1.7 * sqrtI))
-    # BMX[1, 6] = beta_0[1, 6] + (beta_1[1, 6] / (1.7 * I)) * (1 - (1 + 1.7 * sqrtI) * np.exp(-1.7 * sqrtI))
+    # BMX[1, 6] = beta_0[1, 6] + (beta_1[1, 6] / (2.89 * Istr)) * 2 * (1 - (1 + 1.7 * sqrtI) * np.exp(-1.7 * sqrtI))
+    # BMX[1, 6] = beta_0[1, 6] + (beta_1[1, 6] / (1.7 * Istr)) * (1 - (1 + 1.7 * sqrtI) * np.exp(-1.7 * sqrtI))
 
     # BMX[4, 6] =BMX[4, 6] * 0  # knock out Ca-SO4
 
@@ -996,7 +996,7 @@ def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
     # so far gamma_H is the [H]F activity coefficient (= free-H pH-scale)
     # thus, conversion is required
     # * (gamma_anion[4] / gamma_anion[6] / gamma_cation[0])
-    [K_HSO4_conditional, K_HSO4] = supplyKHSO4(T, I)
+    [K_HSO4_conditional, K_HSO4] = supplyKHSO4(T, Istr)
     # print (K_HSO4_conditional)
     # print (gamma_anion[4], gamma_anion[6], gamma_cation[0])
     # alpha_H = 1 / (1+ m_anion[6] / K_HSO4_conditional + 0.0000683 / (7.7896E-4 * 1.1 / 0.3 / gamma_cation[0]))
@@ -1014,7 +1014,7 @@ def CalculateGammaAndAlphas(Tc, S, I, m_cation, m_anion):
 
     b0b1CPhi_MgOH = np.array([-0.1, 1.658, 0, 0.028])
     BMX_MgOH = b0b1CPhi_MgOH[
-        0] + (b0b1CPhi_MgOH[1] / (2 * I)) * (1 - (1 + 2 * sqrtI) * np.exp(-2 * sqrtI))
+        0] + (b0b1CPhi_MgOH[1] / (2 * Istr)) * (1 - (1 + 2 * sqrtI) * np.exp(-2 * sqrtI))
     ln_gamma_MgOH = 1 * (f_gamma + R) + (1) * S
     # interaction between MgOH-Cl affects MgOH gamma
     ln_gamma_MgOH = ln_gamma_MgOH + 2 * \
@@ -1111,7 +1111,7 @@ def gammaCO2_fn(Tc, m_an, m_cat):
 # Functions from pKs.py
 # --------------------------------------
 def calculate_gKs(Tc, Sal, mCa, mMg):
-    I = 19.924 * Sal / (1000 - 1.005 * Sal)
+    Istr = 19.924 * Sal / (1000 - 1.005 * Sal)
 
     m_cation = np.zeros((6, *Tc.shape))
     m_cation[0] = (0.00000001 * Sal / 35.)  # H ion; pH of about 8
@@ -1141,7 +1141,7 @@ def calculate_gKs(Tc, Sal, mCa, mMg):
     m_anion[6] = (0.0282352 * Sal / 35.)
 
     [gamma_cation, gamma_anion, alpha_Hsws, alpha_Ht, alpha_OH,
-        alpha_CO3] = CalculateGammaAndAlphas(Tc, Sal, I, m_cation, m_anion)
+        alpha_CO3] = CalculateGammaAndAlphas(Tc, Sal, Istr, m_cation, m_anion)
 
     gammaT_OH = gamma_anion[0] * alpha_OH
     gammaT_BOH4 = gamma_anion[2]
@@ -1212,7 +1212,7 @@ def func_K1(TKS, a, b, c, d, e):
                          b / TempK +
                          c * np.log(TempK) +
                          d * Sal +
-                         e * Sal * Sal))
+                         e * Sal**2))
 
 
 def func_K2(TKS, a, b, c, d, e):
@@ -1221,7 +1221,7 @@ def func_K2(TKS, a, b, c, d, e):
                          b / TempK +
                          c * np.log(TempK) +
                          d * Sal +
-                         e * Sal * Sal))
+                         e * Sal**2))
 
 
 def func_KB(TKS, a, b, c, d, e, f, g, h, i, j, k, l):
@@ -1232,10 +1232,10 @@ def func_KB(TKS, a, b, c, d, e, f, g, h, i, j, k, l):
                   b * sqrtSal +
                   c * Sal + (1 / TempK) *
                   (d +
-                   e * sqrtSal +
+                   e * Sal**0.5 +
                    f * Sal +
                    g * Sal * sqrtSal +
-                   h * Sal * Sal) + lnTempK *
+                   h * Sal**2) + lnTempK *
                   (i +
                    j * sqrtSal +
                    k * Sal) +
@@ -1244,11 +1244,10 @@ def func_KB(TKS, a, b, c, d, e, f, g, h, i, j, k, l):
 
 def func_KW(TKS, a, b, c, d, e, f, g):
     TempK, Sal = TKS
-    sqrtSal = np.sqrt(Sal)
     lnTempK = np.log(TempK)
     return np.exp(a +
                   b / TempK +
-                  c * lnTempK + sqrtSal *
+                  c * lnTempK + Sal**0.5 *
                   (d / TempK +
                    e +
                    f * lnTempK) +
@@ -1269,10 +1268,10 @@ def func_KspC(TKS, a, b, c, d, e, f, g, h, i):
                          h * Sal +
                          i * Sal**1.5))
 
+
 # From Zeebe and Wolf-Gladrow, Appendix A.10.
 def func_KspA(TKS, a, b, c, d, e, f, g, h, i):
     TempK, Sal = TKS
-    sqrtSal = np.sqrt(Sal)
     log10TempK = np.log10(TempK)
     return np.power(10, (a +
                          b * TempK +
@@ -1287,20 +1286,20 @@ def func_KspA(TKS, a, b, c, d, e, f, g, h, i):
 
 def func_KSO4(TKS, a, b, c, d, e, f, g, h, i, j, k):
     TempK, Sal = TKS
-    I = 19.924 * Sal / (1000 - 1.005 * Sal)
-    sqrtI = np.sqrt(I)
+    Istr = 19.924 * Sal / (1000 - 1.005 * Sal)
+    sqrtI = np.sqrt(Istr)
     lnTempK = np.log(TempK)
     return np.exp(a +
                   b / TempK +
                   c * lnTempK + sqrtI *
                   (d / TempK +
                    e +
-                   f * lnTempK) + I *
+                   f * lnTempK) + Istr *
                   (g / TempK +
                    h +
                    i * lnTempK) +
-                  j / TempK * I * sqrtI +
-                  k / TempK * I * I + np.log(1 - 0.001005 * Sal))
+                  j / TempK * Istr * sqrtI +
+                  k / TempK * Istr * Istr + np.log(1 - 0.001005 * Sal))
 
 
 fn_dict = {'K0': func_K0,
@@ -1499,10 +1498,13 @@ def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None, param_d
     # Pressure correction
     if P is not None:
         # parameters from Table 5 of Millero 2007 (doi:10.1021/cr0503557)
+        # TYPO: KW parameters in Millero 2007 are for fresh water. Used
+        #       Millero '83 seawater parameters instead (as in CO2SYS)
         ppar = {'K1': [-25.50, 0.1271, 0, -3.08, 0.0877],
                 'K2': [-15.82, -0.0219, 0, 1.13, -0.1475],
                 'KB': [-29.48, 0.1622, 2.608e-3, -2.84, 0],
-                'KW': [-25.60, 0.2324, -3.6246e-3, -5.13, 0.0794],
+                # 'KW': [-25.60, 0.2324, -3.6246e-3, -5.13, 0.0794],
+                'KW': [-20.02, 0.1119, -1.409e-3, -5.13, 0.0794],  # Millero '83
                 'KSO4': [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
                 'KHF': [-9.78, -0.0090, -0.942e-3, -3.91, 0.054],
                 'KH2S': [-14.80, 0.0020, -0.400e-3, 2.89, 0.054],

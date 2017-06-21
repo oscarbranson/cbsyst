@@ -123,6 +123,7 @@ def calc_KF(TempC, Sal, P=None):
                 -9.68 +
                 0.111 * Sal**0.5)
 
+    # parameters from Table 5 of Millero 2007 (doi:10.1021/cr0503557)
     if (P is not None):
         KF *= prescorr(P, TempC,
                        *[-9.78, -0.0090, -0.942e-3, -3.91, 0.054])
