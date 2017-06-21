@@ -241,7 +241,7 @@ def zero_CO3_DIC(h, CO3, DIC, K1, K2):
 # 15. TA and DIC
 def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
     """
-    Returns H
+    Returns pH
 
     Taken directly from MATLAB CO2SYS.
     """
@@ -264,17 +264,17 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
         PAlk = TP * PhosTop / PhosBot
         SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
         # positive
-        Hfree = H / (1 + TS/ Ks.KSO4)
+        Hfree = H / (1 + TS / Ks.KSO4)
         HSO4 = TS / (1 + Ks.KSO4 / Hfree)
         HF = TF / (1 + Ks.KF / Hfree)
 
         Residual = TA - CAlk - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
 
-        Slope = ln10 * (DIC * Ks.K1 * H * 
-                        (H**2 + 
-                         Ks.K1 * Ks.K2 + 
-                         4 * H * Ks.K2) / 
-                        Denom / Denom + 
+        Slope = ln10 * (DIC * Ks.K1 * H *
+                        (H**2 +
+                         Ks.K1 * Ks.K2 +
+                         4 * H * Ks.K2) /
+                        Denom / Denom +
                         BAlk * H / (Ks.KB + H) + OH + H)
         deltapH = Residual / Slope
 
@@ -284,10 +284,7 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
 
         pHx += deltapH
 
-    # return pHx
-    return ch(pHx)
-#     print(deltapH)
-# Hx = 10**-pHx 
+    return pHx
 
 # def TA_DIC(TA, DIC, BT, Ks):
 #     """
