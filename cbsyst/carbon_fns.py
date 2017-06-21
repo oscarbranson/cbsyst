@@ -398,6 +398,14 @@ def cCO3(H, DIC, Ks):
 #     return (CO2 * (Ks.K1 / H + 2 * Ks.K1 * Ks.K2 / H**2) +
 #             BT * Ks.KB / (Ks.KB + H) + unit * Ks.KW / H - H * unit)
 def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode='multi'):
+    """
+    Calculate Alkalinity
+
+    Returns
+    -------
+    If mode == 'multi' returns TA, CAlk, PAlk, SiAlk, OH
+    else: returns TA
+    """
     # negative
     Denom = H**2 + Ks.K1 * H + Ks.K1 * Ks.K2
     CAlk = DIC * Ks.K1 * (H + 2 * Ks.K2) / Denom
