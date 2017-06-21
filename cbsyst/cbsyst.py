@@ -1,5 +1,5 @@
 import numpy as np
-from cbsyst.helpers import Bunch
+from cbsyst.helpers import Bunch, maxL
 from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi
 from cbsyst.carbon_fns import *
 from cbsyst.boron_fns import *
@@ -18,10 +18,12 @@ def get_Ks(ps):
     if isinstance(ps.Ks, dict):
         Ks = Bunch(ps.Ks)
     else:
-        if ps.Ca is None and ps.Mg is None:
-            ps.Ca = 0.0102821
-            ps.Mg = 0.0528171
-            Ks = MyAMI_K_calc(ps.T, ps.S, P=ps.P)
+        if maxL(ps.T, ps.S, ps.P, ps.Mg, ps.Ca) == 1:
+            if ps.Mg is None:
+                ps.Mg = 0.0528171
+            if ps.Ca is None:
+                ps.Ca = 0.0102821
+                Ks = MyAMI_K_calc(ps.T, ps.S, P=ps.P)
         else:
             # if only Ca or Mg provided, fill in other with modern
             if ps.Mg is None:
@@ -534,6 +536,16 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
              'fmol': 1e15}
     if isinstance(ps.unit, str):
         ps.unit = udict[ps.unit]
+
+    # determin max lengths
+    kexcl = ['Ks', 'pdict', 'unit']
+    ks = [k for k in ps.keys() if k not in kexcl]
+    L = maxL(*[ps[k] for k in ks])
+    # make inputs same length
+    for k in ks:
+        if ps[k] is not None:
+            if isinstance(ps[k], (int, float)):
+                ps[k] = np.full(L, ps[k])
 
     # Calculate Ks
     # if neither Ca nor Mg provided, use MyAMI Ks for modern SW

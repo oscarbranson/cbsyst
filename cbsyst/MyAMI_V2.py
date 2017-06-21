@@ -1558,9 +1558,9 @@ def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=None):
         if k != mL:
             d[k] = itertools.cycle(v)  # turn all shorter arrays into itertools.cycle objects
 
-    zd = np.array(list(zip(d.T, d.S, d.P, d.Ca, d.Mg)))  # make a 4xL array of parameters
+    zd = np.array(list(zip(d.T, d.S, d.P, d.Ca, d.Mg)), dtype=np.float64)  # make a 4xL array of parameters
 
-    # identify Ca-Mg-P triplets
+    # identify Ca-Mg pairs
     CaMg = set(zip(*zd[:, -2:].T))
 
     # set up empty K Bunch
@@ -1574,6 +1574,8 @@ def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=None):
         t = zd[ind, 0]
         s = zd[ind, 1]
         p = zd[ind, 2]
+        # remove Nans (bodge)
+        p[np.isnan(p)] = 0.
 
         Ks_tmp = MyAMI_K_calc(t, s, ca, mg, p)
 
