@@ -109,21 +109,26 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.update(pdict)
 
     # convert unit to multiplier
-    udict = {'mol': 1,
-             'mmol': 1e3,
-             'umol': 1e6,
-             'µmol': 1e6,
-             'nmol': 1e9,
-             'pmol': 1e12,
-             'fmol': 1e15}
+    udict = {'mol': 1.,
+             'mmol': 1.e3,
+             'umol': 1.e6,
+             'µmol': 1.e6,
+             'nmol': 1.e9,
+             'pmol': 1.e12,
+             'fmol': 1.e15}
     if isinstance(ps.unit, str):
         ps.unit = udict[ps.unit]
+
+    upar = ('DIC', 'TA', 'CO2', 'HCO3', 'CO3', 'BT', 'fCO2', 'pCO2', 'TP', 'TSi')
+    for p in upar:
+        if ps[p] is not None:
+            ps[p] = np.divide(ps[p], ps.unit)  # convert to molar
 
     ps.Ks = get_Ks(ps)
 
     # Conserved seawater chemistry
-    ps.TF = calc_TS(ps.S)
-    ps.TS = calc_TF(ps.S)
+    ps.TS = calc_TS(ps.S)
+    ps.TF = calc_TF(ps.S)
 
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
@@ -149,9 +154,9 @@ def Csys(pH=None, DIC=None, CO2=None,
     elif ps.CO2 is not None and ps.TA is not None:
         # unit conversion because OH and H wrapped
         # up in TA fns - all need to be in same units.
-        ps.H = CO2_TA(np.divide(ps.CO2, ps.unit),
-                      np.divide(ps.TA, ps.unit),
-                      np.divide(ps.BT, ps.unit), ps.Ks)
+        ps.H = CO2_TA(ps.CO2,
+                      ps.TA,
+                      ps.BT, ps.Ks)
         ps.DIC = CO2_pH(ps.CO2, cp(ps.H), ps.Ks)
     # 5. ps.CO2 and ps.DIC
     elif ps.CO2 is not None and ps.DIC is not None:
@@ -168,8 +173,8 @@ def Csys(pH=None, DIC=None, CO2=None,
     elif ps.pH is not None and ps.TA is not None:
         ps.H = ch(ps.pH)
         ps.CO2 = ps.unit * pH_TA(ps.pH,
-                                 np.divide(ps.TA, ps.unit),
-                                 np.divide(ps.BT, ps.unit),
+                                 ps.TA,
+                                 ps.BT,
                                  ps.Ks)
         ps.DIC = CO2_pH(ps.CO2, ps.pH, ps.Ks)
     # 9. ps.pH and ps.DIC
@@ -181,9 +186,9 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.DIC = pH_CO3(cp(ps.H), ps.CO3, ps.Ks)
     # 11. ps.HCO3 and ps.TA
     elif ps.HCO3 is not None and ps.TA is not None:
-        ps.H = HCO3_TA(np.divide(ps.HCO3, ps.unit),
-                       np.divide(ps.TA, ps.unit),
-                       np.divide(ps.BT, ps.unit),
+        ps.H = HCO3_TA(ps.HCO3,
+                       ps.TA,
+                       ps.BT,
                        ps.Ks)
         ps.DIC = pH_HCO3(cp(ps.H), ps.HCO3, ps.Ks)
     # 12. ps.HCO3 amd ps.DIC
@@ -191,9 +196,9 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.H = HCO3_DIC(ps.HCO3, ps.DIC, ps.Ks)
     # 13. ps.CO3 and ps.TA
     elif ps.CO3 is not None and ps.TA is not None:
-        ps.H = CO3_TA(np.divide(ps.CO3, ps.unit),
-                      np.divide(ps.TA, ps.unit),
-                      np.divide(ps.BT, ps.unit),
+        ps.H = CO3_TA(ps.CO3,
+                      ps.TA,
+                      ps.BT,
                       ps.Ks)
         ps.DIC = pH_CO3(cp(ps.H), ps.CO3, ps.Ks)
     # 14. ps.CO3 and ps.DIC
@@ -201,14 +206,15 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.H = CO3_DIC(ps.CO3, ps.DIC, ps.Ks)
     # 15. ps.TA and ps.DIC
     elif ps.TA is not None and ps.DIC is not None:
-        ps.H = TA_DIC(np.divide(ps.TA, ps.unit),
-                      np.divide(ps.DIC, ps.unit),
-                      np.divide(ps.BT, ps.unit),
-                      np.divide(ps.TP, ps.unit),
-                      np.divide(ps.TSi, ps.unit),
-                      ps.TS,
-                      ps.TF,
-                      ps.Ks)
+        ps.pH = TA_DIC(TA=ps.TA,
+                       DIC=ps.DIC,
+                       BT=ps.BT,
+                       TP=ps.TP,
+                       TSi=ps.TSi,
+                       TS=ps.TS,
+                       TF=ps.TF,
+                       Ks=ps.Ks)
+        ps.H = ch(ps.pH)
 
     # The above makes sure that DIC and H are known,
     # this next bit calculates all the missing species
@@ -240,6 +246,9 @@ def Csys(pH=None, DIC=None, CO2=None,
               'HCO3', 'Mg', 'S', 'T', 'TA', 'pH']:
         if not isinstance(ps[k], np.ndarray):
             ps[k] = np.array(ps[k], ndmin=1)  # convert all outputs to (min) 1D numpy arrays.
+
+    for p in upar:
+        ps[p] *= ps.unit  # convert back to input units
 
     return ps
 
