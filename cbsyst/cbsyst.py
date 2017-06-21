@@ -3,7 +3,8 @@ from cbsyst.helpers import Bunch
 from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi
 from cbsyst.carbon_fns import *
 from cbsyst.boron_fns import *
-from cbsyst.helpers import ch, cp, NnotNone
+from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS
+from cbsyst.non_MyAMI_constants import *
 
 
 # Helper functions
@@ -31,6 +32,11 @@ def get_Ks(ps):
             # calculate Ca and Mg specific Ks
             Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg, ps.P)
 
+    # non-MyAMI Constants
+    Ks.update(calc_KPs(ps.T, ps.S, ps.P))
+    Ks.update(calc_KF(ps.T, ps.S, ps.P))
+    Ks.update(calc_KSi(ps.T, ps.S, ps.P))
+
     return Ks
 
 
@@ -41,6 +47,7 @@ def Csys(pH=None, DIC=None, CO2=None,
          fCO2=None, pCO2=None,
          BT=433., Ca=None, Mg=None,
          T=25., S=35., P=None,
+         TP=0., TSi=0.,
          Ks=None, pdict=None, unit='umol'):
     """
     Calculate the carbon chemistry of seawater from a minimal parameter set.
@@ -113,6 +120,10 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.unit = udict[ps.unit]
 
     ps.Ks = get_Ks(ps)
+
+    # Conserved seawater chemistry
+    ps.TF = calc_TS(ps.S)
+    ps.TS = calc_TF(ps.S)
 
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
@@ -193,6 +204,10 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.H = TA_DIC(np.divide(ps.TA, ps.unit),
                       np.divide(ps.DIC, ps.unit),
                       np.divide(ps.BT, ps.unit),
+                      np.divide(ps.TP, ps.unit),
+                      np.divide(ps.TSi, ps.unit),
+                      ps.TS,
+                      ps.TF,
                       ps.Ks)
 
     # The above makes sure that DIC and H are known,

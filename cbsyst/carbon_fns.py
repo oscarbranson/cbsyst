@@ -1,6 +1,6 @@
 import scipy.optimize as opt
 import numpy as np
-from cbsyst.helpers import ch, noms, cast_array
+from cbsyst.helpers import ch, noms, cast_array, maxL
 from cbsyst.boron_fns import cBO4
 
 
@@ -239,14 +239,64 @@ def zero_CO3_DIC(h, CO3, DIC, K1, K2):
 
 
 # 15. TA and DIC
-def TA_DIC(TA, DIC, BT, Ks):
+def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
     """
     Returns H
-    """
-    TA, DIC, BT = noms(TA, DIC, BT)  # get nominal values of inputs
-    par = cast_array(TA, DIC, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
 
-    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_TA_DIC)
+    Taken directly from MATLAB CO2SYS.
+    """
+    L = maxL(TA, DIC, BT, TP, TSi, TS, TF, Ks.K1)
+    pHguess = 7.
+    pHtol = 0.00000001
+    pHx = np.full(L, pHguess)
+    deltapH = np.array(pHtol + 1, ndmin=1)
+    ln10 = np.log(10)
+
+    while any(abs(deltapH) > pHtol):
+        H = 10**-pHx
+        # negative
+        Denom = H**2 + Ks.K1 * H + Ks.K1 * Ks.K2
+        CAlk = DIC * Ks.K1 * (H + 2 * Ks.K2) / Denom
+        BAlk = BT * Ks.KB / (Ks.KB + H)
+        OH = Ks.KW / H
+        PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H**3
+        PhosBot = H**3 + Ks.KP1 * H**2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
+        PAlk = TP * PhosTop / PhosBot
+        SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
+        # positive
+        Hfree = H / (1 + TS/ Ks.KSO4)
+        HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+        HF = TF / (1 + Ks.KF / Hfree)
+
+        Residual = TA - CAlk - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
+
+        Slope = ln10 * (DIC * Ks.K1 * H * 
+                        (H**2 + 
+                         Ks.K1 * Ks.K2 + 
+                         4 * H * Ks.K2) / 
+                        Denom / Denom + 
+                        BAlk * H / (Ks.KB + H) + OH + H)
+        deltapH = Residual / Slope
+
+        while any(abs(deltapH) > 1):
+            FF = abs(deltapH) > 1
+            deltapH[FF] = deltapH[FF] / 2
+
+        pHx += deltapH
+
+    # return pHx
+    return ch(pHx)
+#     print(deltapH)
+# Hx = 10**-pHx 
+
+# def TA_DIC(TA, DIC, BT, Ks):
+#     """
+#     Returns H
+#     """
+#     TA, DIC, BT = noms(TA, DIC, BT)  # get nominal values of inputs
+#     par = cast_array(TA, DIC, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
+
+#     return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_TA_DIC)
 
 
 def zero_TA_DIC(h, TA, DIC, BT, K1, K2, KB, KW):
