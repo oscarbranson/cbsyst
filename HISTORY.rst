@@ -36,3 +36,8 @@ In MyAMI, pressure correction was involved lower down in generating the K meshes
 * Minor idiot-proofing of minor functions.
 * Improved tests.
 * General cleanup.
+
+0.3.3 (2016-06-21)
+++++++++++++++++++
+
+* Implemented nutrient alkalinity for all except CO3_TA and HCO3_TA cases using parameterisation of Matlab CO2SYS.
