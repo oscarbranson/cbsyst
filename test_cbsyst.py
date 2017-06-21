@@ -1,5 +1,6 @@
 import unittest
 import pandas as pd
+import numpy as np
 import cbsyst.carbon_fns as cf
 import cbsyst.boron_fns as bf
 from cbsyst.cbsyst import Csys
@@ -101,25 +102,39 @@ class CarbonFnTestCase(unittest.TestCase):
     """Test all C functions"""
 
     def test_Carbon_Fns(self):
-        ref = Bunch({'BT': 433,
+        ref = Bunch({'BT': 433.,
+                     'CAlk': 2228.7250716,
                      'CO2': 9.7861814,
                      'CO3': 238.511253,
                      'Ca': 0.0102821,
-                     'DIC': 2000,
+                     'DIC': 2000.,
                      'H': 7.94328235e-09,
                      'HCO3': 1751.7025656,
                      'Ks': {'K0': 0.028391881804015685,
                             'K1': 1.4218281371391736e-06,
                             'K2': 1.0815547472209423e-09,
                             'KB': 2.5265729902477677e-09,
+                            'KF': 0.0022610979159034443,
+                            'KP1': 0.024442701952839218,
+                            'KP2': 1.0497978385272834e-06,
+                            'KP3': 1.6243084109473091e-09,
                             'KSO4': 0.10030207107256615,
+                            'KSi': 4.1325228921937028e-10,
                             'KW': 6.0638636861053757e-14,
                             'KspA': 6.4817590680119676e-07,
                             'KspC': 4.2723509278625912e-07},
                      'Mg': 0.0528171,
+                     'OH': 7.63395209,
+                     'P': None,
+                     'PAlk': 0.,
                      'S': 35.,
+                     'SiAlk': 0.,
                      'T': 25.,
-                     'TA': 2340.84212345,
+                     'TA': 2340.84193615,
+                     'TF': 6.832583968836728e-05,
+                     'TP': 0.0,
+                     'TS': 0.028235434132860126,
+                     'TSi': 0.0,
                      'fCO2': 344.68238018419373,
                      'pCO2': 345.78871573110143,
                      'pH': 8.1,
@@ -139,12 +154,16 @@ class CarbonFnTestCase(unittest.TestCase):
                                ref.H,
                                msg='CO2_CO3 (zf)', places=6)
 
-        self.assertAlmostEqual(cf.CO2_TA(ref.CO2 / ref.unit,
-                                         ref.TA / ref.unit,
-                                         ref.BT / ref.unit, Ks)[0],
-                               ref.H,
+        self.assertAlmostEqual(cf.CO2_TA(CO2=ref.CO2 / ref.unit,
+                                         TA=ref.TA / ref.unit,
+                                         BT=ref.BT / ref.unit,
+                                         TP=ref.TP / ref.unit,
+                                         TSi=ref.TSi / ref.unit,
+                                         TS=ref.TS,
+                                         TF=ref.TF,
+                                         Ks=Ks)[0],
+                               ref.pH,
                                msg='CO2_TA (zf)', places=6)
-
         self.assertAlmostEqual(cf.CO2_DIC(ref.CO2, ref.DIC, Ks)[0],
                                ref.H,
                                msg='CO2_DIC (zf)', places=6)
@@ -157,10 +176,15 @@ class CarbonFnTestCase(unittest.TestCase):
                                ref.DIC,
                                msg='pH_CO3', places=6)
 
-        self.assertAlmostEqual(cf.pH_TA(ref.pH,
-                                        ref.TA / ref.unit,
-                                        ref.BT / ref.unit, Ks) * ref.unit,
-                               ref.CO2,
+        self.assertAlmostEqual(cf.pH_TA(pH=ref.pH,
+                                        TA=ref.TA / ref.unit,
+                                        BT=ref.BT / ref.unit,
+                                        TP=ref.TP / ref.unit,
+                                        TSi=ref.TSi / ref.unit,
+                                        TS=ref.TS,
+                                        TF=ref.TF,
+                                        Ks=Ks) * ref.unit,
+                               ref.DIC,
                                msg='pH_TA', places=6)
 
         self.assertAlmostEqual(cf.pH_DIC(ref.pH, ref.DIC, Ks),
@@ -191,10 +215,15 @@ class CarbonFnTestCase(unittest.TestCase):
                                ref.H,
                                msg='CO3_DIC (zf)', places=6)
 
-        self.assertAlmostEqual(cf.TA_DIC(ref.TA / ref.unit,
-                                         ref.DIC / ref.unit,
-                                         ref.BT / ref.unit, Ks)[0],
-                               ref.H,
+        self.assertAlmostEqual(cf.TA_DIC(TA=ref.TA / ref.unit,
+                                         DIC=ref.DIC / ref.unit,
+                                         BT=ref.BT / ref.unit,
+                                         TP=ref.TP / ref.unit,
+                                         TSi=ref.TSi / ref.unit,
+                                         TS=ref.TS,
+                                         TF=ref.TF,
+                                         Ks=Ks)[0],
+                               ref.pH,
                                msg='TA_DIC (zf)', places=6)
 
         self.assertAlmostEqual(cf.cCO2(ref.H, ref.DIC, Ks),
@@ -209,9 +238,16 @@ class CarbonFnTestCase(unittest.TestCase):
                                ref.HCO3,
                                msg='cHCO3', places=6)
 
-        self.assertAlmostEqual(cf.cTA(ref.CO2, ref.H, ref.BT, Ks, unit=ref.unit),
+        self.assertAlmostEqual(cf.cTA(H=ref.H,
+                                      DIC=ref.DIC / ref.unit,
+                                      BT=ref.BT / ref.unit,
+                                      TP=ref.TP / ref.unit,
+                                      TSi=ref.TSi / ref.unit,
+                                      TS=ref.TS,
+                                      TF=ref.TF,
+                                      Ks=Ks, mode='TA') * ref.unit,
                                ref.TA,
-                               msg='cTA', places=5)
+                               msg='cTA', places=6)
 
         self.assertAlmostEqual(cf.fCO2_to_CO2(ref.fCO2, Ks),
                                ref.CO2,
@@ -245,10 +281,10 @@ class ReferenceDataTestCase(unittest.TestCase):
                    'DIC': 2141.94,
                    'pH': 7.5541}
 
-        pH = [batch_A['pH'], batch_B['pH']]
-        TA = [batch_A['TA'], batch_B['TA']]
-        DIC = [batch_A['DIC'], batch_B['DIC']]
-        S = [batch_A['S'], batch_B['S']]
+        pH = np.array([batch_A['pH'], batch_B['pH']])
+        TA = np.array([batch_A['TA'], batch_B['TA']])
+        DIC = np.array([batch_A['DIC'], batch_B['DIC']])
+        S = np.array([batch_A['S'], batch_B['S']])
         BT = 433.
 
         # Csys calculations
