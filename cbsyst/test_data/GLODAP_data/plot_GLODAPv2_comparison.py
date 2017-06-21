@@ -21,24 +21,25 @@ def GLODAPv2_comparison(figdir='.'):
     print('Importing GLODAPv2 Data...')
     gd = pd.read_csv('./GLODAPv2_pH_DIC_ALK_subset.csv')
     gd.dropna(subset=['phtsinsitutp', 'temperature',
-                      'salinity', 'tco2', 'talk', 'pressure'], inplace=True)
+                      'salinity', 'tco2', 'talk',
+                      'pressure', 'phosphate', 'silicate'], inplace=True)
     gd.pressure /= 10  # convert pressure to bar
 
     # Do the work...
     print('Calculating pH from DIC and TA...')
-    cpH = cb.Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity, P=gd.pressure)
+    cpH = cb.Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity, P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate)
     print('   Making plots...')
     fig, axs = cplot(gd.phtsinsitutp, cpH.pH, 'pH', 'Depth', gd.depth)
     fig.savefig(figdir + '/Figures/pH_comparison.png', dpi=200)
 
     print('Calculating TA from pH and DIC...')
-    cTA = cb.Csys(pH=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity, P=gd.pressure)
+    cTA = cb.Csys(pH=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity, P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate)
     print('   Making plots...')
     fig, ax = cplot(gd.talk, cTA.TA, 'Alk', 'Depth', gd.depth)
     fig.savefig('Figures/TA_comparison.png', dpi=200)
 
     print('Calculating DIC from pH and TA...')
-    cDIC = cb.Csys(pH=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity, P=gd.pressure)
+    cDIC = cb.Csys(pH=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity, P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate)
     print('   Making plots...')
     fig, ax = cplot(gd.tco2, cDIC.DIC, 'DIC', 'Depth', gd.depth)
     fig.savefig('Figures/DIC_comparison.png', dpi=200)
