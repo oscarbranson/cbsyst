@@ -68,14 +68,55 @@ def zero_CO2_CO3(h, CO2, CO3, K1, K2):
 
 
 # 4. CO2 and TA
-def CO2_TA(CO2, TA, BT, Ks):
-    """
-    Returns H
-    """
-    CO2, TA, BT = noms(CO2, TA, BT)  # get nominal values of inputs
-    par = cast_array(CO2, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
+# def CO2_TA(CO2, TA, BT, Ks):
+#     """
+#     Returns H
+#     """
+#     CO2, TA, BT = noms(CO2, TA, BT)  # get nominal values of inputs
+#     par = cast_array(CO2, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
 
-    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_TA)
+#     return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_TA)
+def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
+    """
+    Returns pH
+
+    Taken from matlab CO2SYS
+    """
+    fCO2 = CO2 / Ks.K0
+    L = maxL(TA, CO2, BT, TP, TSi, TS, TF, Ks.K1)
+    pHguess = 8.
+    pHtol = 0.0000001
+    pHx = np.full(L, pHguess)
+    deltapH = np.array(pHtol + 1, ndmin=1)
+    ln10 = np.log(10)
+
+    while any(abs(deltapH) > pHtol):
+        H = 10**-pHx
+        HCO3 = Ks.K0 * Ks.K1 * fCO2 / H
+        CO3 = Ks.K0 * Ks.K1 * Ks.K2 * fCO2 / H**2
+        CAlk = HCO3 + 2 * CO3
+        BAlk = BT * Ks.KB / (Ks.KB + H)
+        OH = Ks.KW / H
+        PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H**3
+        PhosBot = H**3 + Ks.KP1 * H**2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
+        PAlk = TP * PhosTop / PhosBot
+        SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
+        # positive
+        Hfree = H / (1 + TS / Ks.KSO4)
+        HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+        HF = TF / (1 + Ks.KF / Hfree)
+
+        Residual = TA - CAlk - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
+        Slope = ln10 * (HCO3 + 4. * CO3 + BAlk * H / (Ks.KB + H) + OH + H)
+        deltapH = Residual / Slope
+
+        while any(abs(deltapH) > 1):
+            FF = abs(deltapH) > 1
+            deltapH[FF] = deltapH[FF] / 2
+
+        pHx += deltapH
+
+    return pHx
 
 
 def zero_CO2_TA(h, CO2, TA, BT, K1, K2, KB, KW):
@@ -350,13 +391,32 @@ def cCO3(H, DIC, Ks):
 
 
 # 1.5.80
-def cTA(CO2, H, BT, Ks, unit=1e6):
-    """
-    Returns TA
-    """
-    return (CO2 * (Ks.K1 / H + 2 * Ks.K1 * Ks.K2 / H**2) +
-            BT * Ks.KB / (Ks.KB + H) + unit * Ks.KW / H - H * unit)
+# def cTA(CO2, H, BT, Ks, unit=1e6):
+#     """
+#     Returns TA
+#     """
+#     return (CO2 * (Ks.K1 / H + 2 * Ks.K1 * Ks.K2 / H**2) +
+#             BT * Ks.KB / (Ks.KB + H) + unit * Ks.KW / H - H * unit)
+def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode='multi'):
+    # negative
+    Denom = H**2 + Ks.K1 * H + Ks.K1 * Ks.K2
+    CAlk = DIC * Ks.K1 * (H + 2 * Ks.K2) / Denom
+    BAlk = BT * Ks.KB / (Ks.KB + H)
+    OH = Ks.KW / H
+    PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H**3
+    PhosBot = H**3 + Ks.KP1 * H**2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
+    PAlk = TP * PhosTop / PhosBot
+    SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
+    # positive
+    HSO4 = TS / (1 + Ks.KSO4 / H)
+    HF = TF / (1 + Ks.KF / H)
 
+    TA = CAlk + BAlk + OH + PAlk + SiAlk - H - HSO4 - HF
+
+    if mode == 'multi':
+        return TA, CAlk, PAlk, SiAlk, OH
+    else:
+        return TA
 
 # # 1.2.28
 # def cTA(HCO3, CO3, BT, H, Ks):

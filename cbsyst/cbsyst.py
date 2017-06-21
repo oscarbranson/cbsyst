@@ -118,8 +118,11 @@ def Csys(pH=None, DIC=None, CO2=None,
              'fmol': 1.e15}
     if isinstance(ps.unit, str):
         ps.unit = udict[ps.unit]
+    elif isinstance(ps.unit, (int, float)):
+        ps.unit = unit
 
-    upar = ('DIC', 'TA', 'CO2', 'HCO3', 'CO3', 'BT', 'fCO2', 'pCO2', 'TP', 'TSi')
+    upar = ['DIC', 'TA', 'CO2', 'HCO3', 'CO3',
+            'BT', 'fCO2', 'pCO2', 'TP', 'TSi']
     for p in upar:
         if ps[p] is not None:
             ps[p] = np.divide(ps[p], ps.unit)  # convert to molar
@@ -154,10 +157,16 @@ def Csys(pH=None, DIC=None, CO2=None,
     elif ps.CO2 is not None and ps.TA is not None:
         # unit conversion because OH and H wrapped
         # up in TA fns - all need to be in same units.
-        ps.H = CO2_TA(ps.CO2,
-                      ps.TA,
-                      ps.BT, ps.Ks)
-        ps.DIC = CO2_pH(ps.CO2, cp(ps.H), ps.Ks)
+        ps.pH = CO2_TA(CO2=ps.CO2,
+                       TA=ps.TA,
+                       BT=ps.BT,
+                       TP=ps.TP,
+                       TSi=ps.TSi,
+                       TS=ps.TS,
+                       TF=ps.TF,
+                       Ks=ps.Ks)
+        ps.H = ch(ps.pH)
+        ps.DIC = CO2_pH(ps.CO2, ps.pH, ps.Ks)
     # 5. ps.CO2 and ps.DIC
     elif ps.CO2 is not None and ps.DIC is not None:
         ps.H = CO2_DIC(ps.CO2, ps.DIC, ps.Ks)
@@ -189,6 +198,7 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.DIC = pH_CO3(cp(ps.H), ps.CO3, ps.Ks)
     # 11. ps.HCO3 and ps.TA
     elif ps.HCO3 is not None and ps.TA is not None:
+        Warning('Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity.')
         ps.H = HCO3_TA(ps.HCO3,
                        ps.TA,
                        ps.BT,
@@ -199,6 +209,7 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.H = HCO3_DIC(ps.HCO3, ps.DIC, ps.Ks)
     # 13. ps.CO3 and ps.TA
     elif ps.CO3 is not None and ps.TA is not None:
+        Warning('Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity.')
         ps.H = CO3_TA(ps.CO3,
                       ps.TA,
                       ps.BT,
@@ -232,13 +243,20 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.HCO3 = cHCO3(ps.H, ps.DIC, ps.Ks)
     if ps.CO3 is None:
         ps.CO3 = cCO3(ps.H, ps.DIC, ps.Ks)
-    if ps.TA is None:
-        try:
-            # necessary for use with CBsyst in special cases
-            # where BT is not known before Csys is run.
-            ps.TA = cTA(ps.CO2, ps.H, ps.BT, ps.Ks, unit=ps.unit)
-        except TypeError:
-            pass
+    # Always calculate elements of alkalinity
+    try:
+        # necessary for use with CBsyst in special cases
+        # where BT is not known before Csys is run.
+        ps.TA, ps.CAlk, ps.PAlk, ps.SiAlk, ps.OH = cTA(H=ps.H,
+                                                       DIC=ps.DIC,
+                                                       BT=ps.BT,
+                                                       TP=ps.TP,
+                                                       TSi=ps.TSi,
+                                                       TS=ps.TS,
+                                                       TF=ps.TF,
+                                                       Ks=ps.Ks, mode='multi')
+    except TypeError:
+        pass
     if ps.pH is None:
         ps.pH = cp(ps.H)
 
@@ -246,11 +264,13 @@ def Csys(pH=None, DIC=None, CO2=None,
     if 'pdict' in ps:
         del ps.pdict  # remove pdict, for clarity
     for k in ['BT', 'CO2', 'CO3', 'Ca', 'DIC', 'H',
-              'HCO3', 'Mg', 'S', 'T', 'TA', 'pH']:
+              'HCO3', 'Mg', 'S', 'T', 'TA', 'pH',
+              'CAlk', 'PAlk', 'SiAlk', 'OH']:
         if not isinstance(ps[k], np.ndarray):
-            ps[k] = np.array(ps[k], ndmin=1)  # convert all outputs to (min) 1D numpy arrays.
+            # convert all outputs to (min) 1D numpy arrays.
+            ps[k] = np.array(ps[k], ndmin=1)
 
-    for p in upar:
+    for p in upar + ['CAlk', 'PAlk', 'SiAlk', 'OH']:
         ps[p] *= ps.unit  # convert back to input units
 
     return ps
@@ -353,7 +373,8 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
               'Ca', 'Mg', 'S', 'T', ]:
         # convert all outputs to (min) 1D numpy arrays.
         if not isinstance(ps[k], np.ndarray):
-            ps[k] = np.array(ps[k], ndmin=1)  # convert all outputs to (min) 1D numpy arrays.
+            # convert all outputs to (min) 1D numpy arrays.
+            ps[k] = np.array(ps[k], ndmin=1)
 
     return ps
 
@@ -462,7 +483,8 @@ def ABsys(pH=None,
               'H', 'Mg', 'S', 'T', 'alphaB',
               'dBO3', 'dBO4', 'dBT', 'pH']:
         if not isinstance(ps[k], np.ndarray):
-            ps[k] = np.array(ps[k], ndmin=1)  # convert all outputs to (min) 1D numpy arrays.
+            # convert all outputs to (min) 1D numpy arrays.
+            ps[k] = np.array(ps[k], ndmin=1)
 
     return ps
 
