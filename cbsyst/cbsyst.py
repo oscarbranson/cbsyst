@@ -172,11 +172,14 @@ def Csys(pH=None, DIC=None, CO2=None,
     # 8. ps.pH and ps.TA
     elif ps.pH is not None and ps.TA is not None:
         ps.H = ch(ps.pH)
-        ps.CO2 = ps.unit * pH_TA(ps.pH,
-                                 ps.TA,
-                                 ps.BT,
-                                 ps.Ks)
-        ps.DIC = CO2_pH(ps.CO2, ps.pH, ps.Ks)
+        ps.DIC = pH_TA(pH=ps.pH,
+                       TA=ps.TA,
+                       BT=ps.BT,
+                       TP=ps.TP,
+                       TSi=ps.TSi,
+                       TS=ps.TS,
+                       TF=ps.TF,
+                       Ks=ps.Ks)
     # 9. ps.pH and ps.DIC
     elif ps.pH is not None and ps.DIC is not None:
         ps.H = ch(ps.pH)

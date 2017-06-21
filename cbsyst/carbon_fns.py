@@ -123,13 +123,34 @@ def pH_CO3(pH, CO3, Ks):
 
 
 # 8. pH and TA
-def pH_TA(pH, TA, BT, Ks):
+# def pH_TA(pH, TA, BT, Ks):
+#     """
+#     Returns CO2
+#     """
+#     h = ch(pH)
+#     return ((TA - Ks.KB * BT / (Ks.KB + h) - Ks.KW / h + h) /
+#             (Ks.K1 / h + 2 * Ks.K1 * Ks.K2 / h**2))
+def pH_TA(pH, TA, BT, TP, TSi, TS, TF, Ks):
     """
-    Returns CO2
+    Returns DIC
+
+    Taken directly from MATLAB CO2SYS.
     """
-    h = ch(pH)
-    return ((TA - Ks.KB * BT / (Ks.KB + h) - Ks.KW / h + h) /
-            (Ks.K1 / h + 2 * Ks.K1 * Ks.K2 / h**2))
+    H = 10**-pH
+    # negative alk
+    BAlk = BT * Ks.KB / (Ks.KB + H)
+    OH = Ks.KW / H
+    PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H**3
+    PhosBot = H**3 + Ks.KP1 * H**2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
+    PAlk = TP * PhosTop / PhosBot
+    SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
+    # positive alk
+    Hfree = H / (1 + TS / Ks.KSO4)
+    HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+    HF = TF / (1 + Ks.KF / Hfree)
+    CAlk = TA - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
+
+    return CAlk * (H**2 + Ks.K1 * H + Ks.K1 * Ks.K2) / (Ks.K1 * (H + 2. * Ks.K2))
 
 
 # 9. pH and DIC
