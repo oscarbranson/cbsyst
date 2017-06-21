@@ -24,7 +24,8 @@ def get_Ks(ps):
                 ps.Mg = 0.0528171
             if ps.Ca is None:
                 ps.Ca = 0.0102821
-                Ks = MyAMI_K_calc(ps.T, ps.S, P=ps.P)
+            Ks = MyAMI_K_calc(TempC=ps.T, Sal=ps.S,
+                              Mg=ps.Mg, Ca=ps.Ca, P=ps.P)
         else:
             # if only Ca or Mg provided, fill in other with modern
             if ps.Mg is None:
@@ -32,7 +33,8 @@ def get_Ks(ps):
             if ps.Ca is None:
                 ps.Ca = 0.0102821
             # calculate Ca and Mg specific Ks
-            Ks = MyAMI_K_calc_multi(ps.T, ps.S, ps.Ca, ps.Mg, ps.P)
+            Ks = MyAMI_K_calc_multi(TempC=ps.T, Sal=ps.S,
+                                    Ca=ps.Ca, Mg=ps.Mg, P=ps.P)
 
     # non-MyAMI Constants
     Ks.update(calc_KPs(ps.T, ps.S, ps.P))
