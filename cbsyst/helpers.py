@@ -244,3 +244,13 @@ def calc_TF(Sal):
     this is .000068.*Sali./35. = .00000195.*Sali
     """
     return (0.000067 / 18.998) * (Sal / 1.80655)  # mol/kg-SW
+
+
+def calc_TB(Sal):
+    """
+    Calculate total Boron
+
+    Lee, Kim, Byrne, Millero, Feely, Yong-Ming Liu. 2010.
+    Geochimica Et Cosmochimica Acta 74 (6): 1801–1811.
+    """
+    return 0.0004326 * Sal / 35

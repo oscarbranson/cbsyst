@@ -3,7 +3,7 @@ from cbsyst.helpers import Bunch, maxL
 from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi
 from cbsyst.carbon_fns import *
 from cbsyst.boron_fns import *
-from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS
+from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB
 from cbsyst.non_MyAMI_constants import *
 
 
@@ -47,7 +47,7 @@ def get_Ks(ps):
 def Csys(pH=None, DIC=None, CO2=None,
          HCO3=None, CO3=None, TA=None,
          fCO2=None, pCO2=None,
-         BT=433., Ca=None, Mg=None,
+         BT=None, Ca=None, Mg=None,
          T=25., S=35., P=None,
          TP=0., TSi=0.,
          Ks=None, pdict=None, unit='umol'):
@@ -140,6 +140,8 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.TS = calc_TS(ps.S)
     if 'TF' not in ps:
         ps.TF = calc_TF(ps.S)
+    if ps.BT is None:
+        ps.BT = calc_TB(ps.S)
 
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
@@ -165,7 +167,6 @@ def Csys(pH=None, DIC=None, CO2=None,
     elif ps.CO2 is not None and ps.TA is not None:
         # unit conversion because OH and H wrapped
         # up in TA fns - all need to be in same units.
-        print('CO2_TA')
         ps.pH = CO2_TA(CO2=ps.CO2,
                        TA=ps.TA,
                        BT=ps.BT,
@@ -651,7 +652,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
     # if no B info provided, assume modern conc.
     nBspec = NnotNone(ps.BT, ps.BO3, ps.BO4)
     if nBspec == 0:
-        ps.BT = 433.e-6
+        ps.BT = calc_TB(ps.S)
 
     # This section works out the order that things should be calculated in.
     # Special case: if pH is missing, must have:
