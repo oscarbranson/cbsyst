@@ -104,6 +104,7 @@ def get_GLODAP_WOA(save=True):
     columns = ['lat', 'lon', 'depth', 'obj_mean', 'mean', 'std', 'se',
                'obj_mean_mean', 'obj_mean_ann_mean', 'ngrids', 'ndata']
     params = ['s', 't', 'n', 'p', 'i']
+    pdict = {k: v for k, v in zip(params, ['sal', 'temp', 'nitrate', 'phosphate', 'silicate'])}
 
     # read in all data
     cdat = []
@@ -123,7 +124,9 @@ def get_GLODAP_WOA(save=True):
 
     # recaset into 3D arrays
     woa = pd.pivot_table(cdat, index=['lat', 'lon', 'depth'], columns='var')
-    woa.columns = params
+    woa.columns = woa.columns.droplevel()
+    woa.columns = [pdict[c] for c in woa.columns]
+    params = [pdict[p] for p in params]
 
     shape = list(map(len, woa.index.levels))
 
@@ -170,6 +173,9 @@ def get_GLODAP_WOA(save=True):
 
     # very approx pressure estimate...
     glodap_woa.loc[:, 'pres'] = glodap_woa.loc[:, 'dep'] / 10
+
+    # reset index
+    glodap_woa.reset_index(inplace=True, drop=True)
 
     # save data
     if save:
