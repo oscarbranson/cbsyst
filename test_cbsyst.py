@@ -97,6 +97,8 @@ class BoronFnTestCase(unittest.TestCase):
                                0.807817779214075,
                                msg='d11_2_A11', places=6)
 
+        return
+
 
 class CarbonFnTestCase(unittest.TestCase):
     """Test all C functions"""
@@ -163,7 +165,7 @@ class CarbonFnTestCase(unittest.TestCase):
                                          TF=ref.TF,
                                          Ks=Ks)[0],
                                ref.pH,
-                               msg='CO2_TA (zf)', places=6)
+                               msg='CO2_TA', places=6)
         self.assertAlmostEqual(cf.CO2_DIC(ref.CO2, ref.DIC, Ks)[0],
                                ref.H,
                                msg='CO2_DIC (zf)', places=6)
@@ -224,7 +226,7 @@ class CarbonFnTestCase(unittest.TestCase):
                                          TF=ref.TF,
                                          Ks=Ks)[0],
                                ref.pH,
-                               msg='TA_DIC (zf)', places=6)
+                               msg='TA_DIC', places=6)
 
         self.assertAlmostEqual(cf.cCO2(ref.H, ref.DIC, Ks),
                                ref.CO2,
@@ -238,16 +240,29 @@ class CarbonFnTestCase(unittest.TestCase):
                                ref.HCO3,
                                msg='cHCO3', places=6)
 
-        self.assertAlmostEqual(cf.cTA(H=ref.H,
-                                      DIC=ref.DIC / ref.unit,
-                                      BT=ref.BT / ref.unit,
-                                      TP=ref.TP / ref.unit,
-                                      TSi=ref.TSi / ref.unit,
-                                      TS=ref.TS,
-                                      TF=ref.TF,
-                                      Ks=Ks, mode='TA') * ref.unit,
-                               ref.TA,
-                               msg='cTA', places=6)
+        TA, CAlk, PAlk, SiAlk, OH = cf.cTA(H=ref.H,
+                                           DIC=ref.DIC / ref.unit,
+                                           BT=ref.BT / ref.unit,
+                                           TP=ref.TP / ref.unit,
+                                           TSi=ref.TSi / ref.unit,
+                                           TS=ref.TS,
+                                           TF=ref.TF,
+                                           Ks=Ks, mode='multi')
+
+        self.assertAlmostEqual(TA * ref.unit, ref.TA,
+                               msg='cTA - TA', places=6)
+
+        self.assertAlmostEqual(CAlk * ref.unit, ref.CAlk,
+                               msg='cTA - CAlk', places=6)
+
+        self.assertAlmostEqual(PAlk * ref.unit, ref.PAlk,
+                               msg='cTA - PAlk', places=6)
+
+        self.assertAlmostEqual(SiAlk * ref.unit, ref.SiAlk,
+                               msg='cTA - SiAlk', places=6)
+
+        self.assertAlmostEqual(OH * ref.unit, ref.OH,
+                               msg='cTA - OH', places=6)
 
         self.assertAlmostEqual(cf.fCO2_to_CO2(ref.fCO2, Ks),
                                ref.CO2,
@@ -264,6 +279,8 @@ class CarbonFnTestCase(unittest.TestCase):
         self.assertAlmostEqual(cf.pCO2_to_fCO2(ref.pCO2, ref.T),
                                ref.fCO2,
                                msg='pCO2_to_fCO2', places=6)
+
+        return
 
 
 class ReferenceDataTestCase(unittest.TestCase):
@@ -309,6 +326,8 @@ class ReferenceDataTestCase(unittest.TestCase):
 
         self.assertLess(max(abs(dDIC)), 0.2, msg='DIC from TA and pH')
 
+        return
+
     def test_Luecker_Data(self):
         ld = pd.read_csv('cbsyst/test_data/Luecker2000/Luecker2000_Table3.csv', comment='#')
 
@@ -327,6 +346,54 @@ class ReferenceDataTestCase(unittest.TestCase):
         cDIC = Csys(TA=ld.TA.values, fCO2=ld.fCO2.values, T=ld.Temp.values, S=ld.Sal.values)
         dDIC = 100 * (ld.DIC - cDIC.DIC) / ld.DIC
         self.assertLess(max(abs(dDIC)), 1, msg='DIC from fCO2 and TA, % difference.')
+
+        return
+
+    def test_GLODAPv2(self):
+        """
+        Test Csys against GLODAP data (n = 83,030).
+
+        Check median offsets are within acceptable limits.
+        Check 95% confidence of residuals are within acceptable limits.
+        """
+        # load GLOAP data
+        gd = pd.read_csv('cbsyst/test_data/GLODAP_data/GLODAPv2_pH_DIC_ALK_subset.csv')
+        gd.dropna(subset=['phtsinsitutp', 'temperature',
+                          'salinity', 'tco2', 'talk',
+                          'pressure', 'phosphate', 'silicate'], inplace=True)
+        gd.pressure /= 10  # convert pressure to bar
+
+        # calculate pH from TA and DIC
+        cpH = Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
+                   P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate)
+        pH_resid = gd.phtsinsitutp - cpH.pH
+        pH_median = np.median(pH_resid)
+        pH_pc95 = np.percentile(pH_resid, [2.5, 97.5])
+
+        self.assertLessEqual(abs(pH_median), 0.01, msg='pH Offset <= 0.01')
+        self.assertTrue(all(abs(pH_pc95) <= 0.05), msg='pH 95% Conf <= 0.05')
+
+        # calculate TA from pH and DIC
+        cTA = Csys(pH=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
+                   P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate)
+        TA_resid = gd.talk - cTA.TA
+        TA_median = np.median(TA_resid)
+        TA_pc95 = np.percentile(TA_resid, [2.5, 97.5])
+
+        self.assertLessEqual(abs(TA_median), 2.5, msg='TA Offset <= 2.5')
+        self.assertTrue(all(abs(TA_pc95) < 15), msg='TA 95% Conf <= 15')
+
+        # calculate DIC from TA and pH
+        cDIC = Csys(pH=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity,
+                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate)
+        DIC_resid = gd.tco2 - cDIC.DIC
+        DIC_median = np.median(DIC_resid)
+        DIC_pc95 = np.percentile(DIC_resid, [2.5, 97.5])
+
+        self.assertLessEqual(abs(DIC_median), 2, msg='DIC Offset <= 2')
+        self.assertTrue(all(abs(DIC_pc95) < 15), msg='DIC 95% Conf <= 15')
+
+        return
 
 
 if __name__ == '__main__':
