@@ -19,7 +19,7 @@ def get_Ks(ps):
     if isinstance(ps.Ks, dict):
         Ks = Bunch(ps.Ks)
     else:
-        if maxL(ps.T, ps.S, ps.P, ps.Mg, ps.Ca) == 1:
+        if maxL(ps.Mg, ps.Ca) == 1:
             if ps.Mg is None:
                 ps.Mg = 0.0528171
             if ps.Ca is None:
@@ -68,6 +68,11 @@ def Csys(pH=None, DIC=None, CO2=None,
 
     **WARNING** Error propagation NOT IMPLEMENTED for carbon system calculations
     with zero-finders (i.e. when pH is not given; cases 2-5 and 10-15).
+
+    Concentration Units
+    +++++++++++++++++++
+    * Ca and Mg must be in molar units.
+    * All other units must be the same, and can be specified in the 'unit' variable. Defaults to umolar.
 
     Parameters
     ----------
@@ -304,6 +309,10 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
     If inputs are ufloat or uarray (from uncertainties package) errors will
     be propagated through all calculations.
 
+    Concentration Units
+    +++++++++++++++++++
+    * All concentrations must be in the same units. Returned in the same units as inputs.
+
     Parameters
     ----------
     pH, BT, BO3, BO4 : array-like
@@ -406,6 +415,12 @@ def ABsys(pH=None,
     Error propagation:
     If inputs are ufloat or uarray (from uncertainties package) errors will
     be propagated through all calculations.
+
+    Concentration Units
+    +++++++++++++++++++
+    * 'A' is fractional abundance (11B / BT)
+    * 'd' are delta values
+    Either specified, both returned.
 
     Parameters
     ----------
@@ -527,6 +542,12 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
 
     **WARNING** Error propagation NOT IMPLEMENTED for carbon system calculations
     with zero-finders (i.e. when pH is not given; cases 2-5 and 10-15).
+
+    Concentration Units
+    +++++++++++++++++++
+    * Ca and Mg must be in molar units.
+    * All other units must be the same, and can be specified in the 'unit' variable. Defaults to umolar.
+    * Isotopes can be in A (11B / BT) or d (delta). Either specified, both returned.
 
     Parameters
     ----------
