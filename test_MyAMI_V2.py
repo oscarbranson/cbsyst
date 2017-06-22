@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import pandas as pd
 from cbsyst.MyAMI_V2 import MyAMI_params, MyAMI_K_calc, MyAMI_pK_calc, MyAMI_K_calc_multi
 
 
@@ -80,7 +81,6 @@ class MyAMIConsistency(unittest.TestCase):
 
             for k in Ks.keys():
                 diffs.append(Ks[k] - oKs[k])
-
             return all(abs(np.array(diffs)) < 1e-6)
 
         self.assertTrue(pcomp(MyAMI_params(),
@@ -103,12 +103,13 @@ class MyAMIConsistency(unittest.TestCase):
 
         self.assertTrue(pcomp(MyAMI_params(0.005, 0.01),
                               MyAMI_lowMglowCa), msg='Low Mg, Low Ca params')
+        return
 
     def test_CompareToDickson2007(self):
         # Check params @ 25ºC and 35 PSU
 
         # Parameters are from Dickson, Sabine & Christian
-        # (Guide to best practises for ocean CO2 measurements, 
+        # (Guide to best practises for ocean CO2 measurements,
         # PICES Special Publication, 2007), Chapter 5.7.2 (seawater).
 
         # Except KspC and KspA, which are from from Zeebe &
@@ -129,6 +130,37 @@ class MyAMIConsistency(unittest.TestCase):
             self.assertAlmostEqual(Ks[k] / p, 1,
                                    places=3,
                                    msg='failed on ' + k)
+        return
+
+    def test_CompareToMehrbachData(self):
+        """
+        Compares pK1 and pK2 calcualted by MyAMI_V2 to data from
+        Mehrbach et al (1973), as per Lueker et al (2000).
+
+        Test data on Total pH scale taken from Table 2 of Lueker et al (2000)
+        """
+        # read data
+        lk = pd.read_csv('cbsyst/test_data/Lueker2000/Lueker2000_Table2.csv', comment='#')
+
+        # calculate MyAMI Ks
+        mKs = MyAMI_K_calc(lk.TempC, lk.Sal)
+
+        # calculate pK1 and pK2 2 residuals
+        rpK1 = lk.pK1 - -np.log10(mKs.K1)
+        rpK2 = lk.pK2 - -np.log10(mKs.K2)
+
+        # calculate median and 95% CI of residuals
+        rpK1_median = rpK1.median()
+        rpK1_95ci = np.percentile(rpK1[~np.isnan(rpK1)], (2.5, 97.5))
+        self.assertLessEqual(abs(rpK1_median), 0.005, msg='Median offset from Mehrbach (1973) pK1.')
+        self.assertTrue(all(abs(rpK1_95ci) <= 0.02), msg='95% CI of difference from Mehrbach pK1 <= 0.02')
+
+        rpK2_median = rpK1.median()
+        rpK2_95ci = np.percentile(rpK2[~np.isnan(rpK2)], (2.5, 97.5))
+        self.assertLessEqual(abs(rpK2_median), 0.005, msg='Median offset from Mehrbach (1973) pK2.')
+        self.assertTrue(all(abs(rpK2_95ci) <= 0.02), msg='95% CI of difference from Mehrbach pK2 <= 0.02')
+
+        return
 
 
 if __name__ == '__main__':

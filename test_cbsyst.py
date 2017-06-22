@@ -329,23 +329,38 @@ class ReferenceDataTestCase(unittest.TestCase):
         return
 
     def test_Luecker_Data(self):
+        """
+        Need to incorporate nutrients!
+        """
         ld = pd.read_csv('cbsyst/test_data/Luecker2000/Luecker2000_Table3.csv', comment='#')
 
         # Calculate using cbsys
         # TA from DIC and fCO2
         cTA = Csys(DIC=ld.DIC.values, fCO2=ld.fCO2.values, T=ld.Temp.values, S=ld.Sal.values)
-        dTA = 100 * (ld.TA - cTA.TA) / ld.TA
-        self.assertLess(max(abs(dTA)), 1, msg='TA from DIC and fCO2, % difference.')
+        dTA = ld.TA - cTA.TA
+        dTA_median = np.median(dTA)
+        dTA_pc95 = np.percentile(dTA, [2.5, 97.5])
+        self.assertLessEqual(abs(dTA_median), 2.5, msg='TA Offset <= 2.5')
+        self.assertTrue(all(abs(dTA_pc95 - dTA_median) <= 16), msg='TA 95% Conf <= 16')
 
         # fCO2 from TA and DIC
-        cfCO2 = Csys(TA=ld.TA.values, DIC=ld.DIC.values, T=ld.Temp.values, S=ld.Sal.values, BT=433)
-        dfCO2 = 100 * (ld.fCO2 - cfCO2.fCO2) / ld.fCO2
-        self.assertLess(max(abs(dfCO2)), 10, msg='fCO2 from DIC and TA, % difference.')
+        cfCO2 = Csys(TA=ld.TA.values, DIC=ld.DIC.values, T=ld.Temp.values, S=ld.Sal.values)
+        dfCO2 = ld.fCO2 - cfCO2.fCO2
+        dfCO2_median = np.median(dfCO2)
+        # dfCO2_pc95 = np.percentile(dfCO2, [2.5, 97.5])
+        dfCO2_percent_offset = 100 * dfCO2 / ld.fCO2
+        self.assertLessEqual(dfCO2_median, 2.5, msg='fCO2 Offset <= 2.5')
+        self.assertLessEqual(np.std(dfCO2_percent_offset), 3, msg='fCO2 STD within 3%')
+        # print(dfCO2_pc95)
+        # self.assertTrue(all(abs(dfCO2_pc95) <= 70), msg='fCO2 95% Conc <= 70')
 
         # DIC from TA and fCO2
         cDIC = Csys(TA=ld.TA.values, fCO2=ld.fCO2.values, T=ld.Temp.values, S=ld.Sal.values)
-        dDIC = 100 * (ld.DIC - cDIC.DIC) / ld.DIC
-        self.assertLess(max(abs(dDIC)), 1, msg='DIC from fCO2 and TA, % difference.')
+        dDIC = ld.DIC - cDIC.DIC
+        dDIC_median = np.median(dDIC)
+        dDIC_pc95 = np.percentile(dDIC, [2.5, 97.5])
+        self.assertLessEqual(abs(dDIC_median), 2, msg='DIC Offset <= 2')
+        self.assertTrue(all(abs(dDIC_pc95) <= 15), msg='DIC 95% Conc <= 15')
 
         return
 
