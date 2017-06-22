@@ -1197,25 +1197,18 @@ start_params = {'K0': np.array([-60.2409, 93.4517, 23.3585, 0.023517,
 
 # K Functions
 # Unless otherwise stated, all are from Dickson, Sabine and Christian 2007 handbook.
+# All checked against CO2sys for consistency
 def func_K0(TKS, a, b, c, d, e, f):
     TempK, Sal = TKS
+    TempK100 = TempK / 100.
     return np.exp(a +
-                  b * 100 / TempK +
-                  c * np.log(TempK / 100) +
-                  Sal * (d + e * TempK / 100 +
-                         f * TempK / 100 * TempK / 100))
+                  b / TempK100 +
+                  c * np.log(TempK100) +
+                  Sal * (d + e * TempK100 +
+                         f * TempK100**2))
 
 
-def func_K1(TKS, a, b, c, d, e):
-    TempK, Sal = TKS
-    return np.power(10, (a +
-                         b / TempK +
-                         c * np.log(TempK) +
-                         d * Sal +
-                         e * Sal**2))
-
-
-def func_K2(TKS, a, b, c, d, e):
+def func_K1K2(TKS, a, b, c, d, e):
     TempK, Sal = TKS
     return np.power(10, (a +
                          b / TempK +
@@ -1247,41 +1240,12 @@ def func_KW(TKS, a, b, c, d, e, f, g):
     lnTempK = np.log(TempK)
     return np.exp(a +
                   b / TempK +
-                  c * lnTempK + Sal**0.5 *
+                  c * lnTempK +
+                  Sal**0.5 *
                   (d / TempK +
                    e +
                    f * lnTempK) +
                   g * Sal)
-
-
-# From Zeebe and Wolf-Gladrow, Appendix A.10.
-def func_KspC(TKS, a, b, c, d, e, f, g, h, i):
-    TempK, Sal = TKS
-    log10TempK = np.log10(TempK)
-    return np.power(10, (a +
-                         b * TempK +
-                         c / TempK +
-                         d * log10TempK + Sal**0.5 *
-                         (e +
-                          f * TempK +
-                          g / TempK) +
-                         h * Sal +
-                         i * Sal**1.5))
-
-
-# From Zeebe and Wolf-Gladrow, Appendix A.10.
-def func_KspA(TKS, a, b, c, d, e, f, g, h, i):
-    TempK, Sal = TKS
-    log10TempK = np.log10(TempK)
-    return np.power(10, (a +
-                         b * TempK +
-                         c / TempK +
-                         d * log10TempK + Sal**0.5 *
-                         (e +
-                          f * TempK +
-                          g / TempK) +
-                         h * Sal +
-                         i * Sal**1.5))
 
 
 def func_KSO4(TKS, a, b, c, d, e, f, g, h, i, j, k):
@@ -1302,13 +1266,29 @@ def func_KSO4(TKS, a, b, c, d, e, f, g, h, i, j, k):
                   k / TempK * Istr * Istr + np.log(1 - 0.001005 * Sal))
 
 
+# From Zeebe and Wolf-Gladrow, Appendix A.10.
+def func_Ksp(TKS, a, b, c, d, e, f, g, h, i):
+    TempK, Sal = TKS
+    log10TempK = np.log10(TempK)
+    return np.power(10, (a +
+                         b * TempK +
+                         c / TempK +
+                         d * log10TempK +
+                         Sal**0.5 *
+                         (e +
+                          f * TempK +
+                          g / TempK) +
+                         h * Sal +
+                         i * Sal**1.5))
+
+
 fn_dict = {'K0': func_K0,
-           'K1': func_K1,
-           'K2': func_K2,
+           'K1': func_K1K2,
+           'K2': func_K1K2,
            'KB': func_KB,
            'KW': func_KW,
-           'KspC': func_KspC,
-           'KspA': func_KspA,
+           'KspC': func_Ksp,
+           'KspA': func_Ksp,
            'KSO4': func_KSO4}
 
 
@@ -1320,12 +1300,12 @@ def fitfunc_K0(TKS, a, b, c, d, e, f):
 
 def fitfunc_K1(TKS, a, b, c, d, e):
     ps = start_params['K1'] * (a, b, c, d, e)
-    return func_K1(TKS, *ps)
+    return func_K1K2(TKS, *ps)
 
 
 def fitfunc_K2(TKS, a, b, c, d, e):
     ps = start_params['K2'] * (a, b, c, d, e)
-    return func_K2(TKS, *ps)
+    return func_K1K2(TKS, *ps)
 
 
 def fitfunc_KB(TKS, a, b, c, d, e, f, g, h, i, j, k, l):
@@ -1340,12 +1320,12 @@ def fitfunc_KW(TKS, a, b, c, d, e, f, g):
 
 def fitfunc_KspC(TKS, a, b, c, d, e, f, g, h, i):
     ps = start_params['KspC'] * (a, b, c, d, e, f, g, h, i)
-    return func_KspC(TKS, *ps)
+    return func_Ksp(TKS, *ps)
 
 
 def fitfunc_KspA(TKS, a, b, c, d, e, f, g, h, i):
     ps = start_params['KspA'] * (a, b, c, d, e, f, g, h, i)
-    return func_KspA(TKS, *ps)
+    return func_Ksp(TKS, *ps)
 
 
 def fitfunc_KSO4(TKS, a, b, c, d, e, f, g, h, i, j, k):
