@@ -104,41 +104,45 @@ class CarbonFnTestCase(unittest.TestCase):
     """Test all C functions"""
 
     def test_Carbon_Fns(self):
-        ref = Bunch({'BT': 433.,
-                     'CAlk': 2228.7250716,
-                     'CO2': 9.7861814,
-                     'CO3': 238.511253,
+        ref = Bunch({'BAlk': 104.39451552567037,
+                     'BT': 432.6,
+                     'CAlk': 2340.16132518,
+                     'CO2': 10.27549047,
+                     'CO3': 250.43681565,
                      'Ca': 0.0102821,
-                     'DIC': 2000.,
+                     'DIC': 2100.,
                      'H': 7.94328235e-09,
-                     'HCO3': 1751.7025656,
-                     'Ks': {'K0': 0.028391881804015685,
+                     'HCO3': 1839.28769389,
+                     'HF': 0.00017903616862286758,
+                     'HSO4': 0.0017448760289520083,
+                     'Hfree': 0.0061984062104620289,
+                     'Ks': {'K0': 0.028391881804015699,
                             'K1': 1.4218281371391736e-06,
                             'K2': 1.0815547472209423e-09,
                             'KB': 2.5265729902477677e-09,
-                            'KF': 0.0022610979159034443,
-                            'KP1': 0.024442701952839218,
-                            'KP2': 1.0497978385272834e-06,
-                            'KP3': 1.6243084109473091e-09,
+                            'KF': 0.0023655007956108367,
+                            'KP1': 0.024265183950721327,
+                            'KP2': 1.0841036169428488e-06,
+                            'KP3': 1.612502080867568e-09,
                             'KSO4': 0.10030207107256615,
-                            'KSi': 4.1325228921937028e-10,
-                            'KW': 6.0638636861053757e-14,
+                            'KSi': 4.1025099579058308e-10,
+                            'KW': 6.019824161802715e-14,
                             'KspA': 6.4817590680119676e-07,
                             'KspC': 4.2723509278625912e-07},
                      'Mg': 0.0528171,
-                     'OH': 7.63395209,
+                     'OH': 7.57850961,
                      'P': None,
                      'PAlk': 0.,
                      'S': 35.,
                      'SiAlk': 0.,
                      'T': 25.,
-                     'TA': 2340.84193615,
+                     'TA': 2452.126228,
                      'TF': 6.832583968836728e-05,
                      'TP': 0.0,
                      'TS': 0.028235434132860126,
                      'TSi': 0.0,
-                     'fCO2': 344.68238018419373,
-                     'pCO2': 345.78871573110143,
+                     'fCO2': 361.91649919340324,
+                     'pCO2': 363.074540437976,
                      'pH': 8.1,
                      'unit': 1000000.0})
 
@@ -240,20 +244,24 @@ class CarbonFnTestCase(unittest.TestCase):
                                ref.HCO3,
                                msg='cHCO3', places=6)
 
-        TA, CAlk, PAlk, SiAlk, OH = cf.cTA(H=ref.H,
-                                           DIC=ref.DIC / ref.unit,
-                                           BT=ref.BT / ref.unit,
-                                           TP=ref.TP / ref.unit,
-                                           TSi=ref.TSi / ref.unit,
-                                           TS=ref.TS,
-                                           TF=ref.TF,
-                                           Ks=Ks, mode='multi')
+        (TA, CAlk, BAlk, PAlk,
+         SiAlk, OH, Hfree, HSO4, HF) = cf.cTA(H=ref.H,
+                                              DIC=ref.DIC / ref.unit,
+                                              BT=ref.BT / ref.unit,
+                                              TP=ref.TP / ref.unit,
+                                              TSi=ref.TSi / ref.unit,
+                                              TS=ref.TS,
+                                              TF=ref.TF,
+                                              Ks=Ks, mode='multi')
 
         self.assertAlmostEqual(TA * ref.unit, ref.TA,
                                msg='cTA - TA', places=6)
 
         self.assertAlmostEqual(CAlk * ref.unit, ref.CAlk,
                                msg='cTA - CAlk', places=6)
+
+        self.assertAlmostEqual(BAlk * ref.unit, ref.BAlk,
+                               msg='cTA - BAlk', places=6)
 
         self.assertAlmostEqual(PAlk * ref.unit, ref.PAlk,
                                msg='cTA - PAlk', places=6)
@@ -263,6 +271,15 @@ class CarbonFnTestCase(unittest.TestCase):
 
         self.assertAlmostEqual(OH * ref.unit, ref.OH,
                                msg='cTA - OH', places=6)
+
+        self.assertAlmostEqual(Hfree * ref.unit, ref.Hfree,
+                               msg='cTA - Hfree', places=6)
+
+        self.assertAlmostEqual(HSO4 * ref.unit, ref.HSO4,
+                               msg='cTA - HSO4', places=6)
+
+        self.assertAlmostEqual(HF * ref.unit, ref.HF,
+                               msg='cTA - HF', places=6)
 
         self.assertAlmostEqual(cf.fCO2_to_CO2(ref.fCO2, Ks),
                                ref.CO2,
@@ -328,11 +345,11 @@ class ReferenceDataTestCase(unittest.TestCase):
 
         return
 
-    def test_Luecker_Data(self):
+    def test_Lueker_Data(self):
         """
         Need to incorporate nutrients!
         """
-        ld = pd.read_csv('cbsyst/test_data/Luecker2000/Luecker2000_Table3.csv', comment='#')
+        ld = pd.read_csv('cbsyst/test_data/Lueker2000/Lueker2000_Table3.csv', comment='#')
 
         # Calculate using cbsys
         # TA from DIC and fCO2
@@ -380,33 +397,33 @@ class ReferenceDataTestCase(unittest.TestCase):
 
         # calculate pH from TA and DIC
         cpH = Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
-                   P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate)
+                   P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         pH_resid = gd.phtsinsitutp - cpH.pH
         pH_median = np.median(pH_resid)
         pH_pc95 = np.percentile(pH_resid, [2.5, 97.5])
 
-        self.assertLessEqual(abs(pH_median), 0.01, msg='pH Offset <= 0.01')
+        self.assertLessEqual(abs(pH_median), 0.005, msg='pH Offset <= 0.01')
         self.assertTrue(all(abs(pH_pc95) <= 0.05), msg='pH 95% Conf <= 0.05')
 
         # calculate TA from pH and DIC
         cTA = Csys(pH=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
-                   P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate)
+                   P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         TA_resid = gd.talk - cTA.TA
         TA_median = np.median(TA_resid)
         TA_pc95 = np.percentile(TA_resid, [2.5, 97.5])
 
-        self.assertLessEqual(abs(TA_median), 2.5, msg='TA Offset <= 2.5')
-        self.assertTrue(all(abs(TA_pc95) < 15), msg='TA 95% Conf <= 15')
+        self.assertLessEqual(abs(TA_median), 0.5, msg='TA Offset <= 2.5')
+        self.assertTrue(all(abs(TA_pc95) < 13), msg='TA 95% Conf <= 15')
 
         # calculate DIC from TA and pH
         cDIC = Csys(pH=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity,
-                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate)
+                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         DIC_resid = gd.tco2 - cDIC.DIC
         DIC_median = np.median(DIC_resid)
         DIC_pc95 = np.percentile(DIC_resid, [2.5, 97.5])
 
-        self.assertLessEqual(abs(DIC_median), 2, msg='DIC Offset <= 2')
-        self.assertTrue(all(abs(DIC_pc95) < 15), msg='DIC 95% Conf <= 15')
+        self.assertLessEqual(abs(DIC_median), 0.5, msg='DIC Offset <= 2')
+        self.assertTrue(all(abs(DIC_pc95) < 13), msg='DIC 95% Conf <= 15')
 
         return
 

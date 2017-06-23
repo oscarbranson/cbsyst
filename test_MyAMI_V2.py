@@ -119,7 +119,7 @@ class MyAMIConsistency(unittest.TestCase):
                    'K1': 10**(-5.8472),
                    'K2': 10**(-8.9660),
                    'KB': np.exp(-19.7964),
-                   'KW': np.exp(-30.434),
+                   # 'KW': np.exp(-30.434),
                    'KSO4': np.exp(-2.30),
                    'KspC': 10**-6.3693,
                    'KspA': 10**-6.1883}
