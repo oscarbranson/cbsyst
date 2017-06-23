@@ -41,3 +41,10 @@ In MyAMI, pressure correction was involved lower down in generating the K meshes
 ++++++++++++++++++
 
 * Implemented nutrient alkalinity for all except CO3_TA and HCO3_TA cases using parameterisation of Matlab CO2SYS.
+
+0.3.4 (2016-06-23)
+++++++++++++++++++
+
+* CO2SYS comparison with GLODAPv2 Bottle data.
+* Minor parameter fixes and equation updates to match CO2SYS.
+* pH scale correction of KP1, KP2, KP3, KSi and KW

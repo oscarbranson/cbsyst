@@ -34,31 +34,28 @@ Pressure corrections are applied to the calculated MyAMI constants following Eqn
 I have used the [GLODAPv2 data set](cbsyst/test_data/GLODAP_data/Olsen_et_al-2016_GLODAPv2.pdf) to test how well `cbsyst` works with modern seawater.
 
 ### Method:
-Import the entire GLODAPv2 data set, remove all data where `flag != 2` (2 = good data), and exclude all rows that don't have all of (salinity, temperature, pressure, tco2, talk, and phtsinsitutp) - i.e. salinity, temperature, pressure and all three measured carbonate parameters.
-The resulting dataset contains 97,963 bottle samples. 
+Import the entire GLODAPv2 data set, remove all data where `flag != 2` (2 = good data), and exclude all rows that don't have all of (salinity, temperature, pressure, tco2, talk, phosphate, silicate and phtsinsitutp) - i.e. salinity, temperature, pressure, nutrients and all three measured carbonate parameters.
+The resulting dataset contains 79,896 bottle samples. 
 The code used to process the raw GLODAPv2 data is available [here](cbsyst/test_data/GLODAP_data/get_GLODAP_data.py).
 
 Next, calculate the carbonate system from sets of two of the measured carbonate parameters, and compare the calculated third parameter to the measured third parameter (i.e. calculate Alkalinity from pH and DIC, then compared calculated vs. measured Alkalinities). The code for making these comparison plots is [here](cbsyst/test_data/GLODAP_data/plot_GLODAPv2_comparison.py).
 
 ### Results:
-**Predicted pH** (from DIC and Alkalinity) is offset from measured values by -0.0041 (-0.031/+0.029).
+**Predicted pH** (from DIC and Alkalinity) is offset from measured values by -0.0011 (-0.031/+0.029).
 ![Calculated vs Measured pH](cbsyst/test_data/GLODAP_data/Figures/pH_comparison.png)
 
-**Predicted Alkalinity** (from pH and DIC) is offset from measured values by -1.5 (-13/+12) umol/kg.
+**Predicted Alkalinity** (from pH and DIC) is offset from measured values by 0.41 (-12/+12) umol/kg.
 ![Calculated vs Measured TA](cbsyst/test_data/GLODAP_data/Figures/TA_comparison.png)
 
-**Predicted DIC** (from pH and Alkalinity) is offset from measured values by 1.5 (-11/+12) umol/kg.
+**Predicted DIC** (from pH and Alkalinity) is offset from measured values by -0.39 (-12/+11) umol/kg.
 ![Calculated vs Measured DIC](cbsyst/test_data/GLODAP_data/Figures/DIC_comparison.png)
 
-Reported statistics are median ±95% confidence intervals extracted from the residuals (n = 97,963).
+Reported statistics are median ±95% confidence intervals extracted from the residuals (n = 79,896).
 
-There is a slight negative trend in the DIC residuals. Uncertain of the cause.
-There are some small, outlying clusters where pH is under-estimated by ~0.1, DIC is under-estimated by 40-50 and Alk is over-estimated by ~70.
-All these data points are from cruise 270.
-Suspect a data problem from that cruise, as the outliers are not identified by any available parameter in the dataset.
+Data are idential to within rouding errors as values calculated by Matlab CO2SYS (v1.1).
 
 ### Conclusions:
-`cbsyst` does a good job of fitting the GLODAPv2 dataset within the noise of the data!
+`cbsyst` does a good job of fitting the GLODAPv2 dataset!
 
 
 # Installation
