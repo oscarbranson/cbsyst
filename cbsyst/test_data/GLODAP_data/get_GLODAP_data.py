@@ -60,24 +60,33 @@ def get_GLODAP(leave_zip=True):
 
     print("Selecting 'good' (flag == 2) data...")
     # isolate good data only (flag = 2)
-    gd.loc[gd.phts25p0f != 2, 'phts25p0'] = np.nan
+    # gd.loc[gd.phts25p0f != 2, 'phts25p0'] = np.nan
     gd.loc[gd.phtsinsitutpf != 2, 'phtsinsitutp'] = np.nan
     gd.loc[gd.tco2f != 2, 'tco2'] = np.nan
     gd.loc[gd.talkf != 2, 'talk'] = np.nan
     gd.loc[gd.salinityf != 2, 'salinity'] = np.nan
+    gd.loc[gd.phosphatef != 2, 'phosphate'] = np.nan
+    gd.loc[gd.silicatef != 2, 'silicate'] = np.nan
 
     # Identify rows where ph, dic, talk and sal are present
-    phind = ~gd.phtsinsitutp.isnull()
-    dicind = ~gd.tco2.isnull()
-    alkind = ~gd.talk.isnull()
-    salind = ~gd.salinity.isnull()
+    # phind = ~gd.phtsinsitutp.isnull()
+    # dicind = ~gd.tco2.isnull()
+    # alkind = ~gd.talk.isnull()
+    # salind = ~gd.salinity.isnull()
+
+    gd.dropna(subset=['phtsinsitutp', 'tco2', 'talk', 'temperature', 'salinity',
+                      'pressure', 'silicate', 'phosphate'], inplace=True)
 
     print('Saving data subset...')
     # Isolate those data
-    gds = gd.loc[phind & dicind & alkind & salind, ['phts25p0', 'phtsinsitutp', 'tco2', 'talk', 'temperature', 'salinity',
-                                                    'cruise', 'station', 'cast', 'year', 'month', 'day', 'hour',
-                                                    'latitude', 'longitude', 'bottomdepth', 'maxsampdepth', 'bottle',
-                                                    'pressure', 'depth', 'theta', 'silicate', 'phosphate']]
+    # gds = gd.loc[phind & dicind & alkind & salind, ['phts25p0', 'phtsinsitutp', 'tco2', 'talk', 'temperature', 'salinity',
+    #                                                 'cruise', 'station', 'cast', 'year', 'month', 'day', 'hour',
+    #                                                 'latitude', 'longitude', 'bottomdepth', 'maxsampdepth', 'bottle',
+    #                                                 'pressure', 'depth', 'theta', 'silicate', 'phosphate']]
+    gds = gd.loc[:, ['phts25p0', 'phtsinsitutp', 'tco2', 'talk', 'temperature', 'salinity',
+                     'cruise', 'station', 'cast', 'year', 'month', 'day', 'hour',
+                     'latitude', 'longitude', 'bottomdepth', 'maxsampdepth', 'bottle',
+                     'pressure', 'depth', 'theta', 'silicate', 'phosphate']]
 
     gds.to_csv('./GLODAPv2_pH_DIC_ALK_subset.csv', index=False)
 
