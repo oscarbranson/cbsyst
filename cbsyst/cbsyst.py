@@ -41,6 +41,17 @@ def get_Ks(ps):
     Ks.update(calc_KF(ps.T, ps.S, ps.P))
     Ks.update(calc_KSi(ps.T, ps.S, ps.P))
 
+    # pH conversions to total scale.
+    #   - KPn are all on SWS
+    #   - KSi is on SWS
+    #   - MyAMI KW is on SWS... DOES THIS MATTER?
+
+    SWStoTOT = (1 + ps.TS / Ks.KSO4) / (1 + ps.TS / Ks.KSO4 + ps.TF / Ks.KF)
+    # FREEtoTOT = 1 + ps.TS / Ks.KSO4
+    conv = ['KP1', 'KP2', 'KP3', 'KSi', 'KW']
+    for c in conv:
+        Ks[c] *= SWStoTOT
+
     return Ks
 
 
@@ -81,7 +92,7 @@ def Csys(pH=None, DIC=None, CO2=None,
     pH, DIC, CO2, HCO3, CO3, TA : array-like
         Carbon system parameters. Two of these must be provided.
     BT : array-like
-        Total B, used in Alkalinity calculations.
+        Total B at Salinity = 35, used in Alkalinity calculations.
     Ca, Mg : arra-like
         The [Ca] and [Mg] of the seawater, in mol / kg.
         Used in calculating MyAMI constants.
@@ -135,8 +146,6 @@ def Csys(pH=None, DIC=None, CO2=None,
             if ps[p] is not None:
                 ps[p] = np.divide(ps[p], ps.unit)  # convert to molar
 
-    ps.Ks = get_Ks(ps)
-
     # Conserved seawater chemistry
     if 'TS' not in ps:
         ps.TS = calc_TS(ps.S)
@@ -144,6 +153,10 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.TF = calc_TF(ps.S)
     if ps.BT is None:
         ps.BT = calc_TB(ps.S)
+    elif isinstance(BT, (int, float)):
+        ps.BT = ps.BT * ps.S / 35.
+
+    ps.Ks = get_Ks(ps)
 
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
@@ -259,14 +272,16 @@ def Csys(pH=None, DIC=None, CO2=None,
     try:
         # necessary for use with CBsyst in special cases
         # where BT is not known before Csys is run.
-        ps.TA, ps.CAlk, ps.PAlk, ps.SiAlk, ps.OH = cTA(H=ps.H,
-                                                       DIC=ps.DIC,
-                                                       BT=ps.BT,
-                                                       TP=ps.TP,
-                                                       TSi=ps.TSi,
-                                                       TS=ps.TS,
-                                                       TF=ps.TF,
-                                                       Ks=ps.Ks, mode='multi')
+        (ps.TA, ps.CAlk, ps.BAlk,
+         ps.PAlk, ps.SiAlk, ps.OH,
+         ps.Hfree, ps.HSO4, ps.HF) = cTA(H=ps.H,
+                                         DIC=ps.DIC,
+                                         BT=ps.BT,
+                                         TP=ps.TP,
+                                         TSi=ps.TSi,
+                                         TS=ps.TS,
+                                         TF=ps.TF,
+                                         Ks=ps.Ks, mode='multi')
     except TypeError:
         pass
     if ps.pH is None:
@@ -282,7 +297,7 @@ def Csys(pH=None, DIC=None, CO2=None,
             # convert all outputs to (min) 1D numpy arrays.
             ps[k] = np.array(ps[k], ndmin=1)
     if ps.unit != 1:
-        for p in upar + ['CAlk', 'PAlk', 'SiAlk', 'OH']:
+        for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk', 'OH', 'HSO4', 'HF', 'Hfree']:
             ps[p] *= ps.unit  # convert back to input units
 
     return ps
@@ -686,15 +701,16 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
             #  mutable, this has the added benefit of the
             #  parameters only being stored in memory once.
             if ps.TA is None:
-                ps.TA, ps.CAlk, ps.PAlk, ps.SiAlk, ps.OH = cTA(H=ps.H,
-                                                               DIC=ps.DIC,
-                                                               BT=ps.BT,
-                                                               TP=ps.TP,
-                                                               TSi=ps.TSi,
-                                                               TS=ps.TS,
-                                                               TF=ps.TF,
-                                                               Ks=ps.Ks,
-                                                               mode='multi')
+                (ps.TA, ps.CAlk, ps.BAlk,
+                 ps.PAlk, ps.SiAlk, ps.OH,
+                 ps.Hfree, ps.HSO4, ps.HF) = cTA(H=ps.H,
+                                                 DIC=ps.DIC,
+                                                 BT=ps.BT,
+                                                 TP=ps.TP,
+                                                 TSi=ps.TSi,
+                                                 TS=ps.TS,
+                                                 TF=ps.TF,
+                                                 Ks=ps.Ks, mode='multi')
                 # necessary becayse TA in Csys fails if there's no BT
         # b) if there are 2 B species
         elif nBspec == 2:
@@ -711,7 +727,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
         ps.update(Bsys(pdict=ps))  # calculate B first
         ps.update(Csys(pdict=ps))  # then C
 
-    for p in upar + ['CAlk', 'PAlk', 'SiAlk', 'OH']:
+    for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk', 'OH', 'HSO4', 'HF', 'Hfree']:
         ps[p] *= orig_unit  # convert back to input units
 
     return ps
