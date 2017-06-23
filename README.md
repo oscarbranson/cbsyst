@@ -1,8 +1,10 @@
 # cbsyst
 
-**A Python module for calculating seawater carbon and boron chemistry**
+**A Python module for calculating seawater carbon and boron chemistry.**
 
-*Tested against GLODAPv2 data (see below). Performs as well as Matlab CO2SYS.*
+This will be particularly useful for anyone thinking about oceans in the distant past, when Mg and Ca concentrations were different, as I use [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf) to adjust speciation constants for Mg and Ca concentration.
+
+***Tested** against GLODAPv2 data (see below). Performs as well as Matlab CO2SYS.*
 
 ## Still To Do...
 - [X] [Nutrient alkalinity](https://github.com/oscarbranson/cbsyst/issues/5)
