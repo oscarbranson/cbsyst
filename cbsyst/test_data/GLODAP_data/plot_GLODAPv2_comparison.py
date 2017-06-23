@@ -25,6 +25,9 @@ def GLODAPv2_comparison(figdir='.'):
                       'pressure', 'phosphate', 'silicate'], inplace=True)
     gd.pressure /= 10  # convert pressure to bar
 
+    # exclude weird cruise 270 data
+    gd = gd.loc[gd.cruise != 270]
+
     # Do the work...
     print('Calculating pH from DIC and TA...')
     cpH = cb.Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity, P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)

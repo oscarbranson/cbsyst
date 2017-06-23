@@ -395,6 +395,9 @@ class ReferenceDataTestCase(unittest.TestCase):
                           'pressure', 'phosphate', 'silicate'], inplace=True)
         gd.pressure /= 10  # convert pressure to bar
 
+        # exclude weird cruise 270 data
+        gd = gd.loc[gd.cruise != 270]
+
         # calculate pH from TA and DIC
         cpH = Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
