@@ -184,7 +184,7 @@ def prescorr(P, Tc, a0, a1, a2, b0, b1):
     dk = (b0 + b1 * Tc) / 1000
     # factor of 1000 not mentioned in Millero,
     # but present in Zeebe book, and used in CO2SYS
-    RT = 83.131 * (Tc + 273.15)
+    RT = 83.1451 * (Tc + 273.15)
     return np.exp((-dV + 0.5 * dk * P) * P / RT)
 
 
