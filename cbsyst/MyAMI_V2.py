@@ -1398,6 +1398,7 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
               'KSO4': KSO4_mod * gKSO4_X / gKSO4_mod}
 
     maxfevN = 2000000  # number of optimiztion timesteps allowed to reach convergence
+    xtol = 1e-12  # fit tolerance
 
     param_dict = Bunch()
     for k in fitfn_dict.keys():
@@ -1405,7 +1406,7 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
         p, cov = curve_fit(fitfn_dict[k],
                            (TempK_M.ravel(), Sal_M.ravel()),
                            X_dict[k].ravel(),
-                           p0=p0, maxfev=maxfevN)
+                           p0=p0, maxfev=maxfevN, xtol=xtol)
 
         param_dict[k] = p * start_params[k]
 
@@ -1462,7 +1463,7 @@ def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None, param_d
                           'KspC': np.array([-1.71906500e+02, -7.79930000e-02, 2.83931900e+03,
                                             7.15950000e+01, -7.77120000e-01, 2.84260000e-03,
                                             1.78340000e+02, -7.71100000e-02, 4.12490000e-03]),
-                          'KW': np.array([1.48965200e+02, -1.38472600e+04, -2.36521000e+01,
+                          'KW': np.array([1.48980200e+02, -1.38472600e+04, -2.36521000e+01,
                                           1.18670000e+02, -5.97700000e+00, 1.04950000e+00,
                                           -1.61500000e-02])}
         else:
@@ -1482,7 +1483,7 @@ def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None, param_d
         #       Millero '83 seawater parameters instead (as in CO2SYS)
         ppar = {'K1': [-25.50, 0.1271, 0, -3.08, 0.0877],
                 'K2': [-15.82, -0.0219, 0, 1.13, -0.1475],
-                'KB': [-29.48, 0.1622, 2.608e-3, -2.84, 0],
+                'KB': [-29.48, 0.1622, -2.608e-3, -2.84, 0],
                 # 'KW': [-25.60, 0.2324, -3.6246e-3, -5.13, 0.0794],
                 'KW': [-20.02, 0.1119, -1.409e-3, -5.13, 0.0794],  # Millero '83
                 'KSO4': [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
