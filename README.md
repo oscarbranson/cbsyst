@@ -16,7 +16,7 @@ If anyone wants to help with any of this, please do contribute!
 ## Acknowledgement
 The development of `cbsyst` has been greatly aided by [CO2SYS](http://cdiac.ornl.gov/oceans/co2rprt.html), and the [Matlab conversion of CO2SYS](http://cdiac.ornl.gov/ftp/oceans/co2sys/).
 In particular, these programs represent a gargantuan effort to find the most appropriate coefficient formulations and parameterisations from typo-prone literature.
-CO2SYS has also provided an invaluable benchmarking tool throughout development.
+CO2SYS has also provided an invaluable benchmark throughout development.
 
 ## Data Comparison
 I have used the [GLODAPv2 data set](cbsyst/test_data/GLODAP_data/Olsen_et_al-2016_GLODAPv2.pdf) to test how well `cbsyst` works with modern seawater.
