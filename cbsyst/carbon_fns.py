@@ -423,7 +423,7 @@ def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode='multi'):
     TA = CAlk + BAlk + OH + PAlk + SiAlk - Hfree - HSO4 - HF
 
     if mode == 'multi':
-        return TA, CAlk, PAlk, SiAlk, OH
+        return TA, CAlk, BAlk, PAlk, SiAlk, OH, Hfree, HSO4, HF
     else:
         return TA
 
@@ -452,30 +452,48 @@ def CO2_to_fCO2(CO2, Ks):
     return CO2 / Ks.K0
 
 
-# 1.4.65
-def pCO2_to_fCO2(pCO2, Tc, atm=1):
+def pCO2_to_fCO2(pCO2, Tc):
     """
     Calculate fCO2 from pCO2
+
+    Taken from matlab CO2SYS.
+
+    This assumes that the pressure is at one atmosphere, or close to it.
+    Otherwise, the Pres term in the exponent affects the results.
+    Weiss, R. F., Marine Chemistry 2:203-215, 1974.
+
+    For a mixture of CO2 and air at 1 atm (at low CO2 concentrations)
+    Delta and B in cm3/mol
     """
     Tk = Tc + 273.15
-    p = atm * 101325.  # convert atm to Pa
-    R = 8.314  # Gas constant
-    B = (-1636.75 + 12.040 * Tk - 3.27957e-2 * Tk**2 + 3.16528e-5 * Tk**3) * 1e-6
-    delta = (57.7 - 0.118 * Tk) * 1e-6
+    P = 1.01325  # in bar
+    RT = 83.1451 * Tk
 
-    return pCO2 * np.exp(p * (B + 2 * delta) / (R * Tk))
+    B = -1636.75 + 12.0408 * Tk - 3.27957e-2 * Tk**2 + 3.16528e-05 * Tk**3
+    delta = (57.7 - 0.118 * Tk)
+
+    return pCO2 * np.exp(P * (B + 2 * delta) / RT)
 
 
-# 1.4.65
-def fCO2_to_pCO2(fCO2, Tc, atm=1):
+def fCO2_to_pCO2(fCO2, Tc):
     """
     Calculate pCO2 from fCO2
+
+    Taken from matlab CO2SYS.
+
+    This assumes that the pressure is at one atmosphere, or close to it.
+    Otherwise, the Pres term in the exponent affects the results.
+    Weiss, R. F., Marine Chemistry 2:203-215, 1974.
+
+    For a mixture of CO2 and air at 1 atm (at low CO2 concentrations)
+    Delta and B in cm3/mol
     """
     Tk = Tc + 273.15
-    p = atm * 101325.  # convert atm to Pa
-    R = 8.314  # Gas constant
-    B = (-1636.75 + 12.040 * Tk - 3.27957e-2 * Tk**2 + 3.16528e-5 * Tk**3) * 1e-6
-    delta = (57.7 - 0.118 * Tk) * 1e-6
+    P = 1.01325  # in bar
+    RT = 83.1451 * Tk
 
-    return fCO2 / np.exp(p * (B + 2 * delta) / (R * Tk))
+    B = -1636.75 + 12.0408 * Tk - 3.27957e-2 * Tk**2 + 3.16528e-5 * Tk**3
+    delta = (57.7 - 0.118 * Tk)
+
+    return fCO2 / np.exp(P * (B + 2 * delta) / RT)
 
