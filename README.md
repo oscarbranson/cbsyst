@@ -13,22 +13,10 @@
 
 If anyone wants to help with any of this, please do contribute!
 
-## Constants
-Constants calculated by an adaptation of [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf). 
-The [original MyAMI code](https://github.com/MathisHain/MyAMI) is available on GitHub.
-A stripped-down version of MyAMI is [packaged with cbsyst](cbsyst/MyAMI_V2.py).
-It has been modified to make it faster (by vectorising) and more 'Pythonic'.
-All the Matlab interface code has been removed.
-
-## Calculations
-Speciation calculations follow [Zeebe and Wolf-Gladrow (2001)](https://www.elsevier.com/books/co2-in-seawater-equilibrium-kinetics-isotopes/zeebe/978-0-444-50946-8).
-Carbon speciation calculations are described in Appendix B.
-Boron speciation calculations in Eqns. 3.4.43 - 3.4.46.
-
-Boron isotopes are calculated in terms of fractional abundances instead of delta values, as outlines [here](cbsyst/docs/B_systematics.pdf).
-Delta values can be provided as an input, and are given as an output.
-
-Pressure corrections are applied to the calculated MyAMI constants following Eqns. 38-40 of [Millero et al (2007)](cbsyst/docs/Millero_2007_ChemicalReview.pdf), using constants in their Table 5.
+## Acknowledgement
+The development of `cbsyst` has been greatly aided by [CO2SYS](http://cdiac.ornl.gov/oceans/co2rprt.html), and the [Matlab conversion of CO2SYS](http://cdiac.ornl.gov/ftp/oceans/co2sys/).
+In particular, these programs represent a gargantuan effort to find the most appropriate coefficient formulations and parameterisations from typo-prone literature.
+CO2SYS has also provided an invaluable benchmarking tool throughout development.
 
 ## Data Comparison
 I have used the [GLODAPv2 data set](cbsyst/test_data/GLODAP_data/Olsen_et_al-2016_GLODAPv2.pdf) to test how well `cbsyst` works with modern seawater.
@@ -56,6 +44,27 @@ Data are idential to within rouding errors as values calculated by Matlab CO2SYS
 
 ### Conclusions:
 `cbsyst` does a good job of fitting the GLODAPv2 dataset!
+
+## Technical Details
+### Constants
+Constants calculated by an adaptation of [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf). 
+The [original MyAMI code](https://github.com/MathisHain/MyAMI) is available on GitHub.
+A stripped-down version of MyAMI is [packaged with cbsyst](cbsyst/MyAMI_V2.py).
+It has been modified to make it faster (by vectorising) and more 'Pythonic'.
+All the Matlab interface code has been removed.
+
+Constants not provided by MyAMI (KP1, KP2, KP3, KSi, KF) are formulated following [Dickson, Sabine & Christian's (2007) 'Guide to best practices for ocean CO<sub>2</sub> measurements.'](http://cdiac.ornl.gov/oceans/Handbook_2007.html).
+
+Pressure corrections are applied to the calculated constants following Eqns. 38-40 of [Millero et al (2007)](cbsyst/docs/Millero_2007_ChemicalReview.pdf), using (typo-corrected) constants in their Table 5.
+All constants are on the pH Total scale.
+
+### Calculations
+Speciation calculations follow [Zeebe and Wolf-Gladrow (2001)](https://www.elsevier.com/books/co2-in-seawater-equilibrium-kinetics-isotopes/zeebe/978-0-444-50946-8).
+Carbon speciation calculations are described in Appendix B, except where Alkalinity is involved, in which cases the formulations of [Ernie Lewis' CO2SYS](http://cdiac.ornl.gov/oceans/co2rprt.html) are used.
+Boron speciation calculations in Eqns. 3.4.43 - 3.4.46.
+
+Boron isotopes are calculated in terms of fractional abundances instead of delta values, as outlines [here](cbsyst/docs/B_systematics.pdf).
+Delta values can be provided as an input, and are given as an output.
 
 
 # Installation
