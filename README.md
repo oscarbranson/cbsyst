@@ -2,7 +2,7 @@
 
 **A Python module for calculating seawater carbon and boron chemistry**
 
-*Work in progress! Tested against reference data, but results not guaranteed. Use at your own risk.*
+*Tested against GLODAPv2 data (see below). Performs as well as Matlab CO2SYS.*
 
 ## Still To Do...
 - [X] [Nutrient alkalinity](https://github.com/oscarbranson/cbsyst/issues/5)

@@ -156,6 +156,7 @@ def Csys(pH=None, DIC=None, CO2=None,
     elif isinstance(BT, (int, float)):
         ps.BT = ps.BT * ps.S / 35.
 
+    # Calculate Ks
     ps.Ks = get_Ks(ps)
 
     # if fCO2 is given but CO2 is not, calculate CO2
@@ -649,15 +650,14 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
             if isinstance(ps[k], (int, float)):
                 ps[k] = np.full(L, ps[k])
 
-    # Calculate Ks
-    # if neither Ca nor Mg provided, use MyAMI Ks for modern SW
-    ps.Ks = get_Ks(ps)
-
     # Conserved seawater chemistry
     if 'TS' not in ps:
         ps.TS = calc_TS(ps.S)
     if 'TF' not in ps:
         ps.TF = calc_TF(ps.S)
+
+    # Calculate Ks
+    ps.Ks = get_Ks(ps)
 
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
@@ -670,6 +670,8 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
     nBspec = NnotNone(ps.BT, ps.BO3, ps.BO4)
     if nBspec == 0:
         ps.BT = calc_TB(ps.S)
+    elif isinstance(BT, (int, float)):
+        ps.BT = ps.BT * ps.S / 35.
 
     # This section works out the order that things should be calculated in.
     # Special case: if pH is missing, must have:

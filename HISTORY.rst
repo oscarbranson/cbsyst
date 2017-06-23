@@ -48,3 +48,8 @@ In MyAMI, pressure correction was involved lower down in generating the K meshes
 * CO2SYS comparison with GLODAPv2 Bottle data.
 * Minor parameter fixes and equation updates to match CO2SYS.
 * pH scale correction of KP1, KP2, KP3, KSi and KW
+
+0.3.5 (2016-06-23)
+++++++++++++++++++
+
+* Bring CBsys in line with new changes.
