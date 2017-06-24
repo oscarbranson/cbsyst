@@ -34,7 +34,7 @@ class BoronFnTestCase(unittest.TestCase):
                      'dBO3': 46.30877684,
                      'dBO4': 18.55320208,
                      'dBT': 39.5,
-                     'pH': 8.1})
+                     'pHtot': 8.1})
 
         Ks = Bunch(ref.Ks)
 
@@ -47,11 +47,11 @@ class BoronFnTestCase(unittest.TestCase):
                                ref.H,
                                msg='BT_BO4', places=6)
 
-        self.assertAlmostEqual(bf.pH_BO3(ref.pH, ref.BO3, Ks),
+        self.assertAlmostEqual(bf.pH_BO3(ref.pHtot, ref.BO3, Ks),
                                ref.BT,
                                msg='pH_BO3', places=6)
 
-        self.assertAlmostEqual(bf.pH_BO4(ref.pH, ref.BO4, Ks),
+        self.assertAlmostEqual(bf.pH_BO4(ref.pHtot, ref.BO4, Ks),
                                ref.BT,
                                msg='pH_BO4', places=6)
 
@@ -72,11 +72,11 @@ class BoronFnTestCase(unittest.TestCase):
                          1.0293 - 0.000082 * ref.T,
                          msg='alphaB_calc')
 
-        self.assertAlmostEqual(bf.pH_ABO3(ref.pH, ref.ABO3, Ks, ref.alphaB),
+        self.assertAlmostEqual(bf.pH_ABO3(ref.pHtot, ref.ABO3, Ks, ref.alphaB),
                                ref.ABT,
                                msg='pH_ABO3', places=6)
 
-        self.assertAlmostEqual(bf.pH_ABO4(ref.pH, ref.ABO4, Ks, ref.alphaB),
+        self.assertAlmostEqual(bf.pH_ABO4(ref.pHtot, ref.ABO4, Ks, ref.alphaB),
                                ref.ABT,
                                msg='pH_ABO4', places=6)
 
@@ -143,12 +143,12 @@ class CarbonFnTestCase(unittest.TestCase):
                      'TSi': 0.0,
                      'fCO2': 361.91649919340324,
                      'pCO2': 363.074540437976,
-                     'pH': 8.1,
+                     'pHtot': 8.1,
                      'unit': 1000000.0})
 
         Ks = Bunch(ref.Ks)
 
-        self.assertAlmostEqual(cf.CO2_pH(ref.CO2, ref.pH, Ks),
+        self.assertAlmostEqual(cf.CO2_pH(ref.CO2, ref.pHtot, Ks),
                                ref.DIC,
                                msg='CO2_pH', places=6)
 
@@ -168,21 +168,21 @@ class CarbonFnTestCase(unittest.TestCase):
                                          TS=ref.TS,
                                          TF=ref.TF,
                                          Ks=Ks)[0],
-                               ref.pH,
+                               ref.pHtot,
                                msg='CO2_TA', places=6)
         self.assertAlmostEqual(cf.CO2_DIC(ref.CO2, ref.DIC, Ks)[0],
                                ref.H,
                                msg='CO2_DIC (zf)', places=6)
 
-        self.assertAlmostEqual(cf.pH_HCO3(ref.pH, ref.HCO3, Ks),
+        self.assertAlmostEqual(cf.pH_HCO3(ref.pHtot, ref.HCO3, Ks),
                                ref.DIC,
                                msg='pH_HCO3', places=6)
 
-        self.assertAlmostEqual(cf.pH_CO3(ref.pH, ref.CO3, Ks),
+        self.assertAlmostEqual(cf.pH_CO3(ref.pHtot, ref.CO3, Ks),
                                ref.DIC,
                                msg='pH_CO3', places=6)
 
-        self.assertAlmostEqual(cf.pH_TA(pH=ref.pH,
+        self.assertAlmostEqual(cf.pH_TA(pH=ref.pHtot,
                                         TA=ref.TA / ref.unit,
                                         BT=ref.BT / ref.unit,
                                         TP=ref.TP / ref.unit,
@@ -193,7 +193,7 @@ class CarbonFnTestCase(unittest.TestCase):
                                ref.DIC,
                                msg='pH_TA', places=6)
 
-        self.assertAlmostEqual(cf.pH_DIC(ref.pH, ref.DIC, Ks),
+        self.assertAlmostEqual(cf.pH_DIC(ref.pHtot, ref.DIC, Ks),
                                ref.CO2,
                                msg='pH_DIC', places=6)
 
@@ -229,7 +229,7 @@ class CarbonFnTestCase(unittest.TestCase):
                                          TS=ref.TS,
                                          TF=ref.TF,
                                          Ks=Ks)[0],
-                               ref.pH,
+                               ref.pHtot,
                                msg='TA_DIC', places=6)
 
         self.assertAlmostEqual(cf.cCO2(ref.H, ref.DIC, Ks),
@@ -323,7 +323,7 @@ class ReferenceDataTestCase(unittest.TestCase):
 
         # Csys calculations
         # TA from pH and DIC
-        cTA = Csys(pH=pH, DIC=DIC, BT=BT, S=S)
+        cTA = Csys(pHtot=pH, DIC=DIC, BT=BT, S=S)
         # Calculate % differences from measured
         dTA = (100 * (TA - cTA.TA) / TA)
 
@@ -332,12 +332,12 @@ class ReferenceDataTestCase(unittest.TestCase):
         # pH from TA and DIC
         cpH = Csys(DIC=DIC, TA=TA, BT=BT, S=S)
         # Calculate % differences from measured
-        dpH = (100 * (pH - cpH.pH) / pH)
+        dpH = (100 * (pH - cpH.pHtot) / pH)
 
         self.assertLess(max(abs(dpH)), 0.2, msg='pH from TA and DIC')
 
         # DIC from pH and TA
-        cDIC = Csys(pH=pH, TA=TA, BT=BT, S=S)
+        cDIC = Csys(pHtot=pH, TA=TA, BT=BT, S=S)
         # Calculate % differences from measured
         dDIC = (100 * (DIC - cDIC.DIC) / DIC)
 
@@ -365,7 +365,7 @@ class ReferenceDataTestCase(unittest.TestCase):
 
         # Csys calculations
         # TA from pH and DIC
-        cTA = CBsys(pH=pH, DIC=DIC, BT=BT, S=S)
+        cTA = CBsys(pHtot=pH, DIC=DIC, BT=BT, S=S)
         # Calculate % differences from measured
         dTA = (100 * (TA - cTA.TA) / TA)
 
@@ -374,12 +374,12 @@ class ReferenceDataTestCase(unittest.TestCase):
         # pH from TA and DIC
         cpH = CBsys(DIC=DIC, TA=TA, BT=BT, S=S)
         # Calculate % differences from measured
-        dpH = (100 * (pH - cpH.pH) / pH)
+        dpH = (100 * (pH - cpH.pHtot) / pH)
 
         self.assertLess(max(abs(dpH)), 0.2, msg='pH from TA and DIC')
 
         # DIC from pH and TA
-        cDIC = CBsys(pH=pH, TA=TA, BT=BT, S=S)
+        cDIC = CBsys(pHtot=pH, TA=TA, BT=BT, S=S)
         # Calculate % differences from measured
         dDIC = (100 * (DIC - cDIC.DIC) / DIC)
 
@@ -479,7 +479,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         # calculate pH from TA and DIC
         cpH = Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
-        pH_resid = gd.phtsinsitutp - cpH.pH
+        pH_resid = gd.phtsinsitutp - cpH.pHtot
         pH_median = np.median(pH_resid)
         pH_pc95 = np.percentile(pH_resid, [2.5, 97.5])
 
@@ -487,7 +487,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         self.assertTrue(all(abs(pH_pc95) <= 0.05), msg='pH 95% Conf <= 0.05')
 
         # calculate TA from pH and DIC
-        cTA = Csys(pH=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
+        cTA = Csys(pHtot=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         TA_resid = gd.talk - cTA.TA
         TA_median = np.median(TA_resid)
@@ -497,7 +497,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         self.assertTrue(all(abs(TA_pc95) < 13), msg='TA 95% Conf <= 15')
 
         # calculate DIC from TA and pH
-        cDIC = Csys(pH=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity,
+        cDIC = Csys(pHtot=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity,
                     P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         DIC_resid = gd.tco2 - cDIC.DIC
         DIC_median = np.median(DIC_resid)
@@ -527,8 +527,8 @@ class ReferenceDataTestCase(unittest.TestCase):
 
         # calculate pH from TA and DIC
         cpH = CBsys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
-                   P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
-        pH_resid = gd.phtsinsitutp - cpH.pH
+                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
+        pH_resid = gd.phtsinsitutp - cpH.pHtot
         pH_median = np.median(pH_resid)
         pH_pc95 = np.percentile(pH_resid, [2.5, 97.5])
 
@@ -536,8 +536,8 @@ class ReferenceDataTestCase(unittest.TestCase):
         self.assertTrue(all(abs(pH_pc95) <= 0.05), msg='pH 95% Conf <= 0.05')
 
         # calculate TA from pH and DIC
-        cTA = CBsys(pH=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
-                   P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
+        cTA = CBsys(pHtot=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
+                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         TA_resid = gd.talk - cTA.TA
         TA_median = np.median(TA_resid)
         TA_pc95 = np.percentile(TA_resid, [2.5, 97.5])
@@ -546,8 +546,8 @@ class ReferenceDataTestCase(unittest.TestCase):
         self.assertTrue(all(abs(TA_pc95) < 13), msg='TA 95% Conf <= 15')
 
         # calculate DIC from TA and pH
-        cDIC = CBsys(pH=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity,
-                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
+        cDIC = CBsys(pHtot=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity,
+                     P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         DIC_resid = gd.tco2 - cDIC.DIC
         DIC_median = np.median(DIC_resid)
         DIC_pc95 = np.percentile(DIC_resid, [2.5, 97.5])
