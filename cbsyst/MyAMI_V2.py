@@ -56,12 +56,16 @@ def CalculateKcond(Tc, Sal):
     K1cond = np.power(10, -3633.86 / T + 61.2172 - 9.67770 * lnT + 0.011555 * Sal - 0.0001152 * Sal * Sal)  # Dickson
     # K1cond = np.exp(290.9097 - 14554.21 / T - 45.0575 * lnT + (-228.39774 + 9714.36839 / T + 34.485796 * lnT) * sqrtSal + (54.20871 - 2310.48919 / T - 8.19515 * lnT) * Sal + (-3.969101 + 170.22169 / T + 0.603627 * lnT) * Sal * sqrtSal - 0.00258768 * Sal * Sal) #Millero95
 
-    K2cond = np.power(10, -471.78 / T - 25.9290 + 3.16967 * lnT + 0.01781 * Sal - 0.0001122 * Sal * Sal)
+    K2cond = np.power(10, -471.78 / T - 25.9290 + 3.16967 * lnT +
+                      0.01781 * Sal - 0.0001122 * Sal * Sal)
 
-    KWcond = np.exp(148.9652 - 13847.26 / T - 23.6521 * lnT + (118.67 / T - 5.977 + 1.0495 * lnT) * sqrtSal - 0.01615 * Sal)
+    KWcond = np.exp(148.9652 - 13847.26 / T - 23.6521 * lnT +
+                    (118.67 / T - 5.977 + 1.0495 * lnT) * sqrtSal - 0.01615 * Sal)
 
-    KBcond = np.exp((-8966.90 - 2890.53 * sqrtSal - 77.942 * Sal + 1.728 * Sal * sqrtSal - 0.0996 * Sal * Sal) /
-                    T + (148.0248 + 137.1942 * sqrtSal + 1.62142 * Sal) + (-24.4344 - 25.085 * sqrtSal - 0.2474 * Sal) *
+    KBcond = np.exp((-8966.90 - 2890.53 * sqrtSal - 77.942 * Sal +
+                     1.728 * Sal * sqrtSal - 0.0996 * Sal * Sal) /
+                    T + (148.0248 + 137.1942 * sqrtSal + 1.62142 * Sal) +
+                    (-24.4344 - 25.085 * sqrtSal - 0.2474 * Sal) *
                     lnT + 0.053105 * sqrtSal * T)  # Dickson90b
 
     KspAcond = np.power(10, (-171.945 - 0.077993 * T + 2903.293 / T + 71.595 * np.log10(T) +
@@ -69,9 +73,12 @@ def CalculateKcond(Tc, Sal):
                              0.10018 * Sal + 0.0059415 * Sal * sqrtSal))
 
     K0cond = np.exp(-60.2409 + 93.4517 * 100 / T + 23.3585 * np.log(T / 100) +
-                    Sal * (0.023517 - 0.023656 * T / 100 + 0.0047036 * (T / 100) * (T / 100)))  # Weiss74
+                    Sal * (0.023517 - 0.023656 * T / 100 +
+                           0.0047036 * (T / 100) * (T / 100)))  # Weiss74
 
-    param_HSO4_cond = np.array([141.328, -4276.1, -23.093, 324.57, -13856, -47.986, -771.54, 35474, 114.723, -2698, 1776])  # Dickson 1990
+    param_HSO4_cond = np.array([141.328, -4276.1, -23.093, 324.57,
+                                -13856, -47.986, -771.54, 35474,
+                                114.723, -2698, 1776])  # Dickson 1990
 
     KHSO4cond = np.exp(param_HSO4_cond[0] +
                        param_HSO4_cond[1] / T +
@@ -103,6 +110,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Tpower2 = T**2
     Tpower3 = T**3
     Tpower4 = T**4
+    Tabz = T - 298.15
 
     # PART 1 -- calculate thermodynamic pK's for acids, gases and complexes
 
@@ -153,22 +161,37 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # PART 2 -- Pitzer equations (based on Millero and Pierrot (1998))
 
     # Table A1 (Millero and Pierrot, 1998; after Moller, 1988 & Greenberg and Moller, 1989) valid 0 to 250degC
-    param_NaCl = np.array([(1.43783204E01, 5.6076740E-3, -4.22185236E2, -2.51226677E0, 0.0, -2.61718135E-6, 4.43854508, -1.70502337),
-                           (-4.83060685E-1, 1.40677470E-3, 1.19311989E2, 0.0, 0.0, 0.0, 0.0, -4.23433299),
-                           (-1.00588714E-1, -1.80529413E-5, 8.61185543E0, 1.2488095E-2, 0.0, 3.41172108E-8, 6.83040995E-2, 2.93922611E-1)])
+    param_NaCl = np.array([(1.43783204E01, 5.6076740E-3, -4.22185236E2,
+                            -2.51226677E0, 0.0, -2.61718135E-6,
+                            4.43854508, -1.70502337),
+                           (-4.83060685E-1, 1.40677470E-3, 1.19311989E2,
+                            0.0, 0.0, 0.0, 0.0, -4.23433299),
+                           (-1.00588714E-1, -1.80529413E-5, 8.61185543E0,
+                            1.2488095E-2, 0.0, 3.41172108E-8, 6.83040995E-2,
+                            2.93922611E-1)])
     # note that second value is changed to original ref (e-3 instead e01)
     param_NaCl = reshaper(param_NaCl, T)
-    param_KCl = np.array([[2.67375563E1, 1.00721050E-2, -7.58485453E2, -4.70624175, 0.0, -3.75994338E-6, 0.0, 0.0],
-                          [-7.41559626, 0.0, 3.22892989E2, 1.16438557, 0.0, 0.0, 0.0, -5.94578140],
-                          [-3.30531334, -1.29807848E-3, 9.12712100E1, 5.864450181E-1, 0.0, 4.95713573E-7, 0.0, 0.0]])
+    param_KCl = np.array([[2.67375563E1, 1.00721050E-2, -7.58485453E2,
+                           -4.70624175, 0.0, -3.75994338E-6, 0.0, 0.0],
+                          [-7.41559626, 0.0, 3.22892989E2, 1.16438557,
+                           0.0, 0.0, 0.0, -5.94578140],
+                          [-3.30531334, -1.29807848E-3, 9.12712100E1,
+                           5.864450181E-1, 0.0, 4.95713573E-7, 0.0, 0.0]])
     param_KCl = reshaper(param_KCl, T)
-    param_K2SO4 = np.array([[4.07908797E1, 8.26906675E-3, -1.418242998E3, -6.74728848, 0.0, 0.0, 0.0, 0.0],
-                            [-1.31669651E1, 2.35793239E-2, 2.06712592E3, 0.0, 0.0, 0.0, 0.0, 0.0],
+    param_K2SO4 = np.array([[4.07908797E1, 8.26906675E-3, -1.418242998E3,
+                             -6.74728848, 0.0, 0.0, 0.0, 0.0],
+                            [-1.31669651E1, 2.35793239E-2, 2.06712592E3,
+                             0.0, 0.0, 0.0, 0.0, 0.0],
                             [-1.88E-2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
     param_K2SO4 = reshaper(param_K2SO4, T)
-    param_CaCl2 = np.array([[-9.41895832E1, -4.04750026E-2, 2.34550368E3, 1.70912300E1, -9.22885841E-1, 1.51488122E-5, -1.39082000E0, 0.0],
-                            [3.4787, -1.5417E-2, 0.0, 0.0, 0.0, 3.1791E-5, 0.0, 0.0],
-                            [1.93056024E1, 9.77090932E-3, -4.28383748E2, -3.57996343, 8.82068538E-2, -4.62270238E-6, 9.91113465, 0.0]])
+    param_CaCl2 = np.array([[-9.41895832E1, -4.04750026E-2, 2.34550368E3,
+                             1.70912300E1, -9.22885841E-1, 1.51488122E-5,
+                             -1.39082000E0, 0.0],
+                            [3.4787, -1.5417E-2, 0.0, 0.0, 0.0,
+                             3.1791E-5, 0.0, 0.0],
+                            [1.93056024E1, 9.77090932E-3, -4.28383748E2,
+                             -3.57996343, 8.82068538E-2, -4.62270238E-6,
+                             9.91113465, 0.0]])
     param_CaCl2 = reshaper(param_CaCl2, T)
     # [-3.03578731e1, 1.36264728e-2, 7.64582238e2, 5.50458061e0, -3.27377782e-1, 5.69405869e-6, -5.36231106e-1, 0]])
     # param_CaCl2_Spencer = np.array([[-5.62764702e1, -3.00771997e-2, 1.05630400e-5, 3.3331626e-9, 1.11730349e3, 1.06664743e1],
@@ -194,9 +217,12 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
                             [2.60135, -0.0109438, 2.60169E-05],
                             [0.059532, -2.49949E-04, 2.41831E-07]])
     param_MgCl2 = reshaper(param_MgCl2, T)
-    param_MgSO4 = np.array([[-1.0282, 8.4790E-03, -2.33667E-05, 2.1575E-08, 6.8402E-04, 0.21499],
-                            [-2.9596E-01, 9.4564E-04, 0.0, 0.0, 1.1028E-02, 3.3646],
-                            [4.2164E-01, -3.5726E-03, 1.0040E-05, -9.3744E-09, -3.5160E-04, 2.7972E-02]])
+    param_MgSO4 = np.array([[-1.0282, 8.4790E-03, -2.33667E-05,
+                             2.1575E-08, 6.8402E-04, 0.21499],
+                            [-2.9596E-01, 9.4564E-04, 0.0, 0.0,
+                             1.1028E-02, 3.3646],
+                            [4.2164E-01, -3.5726E-03, 1.0040E-05,
+                             -9.3744E-09, -3.5160E-04, 2.7972E-02]])
     param_MgSO4 = reshaper(param_MgSO4, T)
     # param_MgSO4 = np.array([[-1.0282, 8.4790E-03, -2.33667E-05, 2.1575E-08, 6.8402E-04, 0.21499],[-2.9596E-01, 9.4564E-04, 0.0, 0.0, 1.1028E-02, 3.3646], [1.0541E-01, -8.9316E-04, 2.51E-06, -2.3436E-09, -8.7899E-05, 0.006993]])  # Cparams corrected after Pabalan and Pitzer ... but note that column lists Cmx not Cphi(=4xCmx) ... MP98 is correct
 
@@ -224,9 +250,16 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     #                             [0.8742642, -70.014123, 0.2962095],
     #                             [7.693706E-3, 4.5879201, 0.019471746]])  # corrected according to Hovey et al 1993; note also that alpha = 1.7, not 2
     param_NaHCO3 = reshaper(param_NaHCO3, T)
-    param_Na2SO4_Moller = np.array([[81.6920027 + 0.0301104957 * T - 2321.93726 / T - 14.3780207 * lnT - 0.666496111 / (T - 263) - 1.03923656e-05 * T**2],
-                                    [1004.63018 + 0.577453682 * T - 21843.4467 / T - 189.110656 * lnT - 0.2035505488 / (T - 263) - 0.000323949532 * T**2 + 1467.72243 / (680 - T)],
-                                    [-80.7816886 - 0.0354521126 * T + 2024.3883 / T + 14.619773 * lnT - 0.091697474 / (T - 263) + 1.43946005e-05 * T**2 - 2.42272049 / (680 - T)]])
+    param_Na2SO4_Moller = np.array([[81.6920027 + 0.0301104957 * T -
+                                     2321.93726 / T - 14.3780207 * lnT -
+                                     0.666496111 / (T - 263) - 1.03923656e-05 * T**2],
+                                    [1004.63018 + 0.577453682 * T -
+                                     21843.4467 / T - 189.110656 * lnT -
+                                     0.2035505488 / (T - 263) -
+                                     0.000323949532 * T**2 + 1467.72243 / (680 - T)],
+                                    [-80.7816886 - 0.0354521126 * T + 2024.3883 / T +
+                                     14.619773 * lnT - 0.091697474 / (T - 263) +
+                                     1.43946005e-05 * T**2 - 2.42272049 / (680 - T)]])
     # Moller 1988 parameters as used in Excel MIAMI code !!!!!! careful this formula assumes alpha1=2 as opposed to alpha1=1.7 for the Hovey parameters
     # XXXXX - - > need to go to the calculation of beta's (to switch Hovey / Moller) and of B et al (to switch alpha1
 
@@ -242,10 +275,10 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
                              [0.01498, -15.7E-4, 0.0]])  # corrected after Simonson et al 1987 5th param should be e-2
     param_NaBOH4 = reshaper(param_NaBOH4, T)
 
-    def Equation_TabA3andTabA4andTabA5(T, a):
+    def Equation_TabA3andTabA4andTabA5(Tabz, a):
         return (a[:, 0] +
-                a[:, 1] * (T - 298.15) +
-                a[:, 2] * (T - 298.15) * (T - 298.15))
+                a[:, 1] * Tabz +
+                a[:, 2] * Tabz**2)
 
     # def Equation_Na2SO4_TabA3(T, ln_of_Tdiv29815, a):
     #     return (a[:, 0] + a[:, 1] * ((1 / T) - (1 / 298.15)) + a[:, 2] * ln_of_Tdiv29815)
@@ -293,13 +326,16 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
 
     def Equation_TabA7(T, P):
         return (P[:, 0] +
-                P[:, 1] * (8834524.639 - 88893.4225 * P[:, 2]) * (1 / T - (1 / 298.15)) +
+                P[:, 1] * (8834524.639 - 88893.4225 *
+                           P[:, 2]) * (1 / T - (1 / 298.15)) +
                 P[:, 1] / 6 * (T**2 - 88893.4225))
 
     # Table A8 - - - Pitzer parameters unknown; beta's known for 25degC
     Equation_KHSO4 = np.array([-0.0003, 0.1735, 0.0])
     # Equation_MgHSO42 = np.array([0.4746, 1.729, 0.0])  #  XX no Cphi #from Harvie et al 1984 as referenced in MP98
-    Equation_MgHSO42 = np.array([-0.61656 - 0.00075174 * (T - 298.15), 7.716066 - 0.0164302 * (T - 298.15), 0.43026 + 0.00199601 * (T - 298.15)])  # from Pierrot and Millero 1997 as used in the Excel file
+    Equation_MgHSO42 = np.array([-0.61656 - 0.00075174 * Tabz,
+                                 7.716066 - 0.0164302 * Tabz,
+                                 0.43026 + 0.00199601 * Tabz])  # from Pierrot and Millero 1997 as used in the Excel file
 
     # Equation_MgHCO32 = np.array([0.329, 0.6072, 0.0])  # Harvie et al 1984
     Equation_MgHCO32 = np.array([0.03, 0.8, 0.0])  # Millero and Pierrot redetermined after Thurmond and Millero 1982
@@ -448,23 +484,23 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Theta_positive = np.zeros((6, 6, *T.shape))  # Array to hold Theta values between ion two ions (for numbering see list above)
 
     # H - Sr
-    Theta_positive[0, 5] = 0.0591 + 4.5 * 1E-4 * (T - 298.15)
+    Theta_positive[0, 5] = 0.0591 + 4.5 * 1E-4 * Tabz
     Theta_positive[5, 0] = Theta_positive[0, 5]
 
     # H - Na
-    Theta_positive[0, 1] = 0.03416 - 2.09 * 1E-4 * (T - 298.15)
+    Theta_positive[0, 1] = 0.03416 - 2.09 * 1E-4 * Tabz
     Theta_positive[1, 0] = Theta_positive[0, 1]
 
     # H - K
-    Theta_positive[0, 2] = 0.005 - 2.275 * 1E-4 * (T - 298.15)
+    Theta_positive[0, 2] = 0.005 - 2.275 * 1E-4 * Tabz
     Theta_positive[2, 0] = Theta_positive[0, 2]
 
     # H - Mg
-    Theta_positive[0, 3] = 0.062 + 3.275 * 1E-4 * (T - 298.15)
+    Theta_positive[0, 3] = 0.062 + 3.275 * 1E-4 * Tabz
     Theta_positive[3, 0] = Theta_positive[0, 3]
 
     # H - Ca
-    Theta_positive[0, 4] = 0.0612 + 3.275 * 1E-4 * (T - 298.15)
+    Theta_positive[0, 4] = 0.0612 + 3.275 * 1E-4 * Tabz
     Theta_positive[4, 0] = Theta_positive[0, 4]
 
     # Na - K
@@ -516,7 +552,8 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Theta_negative[3, 1] = 0.0359
 
     # Cl - BOH4
-    Theta_negative[1, 2] = -0.0323 - 0.42333 * 1E-4 * (T - 298.15) - 21.926 * 1E-6 * (T - 298.15) * (T - 298.15)
+    Theta_negative[1, 2] = (-0.0323 - 0.42333 * 1E-4 * Tabz -
+                            21.926 * 1E-6 * Tabz**2)
     Theta_negative[2, 1] = Theta_negative[1, 2]
 
     # CO3 - HCO3
@@ -528,7 +565,8 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Theta_negative[6, 4] = 0.0
 
     # OH - Cl
-    Theta_negative[0, 1] = -0.05 + 3.125 * 1E-4 * (T - 298.15) - 8.362 * 1E-6 * (T - 298.15) * (T - 298.15)
+    Theta_negative[0, 1] = (-0.05 + 3.125 * 1E-4 * Tabz -
+                            8.362 * 1E-6 * Tabz**2)
     Theta_negative[1, 0] = Theta_negative[0, 1]
 
     # SO4 - CO3
@@ -575,7 +613,8 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Phi_PPN[3, 1, 1] = Phi_PPN[1, 3, 1]
 
     # Na - Ca - Cl
-    Phi_PPN[1, 4, 1] = -7.6398 - 1.2990e-2 * T + 1.1060e-5 * T**2 + 1.8475 * lnT  # Spencer et al 1990 # -0.003
+    Phi_PPN[1, 4, 1] = (-7.6398 - 1.2990e-2 * T +
+                        1.1060e-5 * T**2 + 1.8475 * lnT)  # Spencer et al 1990 # -0.003
     Phi_PPN[4, 1, 1] = Phi_PPN[1, 4, 1]
     # print -7.6398 -1.2990e-2 * T + 1.1060e-5 * T*T + 1.8475 * lnT
 
@@ -596,15 +635,15 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Phi_PPN[4, 2, 6] = 0.0
 
     # H - Sr - Cl
-    Phi_PPN[0, 5, 1] = 0.0054 - 2.1 * 1E-4 * (T - 298.15)
+    Phi_PPN[0, 5, 1] = 0.0054 - 2.1 * 1E-4 * Tabz
     Phi_PPN[5, 0, 1] = Phi_PPN[0, 5, 1]
 
     # H - Mg - Cl
-    Phi_PPN[0, 3, 1] = 0.001 - 7.325 * 1E-4 * (T - 298.15)
+    Phi_PPN[0, 3, 1] = 0.001 - 7.325 * 1E-4 * Tabz
     Phi_PPN[3, 0, 1] = Phi_PPN[0, 3, 1]
 
     # H - Ca - Cl
-    Phi_PPN[0, 4, 1] = 0.0008 - 7.25 * 1E-4 * (T - 298.15)
+    Phi_PPN[0, 4, 1] = 0.0008 - 7.25 * 1E-4 * Tabz
     Phi_PPN[4, 0, 1] = Phi_PPN[0, 4, 1]
 
     # Sr - Na - Cl
@@ -624,7 +663,8 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Phi_PPN[3, 2, 6] = -0.048
 
     # Mg - Ca - Cl
-    Phi_PPN[3, 4, 1] = 4.15790220e1 + 1.30377312e-2 * T - 9.81658526e2 / T - 7.4061986 * lnT  # Spencer et al 1990 # - 0.012
+    Phi_PPN[3, 4, 1] = (4.15790220e1 + 1.30377312e-2 * T -
+                        9.81658526e2 / T - 7.4061986 * lnT)  # Spencer et al 1990 # - 0.012
     Phi_PPN[4, 3, 1] = Phi_PPN[3, 4, 1]
     # print 4.15790220e1 + 1.30377312e-2 * T -9.81658526e2 / T -7.4061986 * lnT
 
@@ -747,7 +787,9 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Phi_NNP[0, 6, 2] = -0.05
     Phi_NNP[6, 0, 2] = -0.05
 
-    return beta_0, beta_1, beta_2, C_phi, Theta_negative, Theta_positive, Phi_NNP, Phi_PPN, C1_HSO4
+    return (beta_0, beta_1, beta_2, C_phi,
+            Theta_negative, Theta_positive,
+            Phi_NNP, Phi_PPN, C1_HSO4)
 
 
 # Functions from K_HSO4_thermo.py
@@ -768,7 +810,10 @@ def supplyKHSO4(T, Istr):
                            param_HSO4[2] * np.log(T) +
                            param_HSO4[3] * T))
 
-    param_HSO4_cond = np.array([141.328, -4276.1, -23.093, 324.57, -13856, -47.986, -771.54, 35474, 114.723, -2698, 1776])  # Dickson 1990
+    param_HSO4_cond = np.array([141.328, -4276.1, -23.093,
+                                324.57, -13856, -47.986,
+                                -771.54, 35474, 114.723,
+                                -2698, 1776])  # Dickson 1990
     K_HSO4_cond = np.exp(param_HSO4_cond[0] +
                          param_HSO4_cond[1] / T +
                          param_HSO4_cond[2] * np.log(T) + np.sqrt(Istr) *
@@ -839,34 +884,43 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
 
     for cat in range(0, 6):
         for an in range(0, 7):
-            BMX_phi[cat, an] = beta_0[cat, an] + \
-                beta_1[cat, an] * np.exp(-2 * sqrtI)
-            BMX[cat, an] = beta_0[cat, an] + \
-                (beta_1[cat, an] / (2 * Istr)) * \
-                (1 - (1 + 2 * sqrtI) * np.exp(-2 * sqrtI))
-            BMX_apostroph[cat, an] = (beta_1[cat, an] / (2 * Istr * Istr)) * \
-                (-1 + (1 + (2 * sqrtI) + (2 * sqrtI)) * np.exp(-2 * sqrtI))
-            CMX[cat, an] = C_phi[cat, an] / \
-                (2 * np.sqrt(-Z_anion[an] * Z_cation[cat]))
+            BMX_phi[cat, an] = (beta_0[cat, an] +
+                                beta_1[cat, an] * np.exp(-2 * sqrtI))
+            BMX[cat, an] = (beta_0[cat, an] + (beta_1[cat, an] / (2 * Istr)) *
+                            (1 - (1 + 2 * sqrtI) * np.exp(-2 * sqrtI)))
+            BMX_apostroph[cat, an] = ((beta_1[cat, an] / (2 * Istr * Istr)) *
+                                      (-1 + (1 + (2 * sqrtI) + (2 * sqrtI)) *
+                                       np.exp(-2 * sqrtI)))
+            CMX[cat, an] = C_phi[cat, an] / (2 * np.sqrt(-Z_anion[an] * Z_cation[cat]))
 
     # BMX* and CMX are calculated differently for 2:2 ion pairs, corrections
     # below  # § alpha2= 6 for borates ... see Simonson et al 1988
     cat = 3
     an = 2  # MgBOH42
-    BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * \
-        np.exp(-1.4 * sqrtI) + beta_2[cat, an] * np.exp(-6 * sqrtI)
-    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
-        beta_2[cat, an] / (18 * Istr)) * (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI))
-    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr * Istr)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) *
-                                                                   np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (18 * Istr)) * (-1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI))
+    BMX_phi[cat, an] = (beta_0[cat, an] + beta_1[cat, an] *
+                        np.exp(-1.4 * sqrtI) + beta_2[cat, an] *
+                        np.exp(-6 * sqrtI))
+    BMX[cat, an] = (beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) *
+                    (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) +
+                    (beta_2[cat, an] / (18 * Istr)) *
+                    (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI)))
+    BMX_apostroph[cat, an] = ((beta_1[cat, an] / (0.98 * Istr * Istr)) *
+                              (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) * np.exp(-1.4 * sqrtI)) +
+                              (beta_2[cat, an] / (18 * Istr)) *
+                              (-1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI)))
     cat = 3
     an = 6  # MgSO4
-    BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * \
-        np.exp(-1.4 * sqrtI) + beta_2[cat, an] * np.exp(-12 * sqrtI)
-    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
-        beta_2[cat, an] / (72 * Istr)) * (1 - (1 + 12 * sqrtI) * np.exp(-12 * sqrtI))
-    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr * Istr)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) * np.exp(-1.4 * sqrtI)
-                                                                   ) + (beta_2[cat, an] / (72 * Istr * Istr)) * (-1 - (1 + 12 * sqrtI + 72 * Istr) * np.exp(-12 * sqrtI))
+    BMX_phi[cat, an] = (beta_0[cat, an] + beta_1[cat, an] *
+                        np.exp(-1.4 * sqrtI) + beta_2[cat, an] *
+                        np.exp(-12 * sqrtI))
+    BMX[cat, an] = (beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) *
+                    (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) +
+                    (beta_2[cat, an] / (72 * Istr)) *
+                    (1 - (1 + 12 * sqrtI) * np.exp(-12 * sqrtI)))
+    BMX_apostroph[cat, an] = ((beta_1[cat, an] / (0.98 * Istr * Istr)) *
+                              (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) * np.exp(-1.4 * sqrtI)) +
+                              (beta_2[cat, an] / (72 * Istr * Istr)) *
+                              (-1 - (1 + 12 * sqrtI + 72 * Istr) * np.exp(-12 * sqrtI)))
     # BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr)) * (-1 + (1 + 1.4
     # * sqrtI + 0.98 * Istr) * np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (72 *
     # Istr)) * (-1-(1 + 12 * sqrtI + 72 * Istr) * np.exp(-12 * sqrtI)) # not 1 /
@@ -874,29 +928,44 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     # 1987 equation 15c / 16b
     cat = 4
     an = 2  # CaBOH42
-    BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * \
-        np.exp(-1.4 * sqrtI) + beta_2[cat, an] * np.exp(-6 * sqrtI)
-    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
-        beta_2[cat, an] / (18 * Istr)) * (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI))
-    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr * Istr)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) *
-                                                                   np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (18 * Istr)) * (-1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI))
+    BMX_phi[cat, an] = (beta_0[cat, an] + beta_1[cat, an] *
+                        np.exp(-1.4 * sqrtI) + beta_2[cat, an] *
+                        np.exp(-6 * sqrtI))
+    BMX[cat, an] = (beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) *
+                    (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) +
+                    (beta_2[cat, an] / (18 * Istr)) *
+                    (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI)))
+    BMX_apostroph[cat, an] = ((beta_1[cat, an] / (0.98 * Istr * Istr)) *
+                              (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) * np.exp(-1.4 * sqrtI)) +
+                              (beta_2[cat, an] / (18 * Istr)) *
+                              (-1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI)))
     cat = 4
     an = 6  # CaSO4
-    BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * \
-        np.exp(-1.4 * sqrtI) + beta_2[cat, an] * np.exp(-12 * sqrtI)
-    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
-        beta_2[cat, an] / (72 * Istr)) * (1 - (1 + 12 * sqrtI) * np.exp(-12 * sqrtI))
-    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr * Istr)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) * np.exp(-1.4 * sqrtI)
-                                                                   ) + (beta_2[cat, an] / (72 * Istr)) * (-1 - (1 + 12 * sqrtI + 72 * Istr) * np.exp(-12 * sqrtI))
+    BMX_phi[cat, an] = (beta_0[cat, an] + beta_1[cat, an] *
+                        np.exp(-1.4 * sqrtI) + beta_2[cat, an] *
+                        np.exp(-12 * sqrtI))
+    BMX[cat, an] = (beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) *
+                    (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) +
+                    (beta_2[cat, an] / (72 * Istr)) *
+                    (1 - (1 + 12 * sqrtI) * np.exp(-12 * sqrtI)))
+    BMX_apostroph[cat, an] = ((beta_1[cat, an] / (0.98 * Istr * Istr)) *
+                              (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) * np.exp(-1.4 * sqrtI)) +
+                              (beta_2[cat, an] / (72 * Istr)) *
+                              (-1 - (1 + 12 * sqrtI + 72 * Istr) * np.exp(-12 * sqrtI)))
 
     cat = 5
     an = 2  # SrBOH42
-    BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * \
-        np.exp(-1.4 * sqrtI) + beta_2[cat, an] * np.exp(-6 * sqrtI)
-    BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) * (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) + (
-        beta_2[cat, an] / (18 * Istr)) * (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI))
-    BMX_apostroph[cat, an] = (beta_1[cat, an] / (0.98 * Istr * Istr)) * (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) *
-                                                                   np.exp(-1.4 * sqrtI)) + (beta_2[cat, an] / (18 * Istr)) * (-1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI))
+    BMX_phi[cat, an] = (beta_0[cat, an] + beta_1[cat, an] *
+                        np.exp(-1.4 * sqrtI) + beta_2[cat, an] *
+                        np.exp(-6 * sqrtI))
+    BMX[cat, an] = (beta_0[cat, an] + (beta_1[cat, an] / (0.98 * Istr)) *
+                    (1 - (1 + 1.4 * sqrtI) * np.exp(-1.4 * sqrtI)) +
+                    (beta_2[cat, an] / (18 * Istr)) *
+                    (1 - (1 + 6 * sqrtI) * np.exp(-6 * sqrtI)))
+    BMX_apostroph[cat, an] = ((beta_1[cat, an] / (0.98 * Istr * Istr)) *
+                              (-1 + (1 + 1.4 * sqrtI + 0.98 * Istr) * np.exp(-1.4 * sqrtI)) +
+                              (beta_2[cat, an] / (18 * Istr)) *
+                              (-1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI)))
 
     # BMX* is calculated with T-dependent alpha for H-SO4; see Clegg et al.,
     # 1994 --- Millero and Pierrot are completly off for this ion pair
@@ -908,8 +977,9 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     BMX[0, 6] = beta_0[0, 6] + beta_1[0, 6] * gClegg
     BMX_apostroph[0, 6] = beta_1[0, 6] / Istr * (np.exp(-xClegg) - gClegg)
 
-    CMX[0, 6] = C_phi[0, 6] + 4 * C1_HSO4 * (6 - (6 + 2.5 * sqrtI * (6 + 3 * 2.5 * sqrtI + 2.5 * sqrtI * 2.5 * sqrtI)) *
-                                             np.exp(-2.5 * sqrtI)) / (2.5 * sqrtI * 2.5 * sqrtI * 2.5 * sqrtI * 2.5 * sqrtI)  # w = 2.5 ... see Clegg et al., 1994
+    CMX[0, 6] = (C_phi[0, 6] + 4 * C1_HSO4 *
+                 (6 - (6 + 2.5 * sqrtI * (6 + 3 * 2.5 * sqrtI + 2.5 * sqrtI * 2.5 * sqrtI)) *
+                  np.exp(-2.5 * sqrtI)) / (2.5 * sqrtI * 2.5 * sqrtI * 2.5 * sqrtI * 2.5 * sqrtI))  # w = 2.5 ... see Clegg et al., 1994
 
     # unusual alpha=1.7 for Na2SO4
     # BMX[1, 6] = beta_0[1, 6] + (beta_1[1, 6] / (2.89 * Istr)) * 2 * (1 - (1 + 1.7 * sqrtI) * np.exp(-1.7 * sqrtI))
@@ -928,66 +998,68 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     ln_gamma_anion = np.zeros((7, *Tc.shape))
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
     # print (np.exp(ln_gammaCl), ln_gammaCl)
-    XX = 99
-
+    
+    # XX = 99
     for an in range(0, 7):
-        ln_gamma_anion[an] = Z_anion[an] * \
-            Z_anion[an] * (f_gamma + R) + Z_anion[an] * S
-        if an == XX:
-            print (ln_gamma_anion[an], "init")
+        ln_gamma_anion[an] = (Z_anion[an] * Z_anion[an] *
+                              (f_gamma + R) + Z_anion[an] * S)
+        # if an == XX:
+        #     print (ln_gamma_anion[an], "init")
         for cat in range(0, 6):
-            ln_gamma_anion[an] = ln_gamma_anion[an] + 2 * \
-                m_cation[cat] * (BMX[cat, an] + E_cat * CMX[cat, an])
-            if an == XX:
-                print (ln_gamma_anion[an], cat)
+            ln_gamma_anion[an] = (ln_gamma_anion[an] + 2 * m_cation[cat] *
+                                  (BMX[cat, an] + E_cat * CMX[cat, an]))
+            # if an == XX:
+            #     print (ln_gamma_anion[an], cat)
         for an2 in range(0, 7):
-            ln_gamma_anion[an] = ln_gamma_anion[an] + \
-                m_anion[an2] * (2 * Theta_negative[an, an2])
-            if an == XX:
-                print (ln_gamma_anion[an], an2)
+            ln_gamma_anion[an] = (ln_gamma_anion[an] + m_anion[an2] *
+                                  (2 * Theta_negative[an, an2]))
+            # if an == XX:
+            #     print (ln_gamma_anion[an], an2)
         for an2 in range(0, 7):
             for cat in range(0, 6):
-                ln_gamma_anion[an] = ln_gamma_anion[an] + \
-                    m_anion[an2] * m_cation[cat] * Phi_NNP[an, an2, cat]
-                if an == XX:
-                    print (ln_gamma_anion[an], an2, cat)
+                ln_gamma_anion[an] = (ln_gamma_anion[an] + m_anion[an2] *
+                                      m_cation[cat] * Phi_NNP[an, an2, cat])
+                # if an == XX:
+                #     print (ln_gamma_anion[an], an2, cat)
         for cat in range(0, 6):
             for cat2 in range(cat + 1, 6):
-                ln_gamma_anion[an] = ln_gamma_anion[an] + m_cation[cat] * m_cation[cat2] * Phi_PPN[cat, cat2, an]
-                if an == XX:
-                    print (ln_gamma_anion[an], cat, cat2)
+                ln_gamma_anion[an] = (ln_gamma_anion[an] + m_cation[cat] *
+                                      m_cation[cat2] * Phi_PPN[cat, cat2, an])
+                # if an == XX:
+                #     print (ln_gamma_anion[an], cat, cat2)
 
     gamma_cation = np.zeros((6, *Tc.shape))
     ln_gamma_cation = np.zeros((6, *Tc.shape))
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
     # print (np.exp(ln_gammaCl), ln_gammaCl)
-    XX = 99
+    # XX = 99
     for cat in range(0, 6):
-        ln_gamma_cation[cat] = Z_cation[cat] * \
-            Z_cation[cat] * (f_gamma + R) + Z_cation[cat] * S
-        if cat == XX:
-            print (ln_gamma_cation[cat], "init")
+        ln_gamma_cation[cat] = (Z_cation[cat] * Z_cation[cat] *
+                                (f_gamma + R) + Z_cation[cat] * S)
+        # if cat == XX:
+        #     print (ln_gamma_cation[cat], "init")
         for an in range(0, 7):
-            ln_gamma_cation[cat] = ln_gamma_cation[cat] + 2 * \
-                m_anion[an] * (BMX[cat, an] + E_cat * CMX[cat, an])
-            if cat == XX:
-                print (ln_gamma_cation[cat], an, BMX[cat, an], E_cat * CMX[cat, an])
+            ln_gamma_cation[cat] = (ln_gamma_cation[cat] + 2 * m_anion[an] *
+                                    (BMX[cat, an] + E_cat * CMX[cat, an]))
+            # if cat == XX:
+            #     print (ln_gamma_cation[cat], an, BMX[cat, an], E_cat * CMX[cat, an])
         for cat2 in range(0, 6):
-            ln_gamma_cation[cat] = ln_gamma_cation[cat] + \
-                m_cation[cat2] * (2 * Theta_positive[cat, cat2])
-            if cat == XX:
-                print (ln_gamma_cation[cat], cat2)
+            ln_gamma_cation[cat] = (ln_gamma_cation[cat] + m_cation[cat2] *
+                                    (2 * Theta_positive[cat, cat2]))
+            # if cat == XX:
+            #     print (ln_gamma_cation[cat], cat2)
         for cat2 in range(0, 6):
             for an in range(0, 7):
-                ln_gamma_cation[cat] = ln_gamma_cation[cat] + m_cation[cat2] * m_anion[an] * Phi_PPN[cat, cat2, an]
-                if cat == XX:
-                    print (ln_gamma_cation[cat], cat2, an)
+                ln_gamma_cation[cat] = (ln_gamma_cation[cat] + m_cation[cat2] *
+                                        m_anion[an] * Phi_PPN[cat, cat2, an])
+                # if cat == XX:
+                #     print (ln_gamma_cation[cat], cat2, an)
         for an in range(0, 7):
             for an2 in range(an + 1, 7):
-                ln_gamma_cation[cat] = ln_gamma_cation[cat] + \
-                    m_anion[an] * m_anion[an2] * Phi_NNP[an, an2, cat]
-                if cat == XX:
-                    print (ln_gamma_cation[cat], an, an2)
+                ln_gamma_cation[cat] = (ln_gamma_cation[cat] + m_anion[an] *
+                                        m_anion[an2] * Phi_NNP[an, an2, cat])
+                # if cat == XX:
+                #     print (ln_gamma_cation[cat], an, an2)
 
     gamma_anion = np.exp(ln_gamma_anion)
     gamma_cation = np.exp(ln_gamma_cation)
@@ -1017,24 +1089,24 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
         0] + (b0b1CPhi_MgOH[1] / (2 * Istr)) * (1 - (1 + 2 * sqrtI) * np.exp(-2 * sqrtI))
     ln_gamma_MgOH = 1 * (f_gamma + R) + (1) * S
     # interaction between MgOH-Cl affects MgOH gamma
-    ln_gamma_MgOH = ln_gamma_MgOH + 2 * \
-        m_anion[1] * (BMX_MgOH + E_cat * b0b1CPhi_MgOH[2])
+    ln_gamma_MgOH = (ln_gamma_MgOH + 2 * m_anion[1] *
+                     (BMX_MgOH + E_cat * b0b1CPhi_MgOH[2]))
     # interaction between MgOH-Mg-OH affects MgOH gamma
     ln_gamma_MgOH = ln_gamma_MgOH + m_cation[3] * m_anion[1] * b0b1CPhi_MgOH[3]
     gamma_MgOH = np.exp(ln_gamma_MgOH)
 
-    K_MgOH = np.power(10, -(3.87 - 501.6 / T)) / \
-        (gamma_cation[3] * gamma_anion[0] / gamma_MgOH)
-    K_MgCO3 = np.power(10, -(1.028 + 0.0066154 * T)) / \
-        (gamma_cation[3] * gamma_anion[5] / gamma_MgCO3)
-    K_CaCO3 = np.power(10, -(1.178 + 0.0066154 * T)) / \
-        (gamma_cation[4] * gamma_anion[5] / gamma_CaCO3)
+    K_MgOH = (np.power(10, -(3.87 - 501.6 / T)) /
+              (gamma_cation[3] * gamma_anion[0] / gamma_MgOH))
+    K_MgCO3 = (np.power(10, -(1.028 + 0.0066154 * T)) /
+               (gamma_cation[3] * gamma_anion[5] / gamma_MgCO3))
+    K_CaCO3 = (np.power(10, -(1.178 + 0.0066154 * T)) /
+               (gamma_cation[4] * gamma_anion[5] / gamma_CaCO3))
     # K_CaCO3 = np.power(10, (-1228.732 - 0.299444 * T + 35512.75 / T +485.818 * np.log10(T))) / (gamma_cation[4] * gamma_anion[5] / gamma_CaCO3) # Plummer and Busenberg82
     # K_MgCO3 = np.power(10, (-1228.732 +(0.15) - 0.299444 * T + 35512.75 / T
     # +485.818 * np.log10(T))) / (gamma_cation[4] * gamma_anion[5] /
     # gamma_CaCO3)# Plummer and Busenberg82
-    K_SrCO3 = np.power(10, -(1.028 + 0.0066154 * T)) / \
-        (gamma_cation[5] * gamma_anion[5] / gamma_SrCO3)
+    K_SrCO3 = (np.power(10, -(1.028 + 0.0066154 * T)) /
+               (gamma_cation[5] * gamma_anion[5] / gamma_SrCO3))
 
     alpha_OH = 1 / (1 + (m_cation[3] / K_MgOH))
     alpha_CO3 = 1 / (1 + (m_cation[3] / K_MgCO3) +
@@ -1074,13 +1146,19 @@ def gammaCO2_fn(Tc, m_an, m_cat):
 
     lamdaCO2 = np.zeros((7, *Tc.shape))
     for ion in range(0, 7):
-        lamdaCO2[ion] = param_lamdaCO2[ion, 0] + param_lamdaCO2[ion, 1] * T + param_lamdaCO2[ion, 2] * T**2 + param_lamdaCO2[ion, 3] / T + param_lamdaCO2[ion, 4] * lnT
+        lamdaCO2[ion] = (param_lamdaCO2[ion, 0] + param_lamdaCO2[ion, 1] * T +
+                         param_lamdaCO2[ion, 2] * T**2 + param_lamdaCO2[ion, 3] / T +
+                         param_lamdaCO2[ion, 4] * lnT)
 
     zetaCO2 = np.zeros([2, 5, *Tc.shape])
     for ion in range(0, 5):
-        zetaCO2[0, ion] = param_zetaCO2[0, ion, 0] + param_zetaCO2[0, ion, 1] * T + param_zetaCO2[0, ion, 2] * T**2 + param_zetaCO2[0, ion, 3] / T + param_zetaCO2[0, ion, 4] * lnT
+        zetaCO2[0, ion] = (param_zetaCO2[0, ion, 0] + param_zetaCO2[0, ion, 1] * T +
+                           param_zetaCO2[0, ion, 2] * T**2 + param_zetaCO2[0, ion, 3] / T +
+                           param_zetaCO2[0, ion, 4] * lnT)
     for ion in range(1, 4):
-        zetaCO2[1, ion] = param_zetaCO2[1, ion, 0] + param_zetaCO2[1, ion, 1] * T + param_zetaCO2[1, ion, 2] * T**2 + param_zetaCO2[1, ion, 3] / T + param_zetaCO2[1, ion, 4] * lnT
+        zetaCO2[1, ion] = (param_zetaCO2[1, ion, 0] + param_zetaCO2[1, ion, 1] * T +
+                           param_zetaCO2[1, ion, 2] * T**2 + param_zetaCO2[1, ion, 3] / T +
+                           param_zetaCO2[1, ion, 4] * lnT)
 
     ln_gammaCO2 = 0
     for ion in range(0, 7):
@@ -1091,7 +1169,8 @@ def gammaCO2_fn(Tc, m_an, m_cat):
     gammaCO2 = np.exp(ln_gammaCO2)  # as according to He and Morse 1993
     # gammaCO2 = np.power(10, ln_gammaCO2) # pK1 is "correct if log-base 10 is assumed
 
-    gammaCO2gas = np.exp(1 / (8.314462175 * T * (0.10476 - 61.0102 / T - 660000 / T / T / T - 2.47E27 / np.power(T, 12))))
+    gammaCO2gas = np.exp(1 / (8.314462175 * T * (0.10476 - 61.0102 / T -
+                                                 660000 / T / T / T - 2.47E27 / np.power(T, 12))))
 
     ##########################
     # CALCULATION OF gammaB
@@ -1184,15 +1263,18 @@ start_params = {'K0': np.array([-60.2409, 93.4517, 23.3585, 0.023517,
                                 0.011555, -0.0001152]),
                 'K2': np.array([-25.9290, -471.78, 3.16967,
                                 0.01781, -0.0001122]),
-                'KB': np.array([148.0248, 137.1942, 1.62142, -8966.90, -2890.53, -77.942, 1.728, -0.0996, -24.4344, -25.085, -0.2474, 0.053105]),
+                'KB': np.array([148.0248, 137.1942, 1.62142, -8966.90,
+                                -2890.53, -77.942, 1.728, -0.0996,
+                                -24.4344, -25.085, -0.2474, 0.053105]),
                 'KW': np.array([148.9652, -13847.26, -23.6521, 118.67,
                                 -5.977, 1.0495, -0.01615]),
                 'KspC': np.array([-171.9065, -0.077993, 2839.319, 71.595, -0.77712,
                                   0.0028426, 178.34, -0.07711, 0.0041249]),
                 'KspA': np.array([-171.945, -0.077993, 2903.293, 71.595, -0.068393,
                                   0.0017276, 88.135, -0.10018, 0.0059415]),
-                'KSO4': np.array([141.328, -4276.1, -23.093, -13856, 324.57, -47.986, 35474,
-                                  -771.54, 114.723, -2698, 1776])}
+                'KSO4': np.array([141.328, -4276.1, -23.093, -13856,
+                                  324.57, -47.986, 35474, -771.54,
+                                  114.723, -2698, 1776])}
 
 
 # K Functions
@@ -1377,15 +1459,17 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
     TempC = np.linspace(0, 40, n)  # 0-40degC in N steps
     Sal = np.linspace(30, 40, n)  # 30-40 Sal
     TempC_M, Sal_M = np.meshgrid(TempC, Sal)  # generate grid in matrix form
-    TempK = TempC + 273.15
     TempK_M = TempC_M + 273.15
 
     # Calculate K's for modern seawater composition
-    KspC_mod, K1_mod, K2_mod, KW_mod, KB_mod, KspA_mod, K0_mod, KSO4_mod = CalculateKcond(TempC_M, Sal_M)
+    (KspC_mod, K1_mod, K2_mod, KW_mod,
+     KB_mod, KspA_mod, K0_mod, KSO4_mod) = CalculateKcond(TempC_M, Sal_M)
 
     # Calculate gK's for modern (mod) and experimental (x) seawater composition
-    gKspC_mod, gK1_mod, gK2_mod, gKW_mod, gKB_mod, gKspA_mod, gK0_mod, gKSO4_mod = calculate_gKs(TempC_M, Sal_M, MmCa, MmMg)
-    gKspC_X, gK1_X, gK2_X, gKW_X, gKB_X, gKspA_X, gK0_X, gKSO4_X = calculate_gKs(TempC_M, Sal_M, XmCa, XmMg)
+    (gKspC_mod, gK1_mod, gK2_mod, gKW_mod,
+     gKB_mod, gKspA_mod, gK0_mod, gKSO4_mod) = calculate_gKs(TempC_M, Sal_M, MmCa, MmMg)
+    (gKspC_X, gK1_X, gK2_X, gKW_X,
+     gKB_X, gKspA_X, gK0_X, gKSO4_X) = calculate_gKs(TempC_M, Sal_M, XmCa, XmMg)
 
     # Calculate conditional K's predicted for seawater composition X
     X_dict = {'K0': K0_mod * gK0_X / gK0_mod,
