@@ -163,7 +163,8 @@ def Csys(pHtot=None, DIC=None, CO2=None,
     ps.Ks = get_Ks(ps)
 
     # Calculate pH scales (does nothing if no pH given)
-    ps.update(calc_pH_scales(ps))
+    ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
+                             ps.TS, ps.TF, ps.Ks))
 
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
@@ -294,7 +295,8 @@ def Csys(pHtot=None, DIC=None, CO2=None,
     if ps.pHtot is None:
         ps.pHtot = np.array(cp(ps.H), ndmin=1)
         # Calculate other pH scales
-        ps.update(calc_pH_scales(ps))
+        ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
+                                 ps.TS, ps.TF, ps.Ks))
 
     # clean up for output
     for k in ['BT', 'CO2', 'CO3', 'Ca', 'DIC', 'H',
@@ -389,7 +391,8 @@ def Bsys(pHtot=None, BT=None, BO3=None, BO4=None,
     ps.Ks = get_Ks(ps)
 
     # Calculate pH scales (does nothing if none pH given)
-    ps.update(calc_pH_scales(ps))
+    ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
+                             ps.TS, ps.TF, ps.Ks))
 
     # B system calculations
     if ps.pHtot is not None and ps.BT is not None:
@@ -418,7 +421,8 @@ def Bsys(pHtot=None, BT=None, BO3=None, BO4=None,
     if ps.pHtot is None:
         ps.pHtot = np.array(cp(ps.H), ndmin=1)
         # Calculate other pH scales
-        ps.update(calc_pH_scales(ps))
+        ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
+                                 ps.TS, ps.TF, ps.Ks))
 
     if NnotNone(ps.ABT, ps.ABO3, ps.ABO4, ps.dBT, ps.dBO3, ps.dBO4) != 0:
         ps.update(ABsys(pdict=ps))
@@ -520,7 +524,8 @@ def ABsys(pHtot=None,
     ps.Ks = get_Ks(ps)
 
     # Calculate pH scales (does nothing if none pH given)
-    ps.update(calc_pH_scales(ps))
+    ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
+                             ps.TS, ps.TF, ps.Ks))
 
     # if deltas provided, calculate corresponding As
     if ps.dBT is not None:
@@ -704,7 +709,8 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
     ps.Ks = get_Ks(ps)
 
     # Calculate pH scales (does nothing if none pH given)
-    ps.update(calc_pH_scales(ps))
+    ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
+                             ps.TS, ps.TF, ps.Ks))
 
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
