@@ -254,3 +254,40 @@ def calc_TB(Sal):
     Geochimica Et Cosmochimica Acta 74 (6): 1801–1811.
     """
     return 0.0004326 * Sal / 35
+
+
+def calc_fH(TempK, Sal):
+    # Same as CO2SYS
+    # Takahashi et al, Chapter 3 in GEOSECS Pacific Expedition,
+    # v. 3, 1982 (p. 80)
+
+    return (1.2948 - 0.002036 * TempK +
+            (0.0004607 - 0.000001475 * TempK) * Sal**2)
+
+
+# Convert between pH scales
+def calc_pH_scales(ps):
+    """
+    Calculate pH on all scales, given one.
+    """
+
+    # check if any pH scale is given.
+    npH = NnotNone(ps.pHfree, ps.pHsws, ps.pHtot)
+
+    if npH == 1:
+        # pH scale conversions
+        FREEtoTOT = -np.log10((1 + ps.TS / ps.Ks.KSO4))
+        SWStoTOT = -np.log10((1 + ps.TS / ps.Ks.KSO4) /
+                             (1 + ps.TS / ps.Ks.KSO4 + ps.TF / ps.Ks.KF))
+
+        if ps.pHtot is not None:
+            return {'pHfree': ps.pHtot - FREEtoTOT,
+                    'pHsws': ps.pHtot - SWStoTOT}
+        elif ps.pHsws is not None:
+            return {'pHfree': ps.pHsws + SWStoTOT - FREEtoTOT,
+                    'pHtot': ps.pHsws + SWStoTOT}
+        elif ps.pHfree is not None:
+            return {'pHsws': ps.pHfree + FREEtoTOT - SWStoTOT,
+                    'pHtot': ps.pHfree + FREEtoTOT}
+    else:
+        return {}

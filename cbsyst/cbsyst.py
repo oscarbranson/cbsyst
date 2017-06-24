@@ -3,7 +3,7 @@ from cbsyst.helpers import Bunch, maxL
 from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi
 from cbsyst.carbon_fns import *
 from cbsyst.boron_fns import *
-from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB
+from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales
 from cbsyst.non_MyAMI_constants import *
 
 
@@ -57,12 +57,13 @@ def get_Ks(ps):
 
 # C Speciation
 # ------------
-def Csys(pH=None, DIC=None, CO2=None,
+def Csys(pHtot=None, DIC=None, CO2=None,
          HCO3=None, CO3=None, TA=None,
          fCO2=None, pCO2=None,
          BT=None, Ca=None, Mg=None,
          T=25., S=35., P=None,
          TP=0., TSi=0.,
+         pHsws=None, pHfree=None,
          Ks=None, pdict=None, unit='umol'):
     """
     Calculate the carbon chemistry of seawater from a minimal parameter set.
@@ -138,6 +139,8 @@ def Csys(pH=None, DIC=None, CO2=None,
              'fmol': 1.e15}
     if isinstance(ps.unit, str):
         ps.unit = udict[ps.unit]
+    # elif isinstance(ps.unit, (int, float)):
+    #     ps.unit = ps.unit
 
     if ps.unit != 1:
         upar = ['DIC', 'TA', 'CO2', 'HCO3', 'CO3',
@@ -159,6 +162,9 @@ def Csys(pH=None, DIC=None, CO2=None,
     # Calculate Ks
     ps.Ks = get_Ks(ps)
 
+    # Calculate pH scales (does nothing if no pH given)
+    ps.update(calc_pH_scales(ps))
+
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
         if ps.fCO2 is not None:
@@ -168,9 +174,9 @@ def Csys(pH=None, DIC=None, CO2=None,
 
     # Carbon System Calculations (from Zeebe & Wolf-Gladrow, Appendix B)
     # 1. CO2 and pH
-    if ps.CO2 is not None and ps.pH is not None:
-        ps.H = ch(ps.pH)
-        ps.DIC = CO2_pH(ps.CO2, ps.pH, ps.Ks)
+    if ps.CO2 is not None and ps.pHtot is not None:
+        ps.H = ch(ps.pHtot)
+        ps.DIC = CO2_pH(ps.CO2, ps.pHtot, ps.Ks)
     # 2. ps.CO2 and ps.HCO3
     elif ps.CO2 is not None and ps.HCO3 is not None:
         ps.H = CO2_HCO3(ps.CO2, ps.HCO3, ps.Ks)
@@ -183,31 +189,31 @@ def Csys(pH=None, DIC=None, CO2=None,
     elif ps.CO2 is not None and ps.TA is not None:
         # unit conversion because OH and H wrapped
         # up in TA fns - all need to be in same units.
-        ps.pH = CO2_TA(CO2=ps.CO2,
-                       TA=ps.TA,
-                       BT=ps.BT,
-                       TP=ps.TP,
-                       TSi=ps.TSi,
-                       TS=ps.TS,
-                       TF=ps.TF,
-                       Ks=ps.Ks)
-        ps.H = ch(ps.pH)
-        ps.DIC = CO2_pH(ps.CO2, ps.pH, ps.Ks)
+        ps.pHtot = CO2_TA(CO2=ps.CO2,
+                          TA=ps.TA,
+                          BT=ps.BT,
+                          TP=ps.TP,
+                          TSi=ps.TSi,
+                          TS=ps.TS,
+                          TF=ps.TF,
+                          Ks=ps.Ks)
+        ps.H = ch(ps.pHtot)
+        ps.DIC = CO2_pH(ps.CO2, ps.pHtot, ps.Ks)
     # 5. ps.CO2 and ps.DIC
     elif ps.CO2 is not None and ps.DIC is not None:
         ps.H = CO2_DIC(ps.CO2, ps.DIC, ps.Ks)
-    # 6. ps.pH and ps.HCO3
-    elif ps.pH is not None and ps.HCO3 is not None:
-        ps.H = ch(ps.pH)
-        ps.DIC = pH_HCO3(ps.pH, ps.HCO3, ps.Ks)
-    # 7. ps.pH and ps.CO3
-    elif ps.pH is not None and ps.CO3 is not None:
-        ps.H = ch(ps.pH)
-        ps.DIC = pH_CO3(ps.pH, ps.CO3, ps.Ks)
-    # 8. ps.pH and ps.TA
-    elif ps.pH is not None and ps.TA is not None:
-        ps.H = ch(ps.pH)
-        ps.DIC = pH_TA(pH=ps.pH,
+    # 6. ps.pHtot and ps.HCO3
+    elif ps.pHtot is not None and ps.HCO3 is not None:
+        ps.H = ch(ps.pHtot)
+        ps.DIC = pH_HCO3(ps.pHtot, ps.HCO3, ps.Ks)
+    # 7. ps.pHtot and ps.CO3
+    elif ps.pHtot is not None and ps.CO3 is not None:
+        ps.H = ch(ps.pHtot)
+        ps.DIC = pH_CO3(ps.pHtot, ps.CO3, ps.Ks)
+    # 8. ps.pHtot and ps.TA
+    elif ps.pHtot is not None and ps.TA is not None:
+        ps.H = ch(ps.pHtot)
+        ps.DIC = pH_TA(pH=ps.pHtot,
                        TA=ps.TA,
                        BT=ps.BT,
                        TP=ps.TP,
@@ -215,9 +221,9 @@ def Csys(pH=None, DIC=None, CO2=None,
                        TS=ps.TS,
                        TF=ps.TF,
                        Ks=ps.Ks)
-    # 9. ps.pH and ps.DIC
-    elif ps.pH is not None and ps.DIC is not None:
-        ps.H = ch(ps.pH)
+    # 9. ps.pHtot and ps.DIC
+    elif ps.pHtot is not None and ps.DIC is not None:
+        ps.H = ch(ps.pHtot)
     # 10. ps.HCO3 and ps.CO3
     elif ps.HCO3 is not None and ps.CO3 is not None:
         ps.H = HCO3_CO3(ps.HCO3, ps.CO3, ps.Ks)
@@ -246,15 +252,15 @@ def Csys(pH=None, DIC=None, CO2=None,
         ps.H = CO3_DIC(ps.CO3, ps.DIC, ps.Ks)
     # 15. ps.TA and ps.DIC
     elif ps.TA is not None and ps.DIC is not None:
-        ps.pH = TA_DIC(TA=ps.TA,
-                       DIC=ps.DIC,
-                       BT=ps.BT,
-                       TP=ps.TP,
-                       TSi=ps.TSi,
-                       TS=ps.TS,
-                       TF=ps.TF,
-                       Ks=ps.Ks)
-        ps.H = ch(ps.pH)
+        ps.pHtot = TA_DIC(TA=ps.TA,
+                          DIC=ps.DIC,
+                          BT=ps.BT,
+                          TP=ps.TP,
+                          TSi=ps.TSi,
+                          TS=ps.TS,
+                          TF=ps.TF,
+                          Ks=ps.Ks)
+        ps.H = ch(ps.pHtot)
 
     # The above makes sure that DIC and H are known,
     # this next bit calculates all the missing species
@@ -285,14 +291,14 @@ def Csys(pH=None, DIC=None, CO2=None,
                                          Ks=ps.Ks, mode='multi')
     except TypeError:
         pass
-    if ps.pH is None:
-        ps.pH = cp(ps.H)
+    if ps.pHtot is None:
+        ps.pHtot = np.array(cp(ps.H), ndmin=1)
+        # Calculate other pH scales
+        ps.update(calc_pH_scales(ps))
 
     # clean up for output
-    if 'pdict' in ps:
-        del ps.pdict  # remove pdict, for clarity
     for k in ['BT', 'CO2', 'CO3', 'Ca', 'DIC', 'H',
-              'HCO3', 'Mg', 'S', 'T', 'TA', 'pH',
+              'HCO3', 'Mg', 'S', 'T', 'TA',
               'CAlk', 'PAlk', 'SiAlk', 'OH']:
         if not isinstance(ps[k], np.ndarray):
             # convert all outputs to (min) 1D numpy arrays.
@@ -301,17 +307,24 @@ def Csys(pH=None, DIC=None, CO2=None,
         for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk', 'OH', 'HSO4', 'HF', 'Hfree']:
             ps[p] *= ps.unit  # convert back to input units
 
+    # remove some superfluous outputs
+    rem = ['pdict']
+    for r in rem:
+        if r in ps:
+            del ps[r]
+
     return ps
 
 
 # B Speciation
 # ------------
-def Bsys(pH=None, BT=None, BO3=None, BO4=None,
+def Bsys(pHtot=None, BT=None, BO3=None, BO4=None,
          ABT=None, ABO3=None, ABO4=None,
          dBT=None, dBO3=None, dBO4=None,
          alphaB=None,
          T=25., S=35., P=None,
          Ca=None, Mg=None,
+         pHsws=None, pHfree=None,
          Ks=None, pdict=None):
     """
     Calculate the boron chemistry of seawater from a minimal parameter set.
@@ -366,12 +379,21 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
     if isinstance(pdict, dict):
         ps.update(pdict)
 
+    # Conserved seawater chemistry
+    if 'TS' not in ps:
+        ps.TS = calc_TS(ps.S)
+    if 'TF' not in ps:
+        ps.TF = calc_TF(ps.S)
+
     # if neither Ca nor Mg provided, use default Ks
     ps.Ks = get_Ks(ps)
 
+    # Calculate pH scales (does nothing if none pH given)
+    ps.update(calc_pH_scales(ps))
+
     # B system calculations
-    if ps.pH is not None and ps.BT is not None:
-        ps.H = ch(ps.pH)
+    if ps.pHtot is not None and ps.BT is not None:
+        ps.H = ch(ps.pHtot)
     elif ps.BT is not None and ps.BO3 is not None:
         ps.H = BT_BO3(ps.BT, ps.BO3, ps.Ks)
     elif ps.BT is not None and ps.BO4 is not None:
@@ -379,12 +401,12 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
     elif ps.BO3 is not None and ps.BO4 is not None:
         ps.BT = ps.BO3 + ps.BO3
         ps.H = BT_BO3(ps.BT, ps.BO3, ps.Ks)
-    elif ps.pH is not None and ps.BO3 is not None:
-        ps.H = ch(ps.pH)
-        ps.BT = pH_BO3(ps.pH, ps.BO3, ps.Ks)
-    elif ps.pH is not None and ps.BO4 is not None:
-        ps.H = ch(ps.pH)
-        ps.BT = pH_BO4(ps.pH, ps.BO4, ps.Ks)
+    elif ps.pHtot is not None and ps.BO3 is not None:
+        ps.H = ch(ps.pHtot)
+        ps.BT = pH_BO3(ps.pHtot, ps.BO3, ps.Ks)
+    elif ps.pHtot is not None and ps.BO4 is not None:
+        ps.H = ch(ps.pHtot)
+        ps.BT = pH_BO4(ps.pHtot, ps.BO4, ps.Ks)
 
     # The above makes sure that BT and H are known,
     # this next bit calculates all the missing species
@@ -393,32 +415,39 @@ def Bsys(pH=None, BT=None, BO3=None, BO4=None,
         ps.BO3 = cBO3(ps.BT, ps.H, ps.Ks)
     if ps.BO4 is None:
         ps.BO4 = cBO4(ps.BT, ps.H, ps.Ks)
-    if ps.pH is None:
-        ps.pH = cp(ps.H)
+    if ps.pHtot is None:
+        ps.pHtot = np.array(cp(ps.H), ndmin=1)
+        # Calculate other pH scales
+        ps.update(calc_pH_scales(ps))
 
     if NnotNone(ps.ABT, ps.ABO3, ps.ABO4, ps.dBT, ps.dBO3, ps.dBO4) != 0:
         ps.update(ABsys(pdict=ps))
 
-    if 'pdict' in ps:
-        del ps.pdict  # remove pdict, for clarity
-    for k in ['BT', 'H', 'pH', 'BO3', 'BO4',
-              'Ca', 'Mg', 'S', 'T', ]:
+    for k in ['BT', 'H', 'BO3', 'BO4',
+              'Ca', 'Mg', 'S', 'T']:
         # convert all outputs to (min) 1D numpy arrays.
         if not isinstance(ps[k], np.ndarray):
             # convert all outputs to (min) 1D numpy arrays.
             ps[k] = np.array(ps[k], ndmin=1)
+
+    # remove some superfluous outputs
+    rem = ['pdict']
+    for r in rem:
+        if r in ps:
+            del ps[r]
 
     return ps
 
 
 # B Isotopes
 # ----------
-def ABsys(pH=None,
+def ABsys(pHtot=None,
           ABT=None, ABO3=None, ABO4=None,
           dBT=None, dBO3=None, dBO4=None,
           alphaB=None,
           T=25., S=35., P=None,
           Ca=None, Mg=None,
+          pHsws=None, pHfree=None,
           Ks=None, pdict=None):
     """
     Calculate the boron isotope chemistry of seawater from a minimal parameter set.
@@ -480,8 +509,18 @@ def ABsys(pH=None,
     if isinstance(pdict, dict):
         ps.update(pdict)
 
+
+    # Conserved seawater chemistry
+    if 'TS' not in ps:
+        ps.TS = calc_TS(ps.S)
+    if 'TF' not in ps:
+        ps.TF = calc_TF(ps.S)
+
     # if neither Ca nor Mg provided, use default Ks
     ps.Ks = get_Ks(ps)
+
+    # Calculate pH scales (does nothing if none pH given)
+    ps.update(calc_pH_scales(ps))
 
     # if deltas provided, calculate corresponding As
     if ps.dBT is not None:
@@ -494,12 +533,12 @@ def ABsys(pH=None,
     # calculate alpha
     ps.alphaB = alphaB_calc(ps.T)
 
-    if ps.pH is not None and ps.ABT is not None:
-        ps.H = ch(ps.pH)
-    elif ps.pH is not None and ps.ABO3 is not None:
-        ps.ABT = pH_ABO3(ps.pH, ps.ABO3, ps.Ks, ps.alphaB)
-    elif ps.pH is not None and ps.ABO4 is not None:
-        ps.ABT = pH_ABO3(ps.pH, ps.ABO4, ps.Ks, ps.alphaB)
+    if ps.pHtot is not None and ps.ABT is not None:
+        ps.H = ch(ps.pHtot)
+    elif ps.pHtot is not None and ps.ABO3 is not None:
+        ps.ABT = pH_ABO3(ps.pHtot, ps.ABO3, ps.Ks, ps.alphaB)
+    elif ps.pHtot is not None and ps.ABO4 is not None:
+        ps.ABT = pH_ABO3(ps.pHtot, ps.ABO4, ps.Ks, ps.alphaB)
     else:
         raise ValueError('pH must be determined to calculate isotopes.')
 
@@ -515,26 +554,31 @@ def ABsys(pH=None,
     if ps.dBO4 is None:
         ps.dBO4 = A11_2_d11(ps.ABO4)
 
-    if 'pdict' in ps:
-        del ps.pdict  # remove pdict, for clarity
     for k in ['ABO3', 'ABO4', 'ABT', 'Ca',
               'H', 'Mg', 'S', 'T', 'alphaB',
-              'dBO3', 'dBO4', 'dBT', 'pH']:
+              'dBO3', 'dBO4', 'dBT', 'pHtot']:
         if not isinstance(ps[k], np.ndarray):
             # convert all outputs to (min) 1D numpy arrays.
             ps[k] = np.array(ps[k], ndmin=1)
+
+    # remove some superfluous outputs
+    rem = ['pdict']
+    for r in rem:
+        if r in ps:
+            del ps[r]
 
     return ps
 
 
 # Whole C-B-Isotope System
 # ------------------------
-def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, pCO2=None,
+def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, pCO2=None,
           BT=None, BO3=None, BO4=None,
           ABT=None, ABO3=None, ABO4=None, dBT=None, dBO3=None, dBO4=None,
           alphaB=None,
           T=25., S=35., P=None,
           Ca=None, Mg=None, TP=0., TSi=0.,
+          pHsws=None, pHfree=None,
           Ks=None, pdict=None, unit='umol'):
     """
     Calculate carbon, boron and boron isotope chemistry of seawater from a minimal parameter set.
@@ -659,6 +703,9 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
     # Calculate Ks
     ps.Ks = get_Ks(ps)
 
+    # Calculate pH scales (does nothing if none pH given)
+    ps.update(calc_pH_scales(ps))
+
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
         if ps.fCO2 is not None:
@@ -679,8 +726,7 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
     #   b) two B
     #   c) one pH-dependent B, one pH-dependent C... But that's cray...
     #      (c not implemented!)
-    
-    if ps.pH is None:
+    if ps.pHtot is None:
         nCspec = NnotNone(ps.DIC, ps.CO2, ps.HCO3, ps.CO3)
         # a) if there are 2 C species, or one C species and TA and BT
         if ((nCspec == 2) | ((nCspec == 1) & (NnotNone(ps.TA, ps.BT) == 2))):
@@ -731,5 +777,11 @@ def CBsys(pH=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, 
 
     for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk', 'OH', 'HSO4', 'HF', 'Hfree']:
         ps[p] *= orig_unit  # convert back to input units
+
+        # remove some superfluous outputs
+    rem = ['pdict', 'unit']
+    for r in rem:
+        if r in ps:
+            del ps[r]
 
     return ps
