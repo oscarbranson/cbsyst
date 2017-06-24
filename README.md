@@ -8,9 +8,9 @@ This will be particularly useful for anyone thinking about oceans in the distant
 
 ## Still To Do...
 - [X] [Nutrient alkalinity](https://github.com/oscarbranson/cbsyst/issues/5)
-- [ ] [Different pH scales](https://github.com/oscarbranson/cbsyst/issues/7)
+- [X] [Different pH scales](https://github.com/oscarbranson/cbsyst/issues/7)
 - [ ] [Separate input / output conditions](https://github.com/oscarbranson/cbsyst/issues/3)
-- [ ] [Ravelle factor reporting](https://github.com/oscarbranson/cbsyst/issues/8)
+- [ ] [Revelle factor reporting](https://github.com/oscarbranson/cbsyst/issues/8)
 - [ ] [Compare to CO2SYS](https://github.com/oscarbranson/cbsyst/issues/6), a la [Orr et al (2015)](http://www.biogeosciences.net/12/1483/2015/bg-12-1483-2015.pdf)?
 
 If anyone wants to help with any of this, please do contribute!
