@@ -469,8 +469,11 @@ def pCO2_to_fCO2(pCO2, Tc):
     P = 1.01325  # in bar
     RT = 83.1451 * Tk
 
-    B = -1636.75 + 12.0408 * Tk - 3.27957e-2 * Tk**2 + 3.16528e-05 * Tk**3
-    delta = (57.7 - 0.118 * Tk)
+    a0, a1, a2, a3 = (-1636.75, 12.0408, -3.27957e-2, 3.16528e-05)
+    b0, b1 = (57.7, -0.118)
+
+    B = a0 + a1 * Tk + a2 * Tk**2 + a3 * Tk**3
+    delta = b0 + b1 * Tk
 
     return pCO2 * np.exp(P * (B + 2 * delta) / RT)
 
@@ -492,8 +495,11 @@ def fCO2_to_pCO2(fCO2, Tc):
     P = 1.01325  # in bar
     RT = 83.1451 * Tk
 
-    B = -1636.75 + 12.0408 * Tk - 3.27957e-2 * Tk**2 + 3.16528e-5 * Tk**3
-    delta = (57.7 - 0.118 * Tk)
+    a0, a1, a2, a3 = (-1636.75, 12.0408, -3.27957e-2, 3.16528e-05)
+    b0, b1 = (57.7, -0.118)
+
+    B = a0 + a1 * Tk + a2 * Tk**2 + a3 * Tk**3
+    delta = b0 + b1 * Tk
 
     return fCO2 / np.exp(P * (B + 2 * delta) / RT)
 
