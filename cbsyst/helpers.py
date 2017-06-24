@@ -233,7 +233,8 @@ def calc_TS(Sal):
     Morris, A. W., and Riley, J. P., Deep-Sea Research 13:699-705, 1966:
     this is .02824.*Sali./35. = .0008067.*Sali
     """
-    return (0.14 / 96.062) * (Sal / 1.80655)  # mol/kg-SW
+    a, b, c = (0.14, 96.062, 1.80655)
+    return (a / b) * (Sal / c)  # mol/kg-SW
 
 
 def calc_TF(Sal):
@@ -243,7 +244,8 @@ def calc_TF(Sal):
     Riley, J. P., Deep-Sea Research 12:219-220, 1965:
     this is .000068.*Sali./35. = .00000195.*Sali
     """
-    return (0.000067 / 18.998) * (Sal / 1.80655)  # mol/kg-SW
+    a, b, c = (0.000067, 18.998, 1.80655)
+    return (a / b) * (Sal / c)  # mol/kg-SW
 
 
 def calc_TB(Sal):
@@ -253,7 +255,8 @@ def calc_TB(Sal):
     Lee, Kim, Byrne, Millero, Feely, Yong-Ming Liu. 2010.
     Geochimica Et Cosmochimica Acta 74 (6): 1801–1811.
     """
-    return 0.0004326 * Sal / 35
+    a, b = (0.0004326, 35.)
+    return a * Sal / b
 
 
 def calc_fH(TempK, Sal):
@@ -261,8 +264,8 @@ def calc_fH(TempK, Sal):
     # Takahashi et al, Chapter 3 in GEOSECS Pacific Expedition,
     # v. 3, 1982 (p. 80)
 
-    return (1.2948 - 0.002036 * TempK +
-            (0.0004607 - 0.000001475 * TempK) * Sal**2)
+    a, b, c, d = (1.2948, -2.036e-3, 4.607e-4, -1.475e-6)
+    return a + b * TempK + (c + d * TempK) * Sal**2
 
 
 # Convert between pH scales
