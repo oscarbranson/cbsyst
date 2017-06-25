@@ -85,7 +85,7 @@ import cbsyst as cb
 import numpy as np
 
 # Create pH master variable for demo
-pH = np.linspace(7,11,100)
+pH = np.linspace(7,11,100)  # pH on Total scale
 
 # Example Usage
 # -------------
@@ -97,13 +97,13 @@ pH = np.linspace(7,11,100)
 # required minimal parameters.
 
 # Carbon system only
-Csw = cb.Csys(pH=pH, DIC=2000.)
+Csw = cb.Csys(pHtot=pH, DIC=2000.)
 
 # Boron system only
-Bsw = cb.Bsys(pH=pH, BT=433., dBT=39.5)
+Bsw = cb.Bsys(pHtot=pH, BT=433., dBT=39.5)
 
 # Carbon and Boron systems
-CBsw = cb.CBsys(pH=pH, DIC=2000., BT=433., dBT=39.5)
+CBsw = cb.CBsys(pHtot=pH, DIC=2000., BT=433., dBT=39.5)
 
 # NOTE:
 # At present, each function call can only be used to
@@ -120,7 +120,7 @@ CBsw = cb.CBsys(pH=pH, DIC=2000., BT=433., dBT=39.5)
 #
 # Output for a single input condition shown for clarity:
 
-out = cb.CBsys(pH=8.1, DIC=2000., BT=433., dBT=39.5)
+out = cb.CBsys(pHtot=8.1, DIC=2000., BT=433., dBT=39.5)
 out
 
 >>> {'ABO3': array([ 0.80882931]),
@@ -154,7 +154,7 @@ out
      'deltas': True,
      'fCO2': array([ 344.68238018]),
      'pCO2': array([ 345.78871573]),
-     'pH': array([ 8.1]),
+     'pHtot': array([ 8.1]),
      'pdict': None}
 
 # All of the calculated output arrays will be the same length as the longest
