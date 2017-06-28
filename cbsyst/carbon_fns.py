@@ -74,8 +74,16 @@ def zero_CO2_CO3(h, CO2, CO3, K1, K2):
 #     """
 #     CO2, TA, BT = noms(CO2, TA, BT)  # get nominal values of inputs
 #     par = cast_array(CO2, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
-
 #     return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_TA)
+
+# def zero_CO2_TA(h, CO2, TA, BT, K1, K2, KB, KW):
+#     # Roots: one pos, one neg, 2 conj. complex. Use positive
+#     LH = TA * h**2 * (KB + h)
+#     RH = (CO2 * (KB + h) * (K1 * h + 2 * K1 * K2) +
+#           h**2 * KB * BT + (KB + h) * (KW * h - h**3))
+#     return LH - RH
+
+
 def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
     """
     Returns pH
@@ -117,14 +125,6 @@ def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
         pHx += deltapH
 
     return pHx
-
-
-def zero_CO2_TA(h, CO2, TA, BT, K1, K2, KB, KW):
-    # Roots: one pos, one neg, 2 conj. complex. Use positive
-    LH = TA * h**2 * (KB + h)
-    RH = (CO2 * (KB + h) * (K1 * h + 2 * K1 * K2) +
-          h**2 * KB * BT + (KB + h) * (KW * h - h**3))
-    return LH - RH
 
 
 # 5. CO2 and DIC
