@@ -3,12 +3,11 @@ Contributing
 
 If you'd like to contribute, a checklist:
 
-1. Claim a ToDo item by linking adding yourself after in in square brackets, e.g. [@github/oscarbranson]
-2. Fork repository
-3. Make changes
-4. Write unittests for any additions within test_cbsyst.py or test_MyAMI_V2.py, as appropriate.
-5. Run tests using setup.py test, and make sure your updated code passes all tests.
-6. Submit pull request.
+1. Fork repository
+2. Make changes
+3. Write unittests for any additions within test_cbsyst.py or test_MyAMI_V2.py, as appropriate.
+4. Run tests using setup.py test, and make sure your updated code passes all tests.
+5. Submit pull request, referencing issues as appropriate.
 
 **Tests**
 Current unittests check internal consistency of functions against stable-state reference values, and compare the output of Csys against reference carbon speciation data. *Do not change existing tests without good reason*.
@@ -16,21 +15,15 @@ Current unittests check internal consistency of functions against stable-state r
 TO-DO
 =====
 A list of bite-sized tasks that can usefully be done.
+Each is linked to an open [issue](cbsyst/issues)
 
 Vectorising
 -----------
-A lot of the solver functions would be sped up by vectorising. 
+A lot of the solver functions in [carbon_fns](cbsyst/carbon_fns.py) would be sped up by vectorising. 
 At the moment, most serially apply zero_finder functions to solve for H.
-In [carbon_fns](cbsyst/carbon_fns.py):
 
-- [ ] CO2SYS-style zero finder for HCO3_TA (case 11)
-- [ ] CO2SYS-style zero finder for CO3_TA (case 13)
-- [ ] Vectorise CO2_HCO3 (case 2)
-- [ ] Vectorise CO2_CO3 (case 3)
-- [ ] Vectorise CO2_DIC (case 5)
-- [ ] Vectorise HCO3_CO3 (case 10)
-- [ ] Vectorise HCO3_DIC (case 12)
-- [ ] Vectorise CO3_DIC (case 14)
+See Issue #11 for itemised to-do list.
+
 
 Condition I/O
 -------------
