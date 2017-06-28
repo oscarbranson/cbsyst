@@ -15,14 +15,14 @@ Current unittests check internal consistency of functions against stable-state r
 TO-DO
 =====
 A list of bite-sized tasks that can usefully be done.
-Each is linked to an open [issue](cbsyst/issues)
+Each is linked to an open [issue](https://github.com/oscarbranson/cbsyst/issues/)
 
 Vectorising
 -----------
 A lot of the solver functions in [carbon_fns](cbsyst/carbon_fns.py) would be sped up by vectorising. 
 At the moment, most serially apply zero_finder functions to solve for H.
 
-See Issue #11 for itemised to-do list.
+See https://github.com/oscarbranson/cbsyst/issues/11 for itemised to-do list.
 
 
 Condition I/O
