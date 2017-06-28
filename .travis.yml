@@ -2,6 +2,6 @@ language: python
 python:
   - "3.5"
 
-before_script: python cbsyst/test_data/GLODAP_data/get_GLODAP_data.py 
+before_script: cd cbsyst/test_data/GLODAP_data/; python get_GLODAP_data.py
 
 script: python setup.py test
