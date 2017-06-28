@@ -6,9 +6,11 @@ Contributions welcome! As long as you adhere to the following:
 
 All welcome.
 Be nice to each other.
-Constructive criticism encouraged, being a jerk<sup>*</sup> will get you banned.
+Constructive criticism<sup>+</sup> encouraged, being a jerk<sup>*</sup> will get you banned.
 
 If you're having issues with a fellow contributor, feel free to <a href="mailto:oscarbranson@gmail.com">contact Oscar</a> about it.
+
+<sup>+</sup>Constructuve criticism: assessing work critically and fairly, and offering constructive suggestions for how to improve and address your criticism.
 
 <sup>*</sup> Being a jerk: unhelpful, offensive, rude, intolerant comments within any part of the project, or outside but relating to the project.
 

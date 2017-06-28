@@ -1,0 +1,5 @@
+numpy>=1.13
+scipy>=0.18
+pandas>=0.19
+uncertainties>=3.0
+tqdm>=4.14
