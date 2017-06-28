@@ -8,7 +8,7 @@ All welcome.
 Be nice to each other.
 Constructive criticism encouraged, being a jerk<sup>*</sup> will get you banned.
 
-If you're having issues with a fellow contributor, feel free to <li><a href="mailto:oscarbranson@gmail.com">contact Oscar</a></li> about it.
+If you're having issues with a fellow contributor, feel free to <a href="mailto:oscarbranson@gmail.com">contact Oscar</a> about it.
 
 <sup>*</sup> Being a jerk: unhelpful, offensive, rude, intolerant comments within any part of the project, or outside but relating to the project.
 
