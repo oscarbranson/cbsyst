@@ -133,7 +133,6 @@ def Csys(pHtot=None, DIC=None, CO2=None,
     udict = {'mol': 1.,
              'mmol': 1.e3,
              'umol': 1.e6,
-             'µmol': 1.e6,
              'nmol': 1.e9,
              'pmol': 1.e12,
              'fmol': 1.e15}
@@ -482,7 +481,7 @@ def ABsys(pHtot=None,
     alphaB : array-like
         Alpha value describing B fractionation (1.0XXX).
         If missing, it's calculated using the temperature
-        sensitive formulation of Hönisch et al (2008)
+        sensitive formulation of Honisch et al (2008)
     T, S : array-like
         Temperature in Celcius and Salinity in PSU.
         Used in calculating MyAMI constants.
@@ -630,7 +629,7 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
     alphaB : array-like
         Alpha value describing B fractionation (1.0XXX).
         If missing, it's calculated using the temperature
-        sensitive formulation of Hönisch et al (2008)
+        sensitive formulation of Honisch et al (2008)
     T, S : array-like
         Temperature in Celcius and Salinity in PSU.
         Used in calculating MyAMI constants.
@@ -670,7 +669,6 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
     udict = {'mol': 1.,
              'mmol': 1.e3,
              'umol': 1.e6,
-             'µmol': 1.e6,
              'nmol': 1.e9,
              'pmol': 1.e12,
              'fmol': 1.e15}
