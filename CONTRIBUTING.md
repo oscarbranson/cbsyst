@@ -21,6 +21,7 @@ If it's a bug, provide a [minimal working example](https://stackoverflow.com/hel
 ## Contributing Code
 
 Contribution workflow:
+
 0. If an issue doesn't exist, create one so that people know you're working on it.
 1. Note your intention to contribute on the appropriate issue, and you'll be asigned to the issue.
 2. Fork repository
