@@ -1,14 +1,21 @@
+Contributing
+============
+
+If you'd like to contribute, a checklist:
+
+1. Claim a ToDo item by linking adding yourself after in in square brackets, e.g. [@github/oscarbranson]
+2. Fork repository
+3. Make changes
+4. Write unittests for any additions within test_cbsyst.py or test_MyAMI_V2.py, as appropriate.
+5. Run tests using setup.py test, and make sure your updated code passes all tests.
+6. Submit pull request.
+
+**Tests**
+Current unittests check internal consistency of functions against stable-state reference values, and compare the output of Csys against reference carbon speciation data. *Do not change existing tests without good reason*.
+
 TO-DO
 =====
-
 A list of bite-sized tasks that can usefully be done.
-
-Before you submit a pull request:
-
-1. Write unittests for any additions within test_cbsyst.py or test_MyAMI_V2.py, as appropriate.
-2. Run tests using setup.py test, and make sure your updated code passes all tests.
-
-Current unittests check internal consistency of functions against stable-state reference values, and compare the output of Csys against reference carbon speciation data. *Do not change existing tests without good reason*.
 
 Vectorising
 -----------
@@ -32,9 +39,7 @@ It would be good to be able to separate input/output T, S, P conditions.
 This should be relatively simple and inexpensive, and involve a second call to MyAMI_get_Ks and re-calculating the final speciations.
 Suggest wrapping this in a separate function which takes Ks, and outputs all conditions from a single parameter combination (e.g. DIC and H for Csys).
 
-**@oscarbranson will do this.**
-
-- [ ] Support separate input output conditions
+- [ ] Support separate input output conditions [@github/oscarbranson]
 
 Revelle Factor
 --------------
