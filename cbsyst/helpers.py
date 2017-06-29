@@ -253,7 +253,7 @@ def calc_TB(Sal):
     Calculate total Boron
 
     Lee, Kim, Byrne, Millero, Feely, Yong-Ming Liu. 2010.
-    Geochimica Et Cosmochimica Acta 74 (6): 1801–1811.
+    Geochimica Et Cosmochimica Acta 74 (6): 1801-1811
     """
     a, b = (0.0004326, 35.)
     return a * Sal / b
