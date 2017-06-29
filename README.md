@@ -1,8 +1,9 @@
 # cbsyst
 
-<div align="right"><a href="https://badge.fury.io/py/cbsyst"><img src="https://badge.fury.io/py/cbsyst.svg" alt="PyPI version" height="18"></a></div>
-
-[![Build Status](https://travis-ci.org/oscarbranson/cbsyst.svg?branch=master)](https://travis-ci.org/oscarbranson/cbsyst)
+<div align="right">
+  <a href="https://travis-ci.org/oscarbranson/cbsyst"><img src="https://travis-ci.org/oscarbranson/cbsyst.svg?branch=master" alt="TravisCI build" height="18"></a>
+  <a href="https://badge.fury.io/py/cbsyst"><img src="https://badge.fury.io/py/cbsyst.svg" alt="PyPI version" height="18"></a>
+</div>
 
 **A Python module for calculating seawater carbon and boron chemistry.** 
 
