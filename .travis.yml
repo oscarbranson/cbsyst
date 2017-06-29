@@ -2,12 +2,6 @@ language: python
 python:
   - "3.5"
 
-os:
-  - linux
-  - osx
-osx_image:
-  - xcode6.4
-
 before_script: 
  - cd cbsyst/test_data/GLODAP_data/
  - python get_GLODAP_data.py
