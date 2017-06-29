@@ -466,7 +466,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         Check median offsets are within acceptable limits.
         Check 95% confidence of residuals are within acceptable limits.
         """
-        # load GLOAP data
+        # load GLODAP data
         gd = pd.read_csv('cbsyst/test_data/GLODAP_data/GLODAPv2_pH_DIC_ALK_subset.csv')
         gd.dropna(subset=['phtsinsitutp', 'temperature',
                           'salinity', 'tco2', 'talk',
@@ -515,7 +515,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         Check median offsets are within acceptable limits.
         Check 95% confidence of residuals are within acceptable limits.
         """
-        # load GLOAP data
+        # load GLODAP data
         gd = pd.read_csv('cbsyst/test_data/GLODAP_data/GLODAPv2_pH_DIC_ALK_subset.csv')
         gd.dropna(subset=['phtsinsitutp', 'temperature',
                           'salinity', 'tco2', 'talk',
