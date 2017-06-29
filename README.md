@@ -1,6 +1,10 @@
 # cbsyst
 
-**A Python module for calculating seawater carbon and boron chemistry.** [![Build Status](https://travis-ci.org/oscarbranson/cbsyst.svg?branch=master)](https://travis-ci.org/oscarbranson/cbsyst)
+<div align="right"><a href="https://badge.fury.io/py/cbsyst"><img src="https://badge.fury.io/py/cbsyst.svg" alt="PyPI version" height="18"></a></div>
+
+[![Build Status](https://travis-ci.org/oscarbranson/cbsyst.svg?branch=master)](https://travis-ci.org/oscarbranson/cbsyst)
+
+**A Python module for calculating seawater carbon and boron chemistry.** 
 
 This will be particularly useful for anyone thinking about oceans in the distant past, when Mg and Ca concentrations were different. I use [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf) to adjust speciation constants for Mg and Ca concentration.
 
