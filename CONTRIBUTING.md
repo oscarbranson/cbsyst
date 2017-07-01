@@ -50,11 +50,11 @@ Current unittests check internal consistency of functions against stable-state r
 ## Project Structure
 
 ```
-cbsyst
+cbsyst/
   |--- boron_fns.py  : Functions for calculating relating to B speciation / isotopes.
   |--- carbon_fns.py  : Functions for calculating C speciation.
   |--- cbsyst.py  : User-facing functions used for calculating seawater chemistry.
   |--- helpers.py  : General functions that are used elsewhere.
-  |--- MyAMI_V2.py  : Calculate K0, K1, K2, KB, KW, KS, KspA, KspC and correct for [Mg] and [Ca].
-  |--- non_MyAMI_constants.py  : Calculate any constants that are not handled by MyAMI.
+  |--- MyAMI_V2.py  : Functions for K0, K1, K2, KB, KW, KS, KspA, KspC and [Mg] and [Ca] corrections.
+  |--- non_MyAMI_constants.py  : Functions to calculate any constants that are not handled by MyAMI.
 ```
