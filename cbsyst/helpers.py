@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 
-# Helpers udeful to the user
+# Helpers useful to the user
 # --------------------------
 def data_out(cbdat, path=None, include_constants=False):
     """
