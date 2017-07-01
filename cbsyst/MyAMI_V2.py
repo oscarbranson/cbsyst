@@ -1565,6 +1565,11 @@ def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None, param_d
         # parameters from Table 5 of Millero 2007 (doi:10.1021/cr0503557)
         # TYPO: KW parameters in Millero 2007 are for fresh water. Used
         #       Millero '83 seawater parameters instead (as in CO2SYS)
+        # TYPO: Third parameter for KB was positive in original, shoul
+        #       have been negative
+        # TYPO: All 'b' parameters were missing a factor of 1e-3.
+        #       this is implemented in the prescorr function, rather
+        #       than in the parameters.
         ppar = {'K1': [-25.50, 0.1271, 0, -3.08, 0.0877],
                 'K2': [-15.82, -0.0219, 0, 1.13, -0.1475],
                 'KB': [-29.48, 0.1622, -2.608e-3, -2.84, 0],
