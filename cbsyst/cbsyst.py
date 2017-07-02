@@ -306,10 +306,8 @@ def Csys(pHtot=None, DIC=None, CO2=None,
         ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
                                  ps.TS, ps.TF, ps.Ks))
 
-    if ps.T_out is None and ps.S_out is None and ps.P_out is None:
-        outfmt = []
-        pass
-    else:
+    # if output conditions specified, calculate outputs.
+    if ps.T_out is not None or ps.S_out is not None or ps.P_out is not None:
         if ps.T_out is None:
             ps.T_out = ps.T_in
         if ps.S_out is None:
@@ -321,9 +319,13 @@ def Csys(pHtot=None, DIC=None, CO2=None,
                                  ps.TP, ps.TSi, ps.TS, ps.TF, ps.Ks_out)
         ps.update({k + '_out': v for k, v in out.items()})
         outfmt = [k + '_out' for k in out.keys()]
-        # outunit = 
+        outunit = [k + '_out' for k in ['CAlk', 'BAlk', 'PAlk', 'SiAlk',
+                                        'OH', 'HSO4', 'HF', 'Hfree'] + upar]
+    else:
+        outfmt = []
+        outunit = []
 
-    # clean up for output
+    # clean up output
     for k in ['BT', 'CO2', 'CO3', 'Ca', 'DIC', 'H',
               'HCO3', 'Mg', 'S_in', 'T_in', 'TA',
               'CAlk', 'PAlk', 'SiAlk', 'OH'] + outfmt:
@@ -331,7 +333,8 @@ def Csys(pHtot=None, DIC=None, CO2=None,
             # convert all outputs to (min) 1D numpy arrays.
             ps[k] = np.array(ps[k], ndmin=1)
     if ps.unit != 1:  # TODO: output unit conversions.
-        for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk', 'OH', 'HSO4', 'HF', 'Hfree']:
+        for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk',
+                         'OH', 'HSO4', 'HF', 'Hfree'] + outunit:
             ps[p] *= ps.unit  # convert back to input units
 
     # remove some superfluous outputs
