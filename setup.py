@@ -25,5 +25,6 @@ setup(name='cbsyst',
                         'pandas',
                         'uncertainties',
                         'tqdm'],
-      package_data={'cbsyst': ['test_data/*']},
+      package_data={'cbsyst': ['test_data/GLODAP_data/*.py',
+                               'test_data/Lueker2000/*.csv']},
       zip_safe=True)
