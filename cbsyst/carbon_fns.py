@@ -1,6 +1,6 @@
 import scipy.optimize as opt
 import numpy as np
-from cbsyst.helpers import ch, noms, cast_array, maxL
+from cbsyst.helpers import ch, noms, cast_array, maxL, calc_pH_scales, Bunch, cp
 # from cbsyst.boron_fns import cBO4
 
 
@@ -502,4 +502,36 @@ def fCO2_to_pCO2(fCO2, Tc):
     delta = b0 + b1 * Tk
 
     return fCO2 / np.exp(P * (B + 2 * delta) / RT)
+
+
+def calc_all_C_species(H, DIC, T, BT, TP, TSi, TS, TF, Ks):
+    """
+    Calculate all C and alkalinity speices from H, DIC
+    """
+    out = Bunch()
+    out.CO2 = cCO2(H, DIC, Ks)
+    out.fCO2 = CO2_to_fCO2(out.CO2, Ks)
+    out.pCO2 = fCO2_to_pCO2(out.fCO2, T)
+    out.HCO3 = cHCO3(H, DIC, Ks)
+    out.CO3 = cCO3(H, DIC, Ks)
+    # Calculate all elements of Alkalinity
+    (out.TA, out.CAlk, out.BAlk,
+     out.PAlk, out.SiAlk, out.OH,
+     out.Hfree, out.HSO4, out.HF) = cTA(H=H,
+                                        DIC=DIC,
+                                        BT=BT,
+                                        TP=TP,
+                                        TSi=TSi,
+                                        TS=TS,
+                                        TF=TF,
+                                        Ks=Ks, mode='multi')
+    pHtot = np.array(cp(H), ndmin=1)
+    # Calculate other pH scales
+    out.update(calc_pH_scales(pHtot=pHtot, pHfree=None, pHsws=None,
+                              TS=TS, TF=TF, Ks=Ks))
+
+    return out
+
+
+
 
