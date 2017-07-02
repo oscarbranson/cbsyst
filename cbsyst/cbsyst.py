@@ -306,6 +306,19 @@ def Csys(pHtot=None, DIC=None, CO2=None,
         ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
                                  ps.TS, ps.TF, ps.Ks))
 
+    # clean up output
+    for k in ['BT', 'CO2', 'CO3', 'Ca', 'DIC', 'H',
+              'HCO3', 'Mg', 'S_in', 'T_in', 'TA',
+              'CAlk', 'PAlk', 'SiAlk', 'OH']:  # + outfmt:
+        if not isinstance(ps[k], np.ndarray):
+            # convert all outputs to (min) 1D numpy arrays.
+            ps[k] = np.array(ps[k], ndmin=1)
+    if ps.unit != 1:  # TODO: output unit conversions.
+        for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk',
+                         'OH', 'HSO4', 'HF', 'Hfree']:  # + outunit:
+            ps[p] *= ps.unit  # convert back to input units
+
+    # Recursive approach to calculate output params.
     # if output conditions specified, calculate outputs.
     if ps.T_out is not None or ps.S_out is not None or ps.P_out is not None:
         if ps.T_out is None:
@@ -314,28 +327,17 @@ def Csys(pHtot=None, DIC=None, CO2=None,
             ps.S_out = ps.S_in
         if ps.P_out is None:
             ps.P_out = ps.P_in
-        ps.Ks_out = calc_Ks(ps.T_out, ps.S_out, ps.P_out, ps)
-        out = calc_all_C_species(ps.H, ps.DIC, ps.T_out, ps.BT,
-                                 ps.TP, ps.TSi, ps.TS, ps.TF, ps.Ks_out)
-        ps.update({k + '_out': v for k, v in out.items()})
-        outfmt = [k + '_out' for k in out.keys()]
-        outunit = [k + '_out' for k in ['CAlk', 'BAlk', 'PAlk', 'SiAlk',
-                                        'OH', 'HSO4', 'HF', 'Hfree'] + upar]
-    else:
-        outfmt = []
-        outunit = []
-
-    # clean up output
-    for k in ['BT', 'CO2', 'CO3', 'Ca', 'DIC', 'H',
-              'HCO3', 'Mg', 'S_in', 'T_in', 'TA',
-              'CAlk', 'PAlk', 'SiAlk', 'OH'] + outfmt:
-        if not isinstance(ps[k], np.ndarray):
-            # convert all outputs to (min) 1D numpy arrays.
-            ps[k] = np.array(ps[k], ndmin=1)
-    if ps.unit != 1:  # TODO: output unit conversions.
-        for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk',
-                         'OH', 'HSO4', 'HF', 'Hfree'] + outunit:
-            ps[p] *= ps.unit  # convert back to input units
+        # ps.Ks_out = calc_Ks(ps.T_out, ps.S_out, ps.P_out, ps)
+        # out = calc_all_C_species(ps.H, ps.DIC, ps.T_out, ps.BT,
+        #                          ps.TP, ps.TSi, ps.TS, ps.TF, ps.Ks_out)
+        # ps.update({k + '_out': v for k, v in out.items()})
+        ps.out = Csys(pHtot=cp(ps.H), DIC=ps.DIC, T_in=ps.T_out, S_in=ps.S_out, P_in=ps.P_out, unit=ps.unit)
+        # outfmt = [k + '_out' for k in out.keys()]
+        # outunit = [k + '_out' for k in ['CAlk', 'BAlk', 'PAlk', 'SiAlk',
+        #                                 'OH', 'HSO4', 'HF', 'Hfree'] + upar]
+    # else:
+    #     outfmt = []
+    #     outunit = []
 
     # remove some superfluous outputs
     rem = ['pdict']
