@@ -80,12 +80,15 @@ Delta values can be provided as an input, and are given as an output.
 **Requires Python 3.5+**. 
 Does *not* work in 2.7. Sorry.
 
+### PyPi
 ```bash
 pip install cbsyst
 ```
 
-## Build Status
-
+### Conda-Forge
+```bash
+conda install cbsyst -c conda-forge
+```
 
 ## Example Usage
 
