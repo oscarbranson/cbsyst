@@ -207,8 +207,13 @@ def Csys(pHtot=None, DIC=None, CO2=None,
             ps.S_out = ps.S_in
         if ps.P_out is None:
             ps.P_out = ps.P_in
+        # assumes conserved alkalinity
         out_cond = Csys(TA=ps.TA, DIC=ps.DIC, T_in=ps.T_out,
                         S_in=ps.S_out, P_in=ps.P_out, unit=ps.unit)
+        # Calculate pH scales (does nothing if no pH given)
+        out_cond.update(calc_pH_scales(out_cond.pHtot, out_cond.pHfree, out_cond.pHsws,
+                                       out_cond.TS, out_cond.TF, out_cond.Ks))
+
         # rename parameters in output conditions
         outputs = ['BAlk', 'BT', 'CAlk', 'CO2', 'CO3',
                    'DIC', 'H', 'HCO3', 'HF',
@@ -402,7 +407,6 @@ def ABsys(pHtot=None,
     ps = Bunch(locals())
     if isinstance(pdict, dict):
         ps.update(pdict)
-
 
     # Conserved seawater chemistry
     if 'TS' not in ps:
@@ -660,8 +664,12 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
             ps.S_out = ps.S_in
         if ps.P_out is None:
             ps.P_out = ps.P_in
+        # assumes conserved alkalinity
         out_cond = CBsys(TA=ps.TA, DIC=ps.DIC, BT=ps.BT, T_in=ps.T_out,
                          S_in=ps.S_out, P_in=ps.P_out, unit=ps.unit)
+        # Calculate pH scales (does nothing if no pH given)
+        out_cond.update(calc_pH_scales(out_cond.pHtot, out_cond.pHfree, out_cond.pHsws,
+                                       out_cond.TS, out_cond.TF, out_cond.Ks))
         # rename parameters in output conditions
         outputs = ['BAlk', 'BT', 'CAlk', 'CO2', 'CO3',
                    'DIC', 'H', 'HCO3', 'HF',
