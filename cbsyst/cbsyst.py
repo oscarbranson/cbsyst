@@ -9,53 +9,48 @@ from cbsyst.non_MyAMI_constants import *
 
 # Helper functions
 # ----------------
-def calc_Ks(T, S, P, ps):
+def calc_Ks(T, S, P, Mg, Ca, TS, TF, Ks=None):
     """
     Helper function to calculate Ks.
 
-    If ps.Ks is a dict, those Ks are used
-    transparrently, with no pressure modification.
-
-    TODO: mode should be 'in' or 'out', and alter a suffix in
-          accessing values in the ps dict.
-
-          i.e. ps['P_in'] or ps['P_out']
+    If Ks is a dict, those Ks are used
+    transparrently (i.e. no pressure modification).
     """
-    if isinstance(ps.Ks, dict):
-        Ks = Bunch(ps.Ks)
+    if isinstance(Ks, dict):
+        Ks = Bunch(Ks)
     else:
-        if maxL(ps.Mg, ps.Ca) == 1:
-            if ps.Mg is None:
-                ps.Mg = 0.0528171
-            if ps.Ca is None:
-                ps.Ca = 0.0102821
+        if maxL(Mg, Ca) == 1:
+            if Mg is None:
+                Mg = 0.0528171
+            if Ca is None:
+                Ca = 0.0102821
             Ks = MyAMI_K_calc(TempC=T, Sal=S, P=P,
-                              Mg=ps.Mg, Ca=ps.Ca)
+                              Mg=Mg, Ca=Ca)
         else:
             # if only Ca or Mg provided, fill in other with modern
-            if ps.Mg is None:
-                ps.Mg = 0.0528171
-            if ps.Ca is None:
-                ps.Ca = 0.0102821
+            if Mg is None:
+                Mg = 0.0528171
+            if Ca is None:
+                Ca = 0.0102821
             # calculate Ca and Mg specific Ks
             Ks = MyAMI_K_calc_multi(TempC=T, Sal=S, P=P,
-                                    Ca=ps.Ca, Mg=ps.Mg)
+                                    Ca=Ca, Mg=Mg)
 
-    # non-MyAMI Constants
-    Ks.update(calc_KPs(T, S, P))
-    Ks.update(calc_KF(T, S, P))
-    Ks.update(calc_KSi(T, S, P))
+        # non-MyAMI Constants
+        Ks.update(calc_KPs(T, S, P))
+        Ks.update(calc_KF(T, S, P))
+        Ks.update(calc_KSi(T, S, P))
 
-    # pH conversions to total scale.
-    #   - KPn are all on SWS
-    #   - KSi is on SWS
-    #   - MyAMI KW is on SWS... DOES THIS MATTER?
+        # pH conversions to total scale.
+        #   - KP1, KP2, KP3 are all on SWS
+        #   - KSi is on SWS
+        #   - MyAMI KW is on SWS... DOES THIS MATTER?
 
-    SWStoTOT = (1 + ps.TS / Ks.KSO4) / (1 + ps.TS / Ks.KSO4 + ps.TF / Ks.KF)
-    # FREEtoTOT = 1 + ps['T_' + mode]S / Ks.KSO4
-    conv = ['KP1', 'KP2', 'KP3', 'KSi', 'KW']
-    for c in conv:
-        Ks[c] *= SWStoTOT
+        SWStoTOT = (1 + TS / Ks.KSO4) / (1 + TS / Ks.KSO4 + TF / Ks.KF)
+        # FREEtoTOT = 1 + 'T_' + mode]S / Ks.KSO4
+        conv = ['KP1', 'KP2', 'KP3', 'KSi', 'KW']
+        for c in conv:
+            Ks[c] *= SWStoTOT
 
     return Ks
 
@@ -172,8 +167,9 @@ def Csys(pHtot=None, DIC=None, CO2=None,
     elif isinstance(BT, (int, float)):
         ps.BT = ps.BT * ps.S_in / 35.
 
-    # Calculate input Ks
-    ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in, ps)
+    # Calculate Ks
+    ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in,
+                    ps.Mg, ps.Ca, ps.TS, ps.TF, ps.Ks)
 
     # Calculate pH scales (does nothing if no pH given)
     ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
@@ -189,13 +185,13 @@ def Csys(pHtot=None, DIC=None, CO2=None,
     # clean up output
     for k in ['BT', 'CO2', 'CO3', 'Ca', 'DIC', 'H',
               'HCO3', 'Mg', 'S_in', 'T_in', 'TA',
-              'CAlk', 'PAlk', 'SiAlk', 'OH']:  # + outfmt:
+              'CAlk', 'PAlk', 'SiAlk', 'OH']:
         if not isinstance(ps[k], np.ndarray):
             # convert all outputs to (min) 1D numpy arrays.
             ps[k] = np.array(ps[k], ndmin=1)
     if ps.unit != 1:  # TODO: output unit conversions.
         for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk',
-                         'OH', 'HSO4', 'HF', 'Hfree']:  # + outunit:
+                         'OH', 'HSO4', 'HF', 'Hfree']:
             ps[p] *= ps.unit  # convert back to input units
 
     # Recursive approach to calculate output params.
@@ -302,8 +298,9 @@ def Bsys(pHtot=None, BT=None, BO3=None, BO4=None,
     if 'TF' not in ps:
         ps.TF = calc_TF(ps.S)
 
-    # if neither Ca nor Mg provided, use default Ks
-    ps.Ks = calc_Ks(ps.T, ps.S, ps.P, ps)
+    # Calculate Ks
+    ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in,
+                    ps.Mg, ps.Ca, ps.TS, ps.TF, ps.Ks)
 
     # Calculate pH scales (does nothing if none pH given)
     ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
@@ -414,8 +411,9 @@ def ABsys(pHtot=None,
     if 'TF' not in ps:
         ps.TF = calc_TF(ps.S_in)
 
-    # if neither Ca nor Mg provided, use default Ks
-    ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in, ps)
+    # Calculate Ks
+    ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in,
+                    ps.Mg, ps.Ca, ps.TS, ps.TF, ps.Ks)
 
     # Calculate pH scales (does nothing if none pH given)
     ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
@@ -440,9 +438,6 @@ def ABsys(pHtot=None,
         ps.ABT = pH_ABO3(ps.pHtot, ps.ABO4, ps.Ks, ps.alphaB)
     else:
         raise ValueError('pH must be determined to calculate isotopes.')
-
-    # TODO CALCULATE Output Ks here. If all X_out parameters are None,
-    # Copy input Ks to output Ks.
 
     if ps.ABO3 is None:
         ps.ABO3 = cABO3(ps.H, ps.ABT, ps.Ks, ps.alphaB)
@@ -474,9 +469,6 @@ def ABsys(pHtot=None,
 
 # Whole C-B-Isotope System
 # ------------------------
-# TODO: This needs re-writing to accommodate different input/output conditions.None
-# Old version rather clumsy.
-
 def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=None, pCO2=None,
           BT=None, BO3=None, BO4=None,
           ABT=None, ABO3=None, ABO4=None, dBT=None, dBO3=None, dBO4=None,
@@ -595,7 +587,8 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
         ps.TF = calc_TF(ps.S_in)
 
     # Calculate Ks
-    ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in, ps)
+    ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in,
+                    ps.Mg, ps.Ca, ps.TS, ps.TF, ps.Ks)
 
     # Calculate pH scales (does nothing if none pH given)
     ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws,
@@ -614,9 +607,11 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
         ps.BT = calc_TB(ps.S_in)
     elif isinstance(BT, (int, float)):
         ps.BT = ps.BT * ps.S_in / 35.
+    # count number of not None C parameters
+    nCspec = NnotNone(ps.DIC, ps.CO2, ps.HCO3, ps.CO3)  # used below
 
     # if pH is given, it's easy
-    if ps.pHtot is not None:
+    if ps.pHtot is not None or nBspec == 2:
         ps.update(calc_B_species(pHtot=ps.pHtot, BT=ps.BT, BO3=ps.BO3, BO4=ps.BO4, Ks=ps.Ks))
         ps.update(calc_C_species(pHtot=ps.pHtot, DIC=ps.DIC, CO2=ps.CO2,
                                  HCO3=ps.HCO3, CO3=ps.CO3, TA=ps.TA,
@@ -626,31 +621,29 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
     # if not, this section works out the order that things should be calculated in.
     # Special case: if pH is missing, must have:
     #   a) two C or one C and both TA and BT
-    #   b) two B
+    #   b) two B (above)
     #   c) one pH-dependent B, one pH-dependent C... But that's cray...
     #      (c not implemented!)
-    else:
-        nCspec = NnotNone(ps.DIC, ps.CO2, ps.HCO3, ps.CO3)  # count number of not None C parameters
-        if ((nCspec == 2) | ((nCspec == 1) & (NnotNone(ps.TA, ps.BT) == 2))):  # case A
-            ps.update(calc_C_species(pHtot=ps.pHtot, DIC=ps.DIC, CO2=ps.CO2,
-                                     HCO3=ps.HCO3, CO3=ps.CO3, TA=ps.TA,
-                                     fCO2=ps.fCO2, pCO2=ps.pCO2,
-                                     T_in=ps.T_in, BT=ps.BT, TP=ps.TP, TSi=ps.TSi,
-                                     TS=ps.TS, TF=ps.TF, Ks=ps.Ks))
-            ps.update(calc_B_species(pHtot=ps.pHtot, BT=ps.BT, BO3=ps.BO3, BO4=ps.BO4, Ks=ps.Ks))
-        elif nBspec == 2:  # case B
-            ps.update(calc_B_species(pHtot=ps.pHtot, BT=ps.BT, BO3=ps.BO3, BO4=ps.BO4, Ks=ps.Ks))
-            ps.update(calc_C_species(pHtot=ps.pHtot, DIC=ps.DIC, CO2=ps.CO2,
-                                     HCO3=ps.HCO3, CO3=ps.CO3, TA=ps.TA,
-                                     fCO2=ps.fCO2, pCO2=ps.pCO2,
-                                     T_in=ps.T_in, BT=ps.BT, TP=ps.TP, TSi=ps.TSi,
-                                     TS=ps.TS, TF=ps.TF, Ks=ps.Ks))  # then C
-        else:  # if neither condition is met, throw an error
-            raise ValueError(("Impossible! You haven't provided enough parameters.\n" +
-                              "If you don't know pH, you must provide either:\n" +
-                              "  - Two of [DIC, CO2, HCO3, CO3], and one of [BT, BO3, BO4]\n" +
-                              "  - One of [DIC, CO2, HCO3, CO3], and TA and BT\n" +
-                              "  - Two of [BT, BO3, BO4] and one of [DIC, CO2, HCO3, CO3]"))
+    elif ((nCspec == 2) | ((nCspec == 1) & (NnotNone(ps.TA, ps.BT) == 2))):  # case A
+        ps.update(calc_C_species(pHtot=ps.pHtot, DIC=ps.DIC, CO2=ps.CO2,
+                                 HCO3=ps.HCO3, CO3=ps.CO3, TA=ps.TA,
+                                 fCO2=ps.fCO2, pCO2=ps.pCO2,
+                                 T_in=ps.T_in, BT=ps.BT, TP=ps.TP, TSi=ps.TSi,
+                                 TS=ps.TS, TF=ps.TF, Ks=ps.Ks))
+        ps.update(calc_B_species(pHtot=ps.pHtot, BT=ps.BT, BO3=ps.BO3, BO4=ps.BO4, Ks=ps.Ks))
+    # elif nBspec == 2:  # case B -- moved up
+    #     ps.update(calc_B_species(pHtot=ps.pHtot, BT=ps.BT, BO3=ps.BO3, BO4=ps.BO4, Ks=ps.Ks))
+    #     ps.update(calc_C_species(pHtot=ps.pHtot, DIC=ps.DIC, CO2=ps.CO2,
+    #                              HCO3=ps.HCO3, CO3=ps.CO3, TA=ps.TA,
+    #                              fCO2=ps.fCO2, pCO2=ps.pCO2,
+    #                              T_in=ps.T_in, BT=ps.BT, TP=ps.TP, TSi=ps.TSi,
+    #                              TS=ps.TS, TF=ps.TF, Ks=ps.Ks))  # then C
+    else:  # if neither condition is met, throw an error
+        raise ValueError(("Impossible! You haven't provided enough parameters.\n" +
+                          "If you don't know pH, you must provide either:\n" +
+                          "  - Two of [DIC, CO2, HCO3, CO3], and one of [BT, BO3, BO4]\n" +
+                          "  - One of [DIC, CO2, HCO3, CO3], and TA and BT\n" +
+                          "  - Two of [BT, BO3, BO4] and one of [DIC, CO2, HCO3, CO3]"))
 
     for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk', 'OH', 'HSO4', 'HF', 'Hfree']:
         ps[p] *= orig_unit  # convert back to input units

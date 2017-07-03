@@ -262,7 +262,8 @@ def calc_TF(Sal):
 def calc_TB(Sal):
     """
     Calculate total Boron
-
+    
+    Directly from CO2SYS:
     Uppstrom, L., Deep-Sea Research 21:161-162, 1974:
     this is 0.000416 * Sal/35. = 0.0000119 * Sal
     TB(FF) = (0.000232 / 10.811) * (Sal / 1.80655) in mol/kg-SW
