@@ -353,9 +353,9 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
 #     Returns H
 #     """
 #     TA, DIC, BT = noms(TA, DIC, BT)  # get nominal values of inputs
-#     par = cast_array(TA, DIC, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
+#     = cast_array(TA, DIC, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast meters into array
 
-#     return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_TA_DIC)
+#     return np.apply_along_axis(_zero_wrapper, 0,  fn=zero_TA_DIC)
 
 
 def zero_TA_DIC(h, TA, DIC, BT, K1, K2, KB, KW):
@@ -504,34 +504,155 @@ def fCO2_to_pCO2(fCO2, Tc):
     return fCO2 / np.exp(P * (B + 2 * delta) / RT)
 
 
-def calc_all_C_species(H, DIC, T, BT, TP, TSi, TS, TF, Ks):
+def calc_C_species(pHtot=None, DIC=None, CO2=None,
+                   HCO3=None, CO3=None, TA=None,
+                   fCO2=None, pCO2=None,
+                   T_in=None, BT=None, TP=0, TSi=0,
+                   TS=0, TF=0, Ks=None):
     """
-    Calculate all C and alkalinity speices from H, DIC
+    Calculate all carbon species from minimal input.
     """
-    out = Bunch()
-    out.CO2 = cCO2(H, DIC, Ks)
-    out.fCO2 = CO2_to_fCO2(out.CO2, Ks)
-    out.pCO2 = fCO2_to_pCO2(out.fCO2, T)
-    out.HCO3 = cHCO3(H, DIC, Ks)
-    out.CO3 = cCO3(H, DIC, Ks)
+
+    # if fCO2 is given but CO2 is not, calculate CO2
+    if CO2 is None:
+        if fCO2 is not None:
+            CO2 = fCO2_to_CO2(fCO2, Ks)
+        elif pCO2 is not None:
+            CO2 = fCO2_to_CO2(pCO2_to_fCO2(pCO2, T_in), Ks)
+
+    # Carbon System Calculations (from Zeebe & Wolf-Gladrow, Appendix B)
+    # 1. CO2 and pH
+    if CO2 is not None and pHtot is not None:
+        H = ch(pHtot)
+        DIC = CO2_pH(CO2, pHtot, Ks)
+    # 2. CO2 and HCO3
+    elif CO2 is not None and HCO3 is not None:
+        H = CO2_HCO3(CO2, HCO3, Ks)
+        DIC = CO2_pH(CO2, cp(H), Ks)
+    # 3. CO2 and CO3
+    elif CO2 is not None and CO3 is not None:
+        H = CO2_CO3(CO2, CO3, Ks)
+        DIC = CO2_pH(CO2, cp(H), Ks)
+    # 4. CO2 and TA
+    elif CO2 is not None and TA is not None:
+        # unit conversion because OH and H wrapped
+        # up in TA fns - all need to be in same units.
+        pHtot = CO2_TA(CO2=CO2,
+                       TA=TA,
+                       BT=BT,
+                       TP=TP,
+                       TSi=TSi,
+                       TS=TS,
+                       TF=TF,
+                       Ks=Ks)
+        H = ch(pHtot)
+        DIC = CO2_pH(CO2, pHtot, Ks)
+    # 5. CO2 and DIC
+    elif CO2 is not None and DIC is not None:
+        H = CO2_DIC(CO2, DIC, Ks)
+    # 6. pHtot and HCO3
+    elif pHtot is not None and HCO3 is not None:
+        H = ch(pHtot)
+        DIC = pH_HCO3(pHtot, HCO3, Ks)
+    # 7. pHtot and CO3
+    elif pHtot is not None and CO3 is not None:
+        H = ch(pHtot)
+        DIC = pH_CO3(pHtot, CO3, Ks)
+    # 8. pHtot and TA
+    elif pHtot is not None and TA is not None:
+        H = ch(pHtot)
+        DIC = pH_TA(pH=pHtot,
+                    TA=TA,
+                    BT=BT,
+                    TP=TP,
+                    TSi=TSi,
+                    TS=TS,
+                    TF=TF,
+                    Ks=Ks)
+    # 9. pHtot and DIC
+    elif pHtot is not None and DIC is not None:
+        H = ch(pHtot)
+    # 10. HCO3 and CO3
+    elif HCO3 is not None and CO3 is not None:
+        H = HCO3_CO3(HCO3, CO3, Ks)
+        DIC = pH_CO3(cp(H), CO3, Ks)
+    # 11. HCO3 and TA
+    elif HCO3 is not None and TA is not None:
+        Warning('Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity.')
+        H = HCO3_TA(HCO3,
+                    TA,
+                    BT,
+                    Ks)
+        DIC = pH_HCO3(cp(H), HCO3, Ks)
+    # 12. HCO3 amd DIC
+    elif HCO3 is not None and DIC is not None:
+        H = HCO3_DIC(HCO3, DIC, Ks)
+    # 13. CO3 and TA
+    elif CO3 is not None and TA is not None:
+        Warning('Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity.')
+        H = CO3_TA(CO3,
+                   TA,
+                   BT,
+                   Ks)
+        DIC = pH_CO3(cp(H), CO3, Ks)
+    # 14. CO3 and DIC
+    elif CO3 is not None and DIC is not None:
+        H = CO3_DIC(CO3, DIC, Ks)
+    # 15. TA and DIC
+    elif TA is not None and DIC is not None:
+        pHtot = TA_DIC(TA=TA,
+                       DIC=DIC,
+                       BT=BT,
+                       TP=TP,
+                       TSi=TSi,
+                       TS=TS,
+                       TF=TF,
+                       Ks=Ks)
+        H = ch(pHtot)
+
+    # The above makes sure that DIC and H are known,
+    # this next bit calculates all the missing species
+    # from DIC and H.
+    if CO2 is None:
+        CO2 = cCO2(H, DIC, Ks)
+    if fCO2 is None:
+        fCO2 = CO2_to_fCO2(CO2, Ks)
+    if pCO2 is None:
+        pCO2 = fCO2_to_pCO2(fCO2, T_in)
+    if HCO3 is None:
+        HCO3 = cHCO3(H, DIC, Ks)
+    if CO3 is None:
+        CO3 = cCO3(H, DIC, Ks)
     # Calculate all elements of Alkalinity
-    (out.TA, out.CAlk, out.BAlk,
-     out.PAlk, out.SiAlk, out.OH,
-     out.Hfree, out.HSO4, out.HF) = cTA(H=H,
-                                        DIC=DIC,
-                                        BT=BT,
-                                        TP=TP,
-                                        TSi=TSi,
-                                        TS=TS,
-                                        TF=TF,
-                                        Ks=Ks, mode='multi')
-    pHtot = np.array(cp(H), ndmin=1)
-    # Calculate other pH scales
-    out.update(calc_pH_scales(pHtot=pHtot, pHfree=None, pHsws=None,
-                              TS=TS, TF=TF, Ks=Ks))
+    (TA, CAlk, BAlk,
+     PAlk, SiAlk, OH,
+     Hfree, HSO4, HF) = cTA(H=H,
+                            DIC=DIC,
+                            BT=BT,
+                            TP=TP,
+                            TSi=TSi,
+                            TS=TS,
+                            TF=TF,
+                            Ks=Ks, mode='multi')
 
-    return out
+    # if pH not calced yet, calculate on all scales.
+    if pHtot is None:
+        pHtot = np.array(cp(H), ndmin=1)
 
-
-
-
+    return Bunch({'pHtot': pHtot,
+                  'TA': TA,
+                  'DIC': DIC,
+                  'CO2': CO2,
+                  'H': H,
+                  'HCO3': HCO3,
+                  'fCO2': fCO2,
+                  'pCO2': pCO2,
+                  'CO3': CO3,
+                  'CAlk': CAlk,
+                  'BAlk': BAlk,
+                  'PAlk': PAlk,
+                  'SiAlk': SiAlk,
+                  'OH': OH,
+                  'Hfree': Hfree,
+                  'HSO4': HSO4,
+                  'HF': HF})
