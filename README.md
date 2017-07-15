@@ -20,7 +20,7 @@ This will be particularly useful for anyone thinking about oceans in the distant
 - [ ] [Compare to CO2SYS](https://github.com/oscarbranson/cbsyst/issues/6), a la [Orr et al (2015)](http://www.biogeosciences.net/12/1483/2015/bg-12-1483-2015.pdf)?
 
 If anyone wants to help with any of this, please do contribute!
-A full list of bite-sized tasks that need doing is available in the [TODO list]().
+A full list of bite-sized tasks that need doing is available on the [Issues](https://github.com/oscarbranson/cbsyst/issues) page.
 
 ## Acknowledgement
 The development of `cbsyst` has been greatly aided by [CO2SYS](http://cdiac.ornl.gov/oceans/co2rprt.html), and the [Matlab conversion of CO2SYS](http://cdiac.ornl.gov/ftp/oceans/co2sys/).
