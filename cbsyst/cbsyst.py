@@ -235,7 +235,8 @@ def Bsys(pHtot=None, BT=None, BO3=None, BO4=None,
          ABT=None, ABO3=None, ABO4=None,
          dBT=None, dBO3=None, dBO4=None,
          alphaB=None,
-         T=25., S=35., P=None,
+         T_in=25., S_in=35., P_in=None,
+         T_out=None, S_out=None, P_out=None,
          Ca=None, Mg=None,
          pHsws=None, pHfree=None,
          Ks=None, pdict=None):
@@ -294,9 +295,9 @@ def Bsys(pHtot=None, BT=None, BO3=None, BO4=None,
 
     # Conserved seawater chemistry
     if 'TS' not in ps:
-        ps.TS = calc_TS(ps.S)
+        ps.TS = calc_TS(ps.S_in)
     if 'TF' not in ps:
-        ps.TF = calc_TF(ps.S)
+        ps.TF = calc_TF(ps.S_in)
 
     # Calculate Ks
     ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in,
