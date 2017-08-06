@@ -1591,7 +1591,7 @@ def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None, param_d
     return Ks
 
 
-def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=None):
+def MyAMI_K_calc_multi(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None):
     """
     Calculate MyAMI equilibrium constants for multiple T, S and Mg and Ca conditions.
 
@@ -1617,8 +1617,8 @@ def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=None):
     """
     # package data in a bunch of 1D arrays.
     d = Bunch()
-    d.T = np.array(T, ndmin=1)
-    d.S = np.array(S, ndmin=1)
+    d.T = np.array(TempC, ndmin=1)
+    d.S = np.array(Sal, ndmin=1)
     d.Ca = np.array(Ca, ndmin=1)
     d.Mg = np.array(Mg, ndmin=1)
     d.P = np.array(P, ndmin=1)
