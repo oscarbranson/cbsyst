@@ -192,6 +192,7 @@ def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None):
         pHtot = np.array(cp(H), ndmin=1)
 
     return Bunch({'pHtot': pHtot,
+                  'H': H,
                   'BT': BT,
                   'BO3': BO3,
                   'BO4': BO4})
