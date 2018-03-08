@@ -1266,7 +1266,7 @@ start_params = {'K0': np.array([-60.2409, 93.4517, 23.3585, 0.023517,
                 'KB': np.array([148.0248, 137.1942, 1.62142, -8966.90,
                                 -2890.53, -77.942, 1.728, -0.0996,
                                 -24.4344, -25.085, -0.2474, 0.053105]),
-                'KW': np.array([148.9652, -13847.26, -23.6521, 118.67,
+                'KW': np.array([148.9802, -13847.26, -23.6521, 118.67,
                                 -5.977, 1.0495, -0.01615]),
                 'KspC': np.array([-171.9065, -0.077993, 2839.319, 71.595, -0.77712,
                                   0.0028426, 178.34, -0.07711, 0.0041249]),
@@ -1591,7 +1591,7 @@ def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None, param_d
     return Ks
 
 
-def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=None):
+def MyAMI_K_calc_multi(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None):
     """
     Calculate MyAMI equilibrium constants for multiple T, S and Mg and Ca conditions.
 
@@ -1617,8 +1617,8 @@ def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=None):
     """
     # package data in a bunch of 1D arrays.
     d = Bunch()
-    d.T = np.array(T, ndmin=1)
-    d.S = np.array(S, ndmin=1)
+    d.T = np.array(TempC, ndmin=1)
+    d.S = np.array(Sal, ndmin=1)
     d.Ca = np.array(Ca, ndmin=1)
     d.Mg = np.array(Mg, ndmin=1)
     d.P = np.array(P, ndmin=1)

@@ -323,21 +323,21 @@ class ReferenceDataTestCase(unittest.TestCase):
 
         # Csys calculations
         # TA from pH and DIC
-        cTA = Csys(pHtot=pH, DIC=DIC, BT=BT, S=S)
+        cTA = Csys(pHtot=pH, DIC=DIC, BT=BT, S_in=S)
         # Calculate % differences from measured
         dTA = (100 * (TA - cTA.TA) / TA)
 
         self.assertLess(max(abs(dTA)), 0.2, msg='TA from DIC and pH')
 
         # pH from TA and DIC
-        cpH = Csys(DIC=DIC, TA=TA, BT=BT, S=S)
+        cpH = Csys(DIC=DIC, TA=TA, BT=BT, S_in=S)
         # Calculate % differences from measured
         dpH = (100 * (pH - cpH.pHtot) / pH)
 
         self.assertLess(max(abs(dpH)), 0.2, msg='pH from TA and DIC')
 
         # DIC from pH and TA
-        cDIC = Csys(pHtot=pH, TA=TA, BT=BT, S=S)
+        cDIC = Csys(pHtot=pH, TA=TA, BT=BT, S_in=S)
         # Calculate % differences from measured
         dDIC = (100 * (DIC - cDIC.DIC) / DIC)
 
@@ -365,21 +365,21 @@ class ReferenceDataTestCase(unittest.TestCase):
 
         # Csys calculations
         # TA from pH and DIC
-        cTA = CBsys(pHtot=pH, DIC=DIC, BT=BT, S=S)
+        cTA = CBsys(pHtot=pH, DIC=DIC, BT=BT, S_in=S)
         # Calculate % differences from measured
         dTA = (100 * (TA - cTA.TA) / TA)
 
         self.assertLess(max(abs(dTA)), 0.2, msg='TA from DIC and pH')
 
         # pH from TA and DIC
-        cpH = CBsys(DIC=DIC, TA=TA, BT=BT, S=S)
+        cpH = CBsys(DIC=DIC, TA=TA, BT=BT, S_in=S)
         # Calculate % differences from measured
         dpH = (100 * (pH - cpH.pHtot) / pH)
 
         self.assertLess(max(abs(dpH)), 0.2, msg='pH from TA and DIC')
 
         # DIC from pH and TA
-        cDIC = CBsys(pHtot=pH, TA=TA, BT=BT, S=S)
+        cDIC = CBsys(pHtot=pH, TA=TA, BT=BT, S_in=S)
         # Calculate % differences from measured
         dDIC = (100 * (DIC - cDIC.DIC) / DIC)
 
@@ -395,7 +395,7 @@ class ReferenceDataTestCase(unittest.TestCase):
 
         # Calculate using cbsys
         # TA from DIC and fCO2
-        cTA = Csys(DIC=ld.DIC.values, fCO2=ld.fCO2.values, T=ld.Temp.values, S=ld.Sal.values)
+        cTA = Csys(DIC=ld.DIC.values, fCO2=ld.fCO2.values, T_in=ld.Temp.values, S_in=ld.Sal.values)
         dTA = ld.TA - cTA.TA
         dTA_median = np.median(dTA)
         dTA_pc95 = np.percentile(dTA, [2.5, 97.5])
@@ -403,7 +403,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         self.assertTrue(all(abs(dTA_pc95 - dTA_median) <= 16), msg='TA 95% Conf <= 16')
 
         # fCO2 from TA and DIC
-        cfCO2 = Csys(TA=ld.TA.values, DIC=ld.DIC.values, T=ld.Temp.values, S=ld.Sal.values)
+        cfCO2 = Csys(TA=ld.TA.values, DIC=ld.DIC.values, T_in=ld.Temp.values, S_in=ld.Sal.values)
         dfCO2 = ld.fCO2 - cfCO2.fCO2
         dfCO2_median = np.median(dfCO2)
         # dfCO2_pc95 = np.percentile(dfCO2, [2.5, 97.5])
@@ -414,7 +414,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         # self.assertTrue(all(abs(dfCO2_pc95) <= 70), msg='fCO2 95% Conc <= 70')
 
         # DIC from TA and fCO2
-        cDIC = Csys(TA=ld.TA.values, fCO2=ld.fCO2.values, T=ld.Temp.values, S=ld.Sal.values)
+        cDIC = Csys(TA=ld.TA.values, fCO2=ld.fCO2.values, T_in=ld.Temp.values, S_in=ld.Sal.values)
         dDIC = ld.DIC - cDIC.DIC
         dDIC_median = np.median(dDIC)
         dDIC_pc95 = np.percentile(dDIC, [2.5, 97.5])
@@ -431,7 +431,7 @@ class ReferenceDataTestCase(unittest.TestCase):
 
         # Calculate using cbsys
         # TA from DIC and fCO2
-        cTA = CBsys(DIC=ld.DIC.values, fCO2=ld.fCO2.values, T=ld.Temp.values, S=ld.Sal.values)
+        cTA = CBsys(DIC=ld.DIC.values, fCO2=ld.fCO2.values, T_in=ld.Temp.values, S_in=ld.Sal.values)
         dTA = ld.TA - cTA.TA
         dTA_median = np.median(dTA)
         dTA_pc95 = np.percentile(dTA, [2.5, 97.5])
@@ -439,7 +439,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         self.assertTrue(all(abs(dTA_pc95 - dTA_median) <= 16), msg='TA 95% Conf <= 16')
 
         # fCO2 from TA and DIC
-        cfCO2 = CBsys(TA=ld.TA.values, DIC=ld.DIC.values, T=ld.Temp.values, S=ld.Sal.values)
+        cfCO2 = CBsys(TA=ld.TA.values, DIC=ld.DIC.values, T_in=ld.Temp.values, S_in=ld.Sal.values)
         dfCO2 = ld.fCO2 - cfCO2.fCO2
         dfCO2_median = np.median(dfCO2)
         # dfCO2_pc95 = np.percentile(dfCO2, [2.5, 97.5])
@@ -450,7 +450,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         # self.assertTrue(all(abs(dfCO2_pc95) <= 70), msg='fCO2 95% Conc <= 70')
 
         # DIC from TA and fCO2
-        cDIC = CBsys(TA=ld.TA.values, fCO2=ld.fCO2.values, T=ld.Temp.values, S=ld.Sal.values)
+        cDIC = CBsys(TA=ld.TA.values, fCO2=ld.fCO2.values, T_in=ld.Temp.values, S_in=ld.Sal.values)
         dDIC = ld.DIC - cDIC.DIC
         dDIC_median = np.median(dDIC)
         dDIC_pc95 = np.percentile(dDIC, [2.5, 97.5])
@@ -477,8 +477,8 @@ class ReferenceDataTestCase(unittest.TestCase):
         gd = gd.loc[gd.cruise != 270]
 
         # calculate pH from TA and DIC
-        cpH = Csys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
-                   P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
+        cpH = Csys(TA=gd.talk, DIC=gd.tco2, T_in=gd.temperature, S_in=gd.salinity,
+                   P_in=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         pH_resid = gd.phtsinsitutp - cpH.pHtot
         pH_median = np.median(pH_resid)
         pH_pc95 = np.percentile(pH_resid, [2.5, 97.5])
@@ -487,8 +487,8 @@ class ReferenceDataTestCase(unittest.TestCase):
         self.assertTrue(all(abs(pH_pc95) <= 0.05), msg='pH 95% Conf <= 0.05')
 
         # calculate TA from pH and DIC
-        cTA = Csys(pHtot=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
-                   P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
+        cTA = Csys(pHtot=gd.phtsinsitutp, DIC=gd.tco2, T_in=gd.temperature, S_in=gd.salinity,
+                   P_in=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         TA_resid = gd.talk - cTA.TA
         TA_median = np.median(TA_resid)
         TA_pc95 = np.percentile(TA_resid, [2.5, 97.5])
@@ -497,8 +497,8 @@ class ReferenceDataTestCase(unittest.TestCase):
         self.assertTrue(all(abs(TA_pc95) < 13), msg='TA 95% Conf <= 15')
 
         # calculate DIC from TA and pH
-        cDIC = Csys(pHtot=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity,
-                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
+        cDIC = Csys(pHtot=gd.phtsinsitutp, TA=gd.talk, T_in=gd.temperature, S_in=gd.salinity,
+                    P_in=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         DIC_resid = gd.tco2 - cDIC.DIC
         DIC_median = np.median(DIC_resid)
         DIC_pc95 = np.percentile(DIC_resid, [2.5, 97.5])
@@ -526,8 +526,8 @@ class ReferenceDataTestCase(unittest.TestCase):
         gd = gd.loc[gd.cruise != 270]
 
         # calculate pH from TA and DIC
-        cpH = CBsys(TA=gd.talk, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
-                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
+        cpH = CBsys(TA=gd.talk, DIC=gd.tco2, T_in=gd.temperature, S_in=gd.salinity,
+                    P_in=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         pH_resid = gd.phtsinsitutp - cpH.pHtot
         pH_median = np.median(pH_resid)
         pH_pc95 = np.percentile(pH_resid, [2.5, 97.5])
@@ -536,8 +536,8 @@ class ReferenceDataTestCase(unittest.TestCase):
         self.assertTrue(all(abs(pH_pc95) <= 0.05), msg='pH 95% Conf <= 0.05')
 
         # calculate TA from pH and DIC
-        cTA = CBsys(pHtot=gd.phtsinsitutp, DIC=gd.tco2, T=gd.temperature, S=gd.salinity,
-                    P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
+        cTA = CBsys(pHtot=gd.phtsinsitutp, DIC=gd.tco2, T_in=gd.temperature, S_in=gd.salinity,
+                    P_in=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         TA_resid = gd.talk - cTA.TA
         TA_median = np.median(TA_resid)
         TA_pc95 = np.percentile(TA_resid, [2.5, 97.5])
@@ -546,8 +546,8 @@ class ReferenceDataTestCase(unittest.TestCase):
         self.assertTrue(all(abs(TA_pc95) < 13), msg='TA 95% Conf <= 15')
 
         # calculate DIC from TA and pH
-        cDIC = CBsys(pHtot=gd.phtsinsitutp, TA=gd.talk, T=gd.temperature, S=gd.salinity,
-                     P=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
+        cDIC = CBsys(pHtot=gd.phtsinsitutp, TA=gd.talk, T_in=gd.temperature, S_in=gd.salinity,
+                     P_in=gd.pressure, TP=gd.phosphate, TSi=gd.silicate, BT=415.7)
         DIC_resid = gd.tco2 - cDIC.DIC
         DIC_median = np.median(DIC_resid)
         DIC_pc95 = np.percentile(DIC_resid, [2.5, 97.5])

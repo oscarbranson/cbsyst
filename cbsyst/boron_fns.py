@@ -1,5 +1,5 @@
 import numpy as np
-from cbsyst.helpers import ch
+from cbsyst.helpers import ch, cp, Bunch
 
 
 # B conc fns
@@ -160,3 +160,39 @@ def R11_2_A11(R11):
     Convert Ratio to Abundance notation.
     """
     return R11 / (1 + R11)
+
+
+def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None):
+    # B system calculations
+    if pHtot is not None and BT is not None:
+        H = ch(pHtot)
+    elif BT is not None and BO3 is not None:
+        H = BT_BO3(BT, BO3, Ks)
+    elif BT is not None and BO4 is not None:
+        H = BT_BO4(BT, BO4, Ks)
+    elif BO3 is not None and BO4 is not None:
+        BT = BO3 + BO3
+        H = BT_BO3(BT, BO3, Ks)
+    elif pHtot is not None and BO3 is not None:
+        H = ch(pHtot)
+        BT = pH_BO3(pHtot, BO3, Ks)
+    elif pHtot is not None and BO4 is not None:
+        H = ch(pHtot)
+        BT = pH_BO4(pHtot, BO4, Ks)
+
+    # The above makes sure that BT and H are known,
+    # this next bit calculates all the missing species
+    # from BT and H.
+
+    if BO3 is None:
+        BO3 = cBO3(BT, H, Ks)
+    if BO4 is None:
+        BO4 = cBO4(BT, H, Ks)
+    if pHtot is None:
+        pHtot = np.array(cp(H), ndmin=1)
+
+    return Bunch({'pHtot': pHtot,
+                  'H': H,
+                  'BT': BT,
+                  'BO3': BO3,
+                  'BO4': BO4})
