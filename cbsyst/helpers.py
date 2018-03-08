@@ -282,28 +282,36 @@ def calc_fH(TempK, Sal):
 
 
 # Convert between pH scales
-def calc_pH_scales(pHtot, pHfree, pHsws, TS, TF, Ks):
+def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, TS, TF, TempK, Sal, Ks):
     """
     Calculate pH on all scales, given one.
     """
 
     # check if any pH scale is given.
-    npH = NnotNone(pHfree, pHsws, pHtot)
+    npH = NnotNone(pHfree, pHsws, pHtot, pHNBS)
 
     if npH == 1:
         # pH scale conversions
         FREEtoTOT = -np.log10((1 + TS / Ks.KSO4))
         SWStoTOT = -np.log10((1 + TS / Ks.KSO4) /
                              (1 + TS / Ks.KSO4 + TF / Ks.KF))
+        fH = calc_fH(TempK, Sal)
 
         if pHtot is not None:
             return {'pHfree': pHtot - FREEtoTOT,
-                    'pHsws': pHtot - SWStoTOT}
+                    'pHsws': pHtot - SWStoTOT,
+                    'pHNBS': pHtot - SWStoTOT - np.log10(fH)}
         elif pHsws is not None:
             return {'pHfree': pHsws + SWStoTOT - FREEtoTOT,
-                    'pHtot': pHsws + SWStoTOT}
+                    'pHtot': pHsws + SWStoTOT,
+                    'pHNBS': pHsws - np.log10(fH)}
         elif pHfree is not None:
             return {'pHsws': pHfree + FREEtoTOT - SWStoTOT,
-                    'pHtot': pHfree + FREEtoTOT}
+                    'pHtot': pHfree + FREEtoTOT,
+                    'pHNBS': pHfree + FREEtoTOT - SWStoTOT - np.log10(fH)}
+        elif pHNBS is not None:
+            return {'pHsws': pHNBS + np.log10(fH),
+                    'pHtot': pHNBS + np.log10(fH) + SWStoTOT,
+                    'pHfree': pHNBS + np.log10(fH) + SWStoTOT - FREEtoTOT}
     else:
         return {}
