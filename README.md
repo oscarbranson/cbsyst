@@ -11,11 +11,6 @@ This will be particularly useful for anyone thinking about oceans in the distant
 
 ***Tested** in the modern ocean against GLODAPv2 data (see below). Performs as well as Matlab CO2SYS.*
 
-## IMPORTANT
-There is currently a problem in MyAMI. The sensitivity of equilibrium constants to varying [Ca] and [Mg] is not correct. **Do not use `cbsyst` at non-ambient [Ca] or [Mg] until this is resolved.**. Check for updates on this issue [here](https://github.com/oscarbranson/cbsyst/issues/18).
-
-***This does not effect the use of `cbsyst` for ambient-seawater [Mg] and [Ca].***
-
 ## Work in Progress:
 - [ ] [Revelle factor reporting](https://github.com/oscarbranson/cbsyst/issues/8)
 - [ ] [Compare to CO2SYS](https://github.com/oscarbranson/cbsyst/issues/6), a la [Orr et al (2015)](http://www.biogeosciences.net/12/1483/2015/bg-12-1483-2015.pdf)?
