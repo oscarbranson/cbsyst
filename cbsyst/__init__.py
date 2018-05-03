@@ -1,2 +1,2 @@
 from cbsyst.cbsyst import *
-from cbsyst.helpers import data_out
+from cbsyst.helpers import data_out, Bunch
