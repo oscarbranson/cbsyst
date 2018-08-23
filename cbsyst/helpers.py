@@ -248,14 +248,27 @@ def calc_TF(Sal):
     return (a / b) * (Sal / c)  # mol/kg-SW
 
 
+# def calc_TB(Sal):
+#     """
+#     Calculate total Boron
+
+#     Lee, Kim, Byrne, Millero, Feely, Yong-Ming Liu. 2010.
+#     Geochimica Et Cosmochimica Acta 74 (6): 1801-1811
+#     """
+#     a, b = (0.0004326, 35.)
+#     return a * Sal / b
+
+
 def calc_TB(Sal):
     """
     Calculate total Boron
-
-    Lee, Kim, Byrne, Millero, Feely, Yong-Ming Liu. 2010.
-    Geochimica Et Cosmochimica Acta 74 (6): 1801-1811
+    
+    Directly from CO2SYS:
+    Uppstrom, L., Deep-Sea Research 21:161-162, 1974:
+    this is 0.000416 * Sal/35. = 0.0000119 * Sal
+    TB(FF) = (0.000232 / 10.811) * (Sal / 1.80655) in mol/kg-SW
     """
-    a, b = (0.0004326, 35.)
+    a, b = (0.0004157, 35.)
     return a * Sal / b
 
 
@@ -269,28 +282,36 @@ def calc_fH(TempK, Sal):
 
 
 # Convert between pH scales
-def calc_pH_scales(pHtot, pHfree, pHsws, TS, TF, Ks):
+def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, TS, TF, TempK, Sal, Ks):
     """
     Calculate pH on all scales, given one.
     """
 
     # check if any pH scale is given.
-    npH = NnotNone(pHfree, pHsws, pHtot)
+    npH = NnotNone(pHfree, pHsws, pHtot, pHNBS)
 
     if npH == 1:
         # pH scale conversions
         FREEtoTOT = -np.log10((1 + TS / Ks.KSO4))
         SWStoTOT = -np.log10((1 + TS / Ks.KSO4) /
                              (1 + TS / Ks.KSO4 + TF / Ks.KF))
+        fH = calc_fH(TempK, Sal)
 
         if pHtot is not None:
             return {'pHfree': pHtot - FREEtoTOT,
-                    'pHsws': pHtot - SWStoTOT}
+                    'pHsws': pHtot - SWStoTOT,
+                    'pHNBS': pHtot - SWStoTOT - np.log10(fH)}
         elif pHsws is not None:
             return {'pHfree': pHsws + SWStoTOT - FREEtoTOT,
-                    'pHtot': pHsws + SWStoTOT}
+                    'pHtot': pHsws + SWStoTOT,
+                    'pHNBS': pHsws - np.log10(fH)}
         elif pHfree is not None:
             return {'pHsws': pHfree + FREEtoTOT - SWStoTOT,
-                    'pHtot': pHfree + FREEtoTOT}
+                    'pHtot': pHfree + FREEtoTOT,
+                    'pHNBS': pHfree + FREEtoTOT - SWStoTOT - np.log10(fH)}
+        elif pHNBS is not None:
+            return {'pHsws': pHNBS + np.log10(fH),
+                    'pHtot': pHNBS + np.log10(fH) + SWStoTOT,
+                    'pHfree': pHNBS + np.log10(fH) + SWStoTOT - FREEtoTOT}
     else:
         return {}

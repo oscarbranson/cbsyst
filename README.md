@@ -13,10 +13,7 @@ This will be particularly useful for anyone thinking about oceans in the distant
 
 ***Tested** in the modern ocean against GLODAPv2 data (see below). Performs as well as Matlab CO2SYS.*
 
-## Still To Do...
-- [X] [Nutrient alkalinity](https://github.com/oscarbranson/cbsyst/issues/5)
-- [X] [Different pH scales](https://github.com/oscarbranson/cbsyst/issues/7)
-- [ ] [Separate input / output conditions](https://github.com/oscarbranson/cbsyst/issues/3)
+## Work in Progress:
 - [ ] [Revelle factor reporting](https://github.com/oscarbranson/cbsyst/issues/8)
 - [ ] [Compare to CO2SYS](https://github.com/oscarbranson/cbsyst/issues/6), a la [Orr et al (2015)](http://www.biogeosciences.net/12/1483/2015/bg-12-1483-2015.pdf)?
 

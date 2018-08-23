@@ -110,7 +110,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Tpower2 = T**2
     Tpower3 = T**3
     Tpower4 = T**4
-    Tabz = T - 298.15
+    Tabs = T - 298.15
 
     # PART 1 -- calculate thermodynamic pK's for acids, gases and complexes
 
@@ -275,10 +275,10 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
                              [0.01498, -15.7E-4, 0.0]])  # corrected after Simonson et al 1987 5th param should be e-2
     param_NaBOH4 = reshaper(param_NaBOH4, T)
 
-    def Equation_TabA3andTabA4andTabA5(Tabz, a):
+    def Equation_TabA3andTabA4andTabA5(Tabs, a):
         return (a[:, 0] +
-                a[:, 1] * Tabz +
-                a[:, 2] * Tabz**2)
+                a[:, 1] * Tabs +
+                a[:, 2] * Tabs**2)
 
     # def Equation_Na2SO4_TabA3(T, ln_of_Tdiv29815, a):
     #     return (a[:, 0] + a[:, 1] * ((1 / T) - (1 / 298.15)) + a[:, 2] * ln_of_Tdiv29815)
@@ -296,7 +296,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
                             [-0.0989, -6.876E-3, 0.0],
                             [-56.43 / 1000, -9.56E-3, 0.0]])  # corrected after Simonson et al 1988
     param_KBOH4 = reshaper(param_KBOH4, T)
-    # same function as TabA3 "Equation_TabA3andTabA4andTabA5(T,a)"
+    # same function as TabA3 "Equation_TabA3andTabA4andTabA5(Tabs,a)"
 
     # Table A5 (Millero and Pierrot, 1998; after Simonson et al, 1987b; valid 5 - 55degC
     param_MgBOH42 = np.array([[-0.623, 6.496E-3, 0.0],
@@ -333,9 +333,9 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # Table A8 - - - Pitzer parameters unknown; beta's known for 25degC
     Equation_KHSO4 = np.array([-0.0003, 0.1735, 0.0])
     # Equation_MgHSO42 = np.array([0.4746, 1.729, 0.0])  #  XX no Cphi #from Harvie et al 1984 as referenced in MP98
-    Equation_MgHSO42 = np.array([-0.61656 - 0.00075174 * Tabz,
-                                 7.716066 - 0.0164302 * Tabz,
-                                 0.43026 + 0.00199601 * Tabz])  # from Pierrot and Millero 1997 as used in the Excel file
+    Equation_MgHSO42 = np.array([-0.61656 - 0.00075174 * Tabs,
+                                 7.716066 - 0.0164302 * Tabs,
+                                 0.43026 + 0.00199601 * Tabs])  # from Pierrot and Millero 1997 as used in the Excel file
 
     # Equation_MgHCO32 = np.array([0.329, 0.6072, 0.0])  # Harvie et al 1984
     Equation_MgHCO32 = np.array([0.03, 0.8, 0.0])  # Millero and Pierrot redetermined after Thurmond and Millero 1982
@@ -403,19 +403,19 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # Na = cation
     [beta_0[1, 0], beta_1[1, 0], C_phi[1, 0]] = Equation_NaOH
     [beta_0[1, 1], beta_1[1, 1], C_phi[1, 1]] = Equation_TabA1(T, Tinv, lnT, param_NaCl)
-    [beta_0[1, 2], beta_1[1, 2], C_phi[1, 2]] = Equation_TabA3andTabA4andTabA5(T, param_NaBOH4)
-    [beta_0[1, 3], beta_1[1, 3], C_phi[1, 3]] = Equation_TabA3andTabA4andTabA5(T, param_NaHCO3)
-    [beta_0[1, 4], beta_1[1, 4], C_phi[1, 4]] = Equation_TabA3andTabA4andTabA5(T, param_NaHSO4)
-    [beta_0[1, 5], beta_1[1, 5], C_phi[1, 5]] = Equation_TabA3andTabA4andTabA5(T, param_Na2CO3)
+    [beta_0[1, 2], beta_1[1, 2], C_phi[1, 2]] = Equation_TabA3andTabA4andTabA5(Tabs, param_NaBOH4)
+    [beta_0[1, 3], beta_1[1, 3], C_phi[1, 3]] = Equation_TabA3andTabA4andTabA5(Tabs, param_NaHCO3)
+    [beta_0[1, 4], beta_1[1, 4], C_phi[1, 4]] = Equation_TabA3andTabA4andTabA5(Tabs, param_NaHSO4)
+    [beta_0[1, 5], beta_1[1, 5], C_phi[1, 5]] = Equation_TabA3andTabA4andTabA5(Tabs, param_Na2CO3)
     [beta_0[1, 6], beta_1[1, 6], C_phi[1, 6]] = param_Na2SO4_Moller  # Equation_Na2SO4_TabA3(T, ln_of_Tdiv29815, param_Na2SO4)
 
     # K = cation
     [beta_0[2, 0], beta_1[2, 0], C_phi[2, 0]] = Equation_TabA7(T, param_KOH)
     [beta_0[2, 1], beta_1[2, 1], C_phi[2, 1]] = Equation_TabA1(T, Tinv, lnT, param_KCl)
-    [beta_0[2, 2], beta_1[2, 2], C_phi[2, 2]] = Equation_TabA3andTabA4andTabA5(T, param_KBOH4)
-    [beta_0[2, 3], beta_1[2, 3], C_phi[2, 3]] = Equation_TabA3andTabA4andTabA5(T, param_KHCO3)
+    [beta_0[2, 2], beta_1[2, 2], C_phi[2, 2]] = Equation_TabA3andTabA4andTabA5(Tabs, param_KBOH4)
+    [beta_0[2, 3], beta_1[2, 3], C_phi[2, 3]] = Equation_TabA3andTabA4andTabA5(Tabs, param_KHCO3)
     [beta_0[2, 4], beta_1[2, 4], C_phi[2, 4]] = Equation_KHSO4
-    [beta_0[2, 5], beta_1[2, 5], C_phi[2, 5]] = Equation_TabA3andTabA4andTabA5(T, param_K2CO3)
+    [beta_0[2, 5], beta_1[2, 5], C_phi[2, 5]] = Equation_TabA3andTabA4andTabA5(Tabs, param_K2CO3)
     [beta_0[2, 6], beta_1[2, 6], C_phi[2, 6]] = Equation_TabA1(T, Tinv, lnT, param_K2SO4)
 
     # Mg = cation
@@ -484,23 +484,23 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Theta_positive = np.zeros((6, 6, *T.shape))  # Array to hold Theta values between ion two ions (for numbering see list above)
 
     # H - Sr
-    Theta_positive[0, 5] = 0.0591 + 4.5 * 1E-4 * Tabz
+    Theta_positive[0, 5] = 0.0591 + 4.5 * 1E-4 * Tabs
     Theta_positive[5, 0] = Theta_positive[0, 5]
 
     # H - Na
-    Theta_positive[0, 1] = 0.03416 - 2.09 * 1E-4 * Tabz
+    Theta_positive[0, 1] = 0.03416 - 2.09 * 1E-4 * Tabs
     Theta_positive[1, 0] = Theta_positive[0, 1]
 
     # H - K
-    Theta_positive[0, 2] = 0.005 - 2.275 * 1E-4 * Tabz
+    Theta_positive[0, 2] = 0.005 - 2.275 * 1E-4 * Tabs
     Theta_positive[2, 0] = Theta_positive[0, 2]
 
     # H - Mg
-    Theta_positive[0, 3] = 0.062 + 3.275 * 1E-4 * Tabz
+    Theta_positive[0, 3] = 0.062 + 3.275 * 1E-4 * Tabs
     Theta_positive[3, 0] = Theta_positive[0, 3]
 
     # H - Ca
-    Theta_positive[0, 4] = 0.0612 + 3.275 * 1E-4 * Tabz
+    Theta_positive[0, 4] = 0.0612 + 3.275 * 1E-4 * Tabs
     Theta_positive[4, 0] = Theta_positive[0, 4]
 
     # Na - K
@@ -552,8 +552,8 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Theta_negative[3, 1] = 0.0359
 
     # Cl - BOH4
-    Theta_negative[1, 2] = (-0.0323 - 0.42333 * 1E-4 * Tabz -
-                            21.926 * 1E-6 * Tabz**2)
+    Theta_negative[1, 2] = (-0.0323 - 0.42333 * 1E-4 * Tabs -
+                            21.926 * 1E-6 * Tabs**2)
     Theta_negative[2, 1] = Theta_negative[1, 2]
 
     # CO3 - HCO3
@@ -565,8 +565,8 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Theta_negative[6, 4] = 0.0
 
     # OH - Cl
-    Theta_negative[0, 1] = (-0.05 + 3.125 * 1E-4 * Tabz -
-                            8.362 * 1E-6 * Tabz**2)
+    Theta_negative[0, 1] = (-0.05 + 3.125 * 1E-4 * Tabs -
+                            8.362 * 1E-6 * Tabs**2)
     Theta_negative[1, 0] = Theta_negative[0, 1]
 
     # SO4 - CO3
@@ -635,15 +635,15 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Phi_PPN[4, 2, 6] = 0.0
 
     # H - Sr - Cl
-    Phi_PPN[0, 5, 1] = 0.0054 - 2.1 * 1E-4 * Tabz
+    Phi_PPN[0, 5, 1] = 0.0054 - 2.1 * 1E-4 * Tabs
     Phi_PPN[5, 0, 1] = Phi_PPN[0, 5, 1]
 
     # H - Mg - Cl
-    Phi_PPN[0, 3, 1] = 0.001 - 7.325 * 1E-4 * Tabz
+    Phi_PPN[0, 3, 1] = 0.001 - 7.325 * 1E-4 * Tabs
     Phi_PPN[3, 0, 1] = Phi_PPN[0, 3, 1]
 
     # H - Ca - Cl
-    Phi_PPN[0, 4, 1] = 0.0008 - 7.25 * 1E-4 * Tabz
+    Phi_PPN[0, 4, 1] = 0.0008 - 7.25 * 1E-4 * Tabs
     Phi_PPN[4, 0, 1] = Phi_PPN[0, 4, 1]
 
     # Sr - Na - Cl
@@ -1266,7 +1266,7 @@ start_params = {'K0': np.array([-60.2409, 93.4517, 23.3585, 0.023517,
                 'KB': np.array([148.0248, 137.1942, 1.62142, -8966.90,
                                 -2890.53, -77.942, 1.728, -0.0996,
                                 -24.4344, -25.085, -0.2474, 0.053105]),
-                'KW': np.array([148.9652, -13847.26, -23.6521, 118.67,
+                'KW': np.array([148.9802, -13847.26, -23.6521, 118.67,
                                 -5.977, 1.0495, -0.01615]),
                 'KspC': np.array([-171.9065, -0.077993, 2839.319, 71.595, -0.77712,
                                   0.0028426, 178.34, -0.07711, 0.0041249]),
@@ -1591,7 +1591,7 @@ def MyAMI_K_calc(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None, param_d
     return Ks
 
 
-def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=None):
+def MyAMI_K_calc_multi(TempC=25., Sal=35., Ca=0.0102821, Mg=0.0528171, P=None):
     """
     Calculate MyAMI equilibrium constants for multiple T, S and Mg and Ca conditions.
 
@@ -1617,8 +1617,8 @@ def MyAMI_K_calc_multi(T=25., S=35., Ca=0.0102821, Mg=0.0528171, P=None):
     """
     # package data in a bunch of 1D arrays.
     d = Bunch()
-    d.T = np.array(T, ndmin=1)
-    d.S = np.array(S, ndmin=1)
+    d.T = np.array(TempC, ndmin=1)
+    d.S = np.array(Sal, ndmin=1)
     d.Ca = np.array(Ca, ndmin=1)
     d.Mg = np.array(Mg, ndmin=1)
     d.P = np.array(P, ndmin=1)
