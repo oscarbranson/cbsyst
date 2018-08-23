@@ -1,7 +1,8 @@
 <div align="right">
   <a href="https://travis-ci.org/oscarbranson/cbsyst"><img src="https://travis-ci.org/oscarbranson/cbsyst.svg?branch=master" alt="TravisCI build" height="18"></a>
   <a href="https://badge.fury.io/py/cbsyst"><img src="https://badge.fury.io/py/cbsyst.svg" alt="PyPI version" height="18"></a>
-  <a href="https://anaconda.org/conda-forge/cbsyst"> <img src="https://anaconda.org/conda-forge/cbsyst/badges/version.svg" ald="conda-forge version" height="18"/></a>
+  <a href="https://anaconda.org/conda-forge/cbsyst"> <img src="https://anaconda.org/conda-forge/cbsyst/badges/version.svg" alt="conda-forge version" height="18"/></a>
+  <a href="https://doi.org/10.5281/zenodo.1402261"> <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1402261.svg" alt="DOI" height="18">
 </div>
 
 # cbsyst
