@@ -33,7 +33,7 @@ from cbsyst.helpers import Bunch, prescorr
 # definition of the function that takes (Temp) as input and returns the K at that temp
 def CalculateKcond(Tc, Sal):
     """
-    Calculate thermodynamic Ks adjusted for salinity.
+    Calculate thermodynamic Ks adjusted for salinity and pressure.
 
     Parameters
     ----------

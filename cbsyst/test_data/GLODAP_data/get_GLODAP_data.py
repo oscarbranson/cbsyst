@@ -25,8 +25,8 @@ class TqdmUpTo(tqdm):
         self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
-def get_GLODAP(leave_zip=True):
-    if not os.path.exists('./GLODAPv2 Merged Master File.csv.zip'):
+def get_GLODAP(path='./', leave_zip=True):
+    if not os.path.exists(path + '/GLODAPv2 Merged Master File.csv.zip'):
         print('Fetching GLODAPv2 Data (Olsen et al, 2016)...')
 
         GLODAP_url = 'http://cdiac.ornl.gov/ftp/oceans/GLODAPv2/Data_Products/data_product/GLODAPv2%20Merged%20Master%20File.csv.zip'
@@ -34,7 +34,7 @@ def get_GLODAP(leave_zip=True):
         # download GLODAP data
         with TqdmUpTo(unit='B', unit_scale=True, miniters=1,
                       desc='Downloading GLODAPv2') as t:
-            ureq.urlretrieve(GLODAP_url, './GLODAPv2 Merged Master File.csv.zip',
+            ureq.urlretrieve(GLODAP_url, path + '/GLODAPv2 Merged Master File.csv.zip',
                              reporthook=t.update_to)
 
         # # open URL
@@ -50,7 +50,7 @@ def get_GLODAP(leave_zip=True):
 
     print('Reading data...')
     # open zip
-    zf = zipfile.ZipFile('./GLODAPv2 Merged Master File.csv.zip')
+    zf = zipfile.ZipFile(path + '/GLODAPv2 Merged Master File.csv.zip')
 
     # read data into pandas
     gd = pd.read_csv(zf.open('GLODAPv2 Merged Master File.csv'))
@@ -88,10 +88,10 @@ def get_GLODAP(leave_zip=True):
                      'latitude', 'longitude', 'bottomdepth', 'maxsampdepth', 'bottle',
                      'pressure', 'depth', 'theta', 'silicate', 'phosphate']]
 
-    gds.to_csv('./GLODAPv2_pH_DIC_ALK_subset.csv', index=False)
+    gds.to_csv(path + '/GLODAPv2_pH_DIC_ALK_subset.csv', index=False)
 
     if not leave_zip:
-        os.remove('./GLODAPv2 Merged Master File.csv.zip')
+        os.remove(path + '/GLODAPv2 Merged Master File.csv.zip')
 
     return
 

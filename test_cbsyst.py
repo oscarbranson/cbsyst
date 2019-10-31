@@ -1,10 +1,12 @@
 import unittest
+import os
 import pandas as pd
 import numpy as np
 import cbsyst.carbon_fns as cf
 import cbsyst.boron_fns as bf
 from cbsyst.cbsyst import Csys, CBsys
 from cbsyst.helpers import Bunch
+from cbsyst.test_data.GLODAP_data.get_GLODAP_data import get_GLODAP
 
 
 class BoronFnTestCase(unittest.TestCase):
@@ -515,6 +517,9 @@ class ReferenceDataTestCase(unittest.TestCase):
         Check median offsets are within acceptable limits.
         Check 95% confidence of residuals are within acceptable limits.
         """
+        if not os.path.exists('cbsyst/test_data/GLODAP_data/GLODAPv2_pH_DIC_ALK_subset.csv'):
+            get_GLODAP(path='cbsyst/test_data/GLODAP_data/', leave_zip=True)
+
         # load GLODAP data
         gd = pd.read_csv('cbsyst/test_data/GLODAP_data/GLODAPv2_pH_DIC_ALK_subset.csv')
         gd.dropna(subset=['phtsinsitutp', 'temperature',

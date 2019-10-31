@@ -1,3 +1,7 @@
+"""
+Functions for calculating the carbon and boron chemistry of seawater.
+"""
+
 import numpy as np
 from cbsyst.helpers import Bunch, maxL
 from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi
@@ -52,6 +56,45 @@ def calc_Ks(T, S, P, Mg, Ca, TS, TF, Ks=None):
         for c in conv:
             Ks[c] *= SWStoTOT
 
+    return Ks
+
+def calc_Ks_TS(T, S, P, Ks={}):
+    """
+    Helper function to calculate Ks given only T, S and P.
+
+    If Ks is a dict, the Ks provided in the dict are used
+    transparrently (i.e. no pressure modification).
+    """
+    Mg = 0.0528171
+    Ca = 0.0102821
+
+    if isinstance(Ks, dict):
+        given_Ks = Ks
+    
+        
+    Ks = MyAMI_K_calc(TempC=T, Sal=S, P=P,
+                      Mg=Mg, Ca=Ca)
+    
+    # non-MyAMI Constants
+    Ks.update(calc_KPs(T, S, P))
+    Ks.update(calc_KF(T, S, P))
+    Ks.update(calc_KSi(T, S, P))
+
+    # pH conversions to total scale.
+    #   - KP1, KP2, KP3 are all on SWS
+    #   - KSi is on SWS
+    #   - MyAMI KW is on SWS... DOES THIS MATTER?
+
+    TS = calc_TS(S)
+    TF = calc_TF(S)
+    SWStoTOT = (1 + TS / Ks.KSO4) / (1 + TS / Ks.KSO4 + TF / Ks.KF)
+    # FREEtoTOT = 1 + 'T_' + mode]S / Ks.KSO4
+    conv = ['KP1', 'KP2', 'KP3', 'KSi', 'KW']
+    for c in conv:
+        Ks[c] *= SWStoTOT
+
+    Ks.update(given_Ks)
+    
     return Ks
 
 
@@ -181,6 +224,12 @@ def Csys(pHtot=None, DIC=None, CO2=None,
                              fCO2=ps.fCO2, pCO2=ps.pCO2,
                              T_in=ps.T_in, BT=ps.BT, TP=ps.TP, TSi=ps.TSi,
                              TS=ps.TS, TF=ps.TF, Ks=ps.Ks))
+    
+    # calculate pHs on all scales, if not done before.
+    if ps.pHNBS is None:
+        # Calculate pH on all scales
+        ps.update(calc_pH_scales(ps.pHtot, ps.pHfree, ps.pHsws, ps.pHNBS,
+                                ps.TS, ps.TF, ps.T_in + 273.15, ps.S_in, ps.Ks))
 
     # clean up output
     for k in ['BT', 'CO2', 'CO3', 'Ca', 'DIC', 'H',
@@ -266,6 +315,11 @@ def Bsys(pHtot=None, BT=None, BO3=None, BO4=None,
     ----------
     pH, BT, BO3, BO4 : array-like
         Boron system parameters. Two of these must be provided.
+    dBT, dBO3, dBO4, ABT, ABO3, ABO4 : array-like
+        delta (d) or fractional abundance (A) values for the Boron 
+        isotope system. One of these must be provided.
+    alphaB : array-like
+        The alpha value for BO3-BO4 isotope fractionation.
     T, S : array-like
         Temperature in Celcius and Salinity in PSU.
         Used in calculating MyAMI constants.
@@ -290,6 +344,11 @@ def Bsys(pHtot=None, BT=None, BO3=None, BO4=None,
     -------
     dict(/Bunch) containing all calculated parameters.
     """
+    # input checks
+    if NnotNone(BT, BO3, BO4) < 1:
+        raise ValueError("Must provide at least one of BT, BO3 or BO4")
+    if NnotNone(dBT, dBO3, dBO4, ABT, ABO3, ABO4) < 1:
+        raise ValueError("Must provide one of dBT, dBO3, dBO4, ABT, ABO3 or ABO4")
 
     # Bunch inputs
     ps = Bunch(locals())
