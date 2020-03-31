@@ -708,6 +708,40 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
                           "  - One of [DIC, CO2, HCO3, CO3], and TA and BT\n" +
                           "  - Two of [BT, BO3, BO4] and one of [DIC, CO2, HCO3, CO3]"))
 
+    # Calculate Isotopes
+    # if deltas provided, calculate corresponding As
+    if ps.dBT is not None:
+        ps.ABT = d11_2_A11(ps.dBT)
+    if ps.dBO3 is not None:
+        ps.ABO3 = d11_2_A11(ps.dBO3)
+    if ps.dBO4 is not None:
+        ps.ABO4 = d11_2_A11(ps.dBO4)
+
+    # calculate alpha
+    ps.alphaB = alphaB_calc(ps.T_in)
+
+    if ps.pHtot is not None and ps.ABT is not None:
+        ps.H = ch(ps.pHtot)
+    elif ps.pHtot is not None and ps.ABO3 is not None:
+        ps.ABT = pH_ABO3(ps.pHtot, ps.ABO3, ps.Ks, ps.alphaB)
+    elif ps.pHtot is not None and ps.ABO4 is not None:
+        ps.ABT = pH_ABO3(ps.pHtot, ps.ABO4, ps.Ks, ps.alphaB)
+    else:
+        raise ValueError('pH must be determined to calculate isotopes.')
+
+    if ps.ABO3 is None:
+        ps.ABO3 = cABO3(ps.H, ps.ABT, ps.Ks, ps.alphaB)
+    if ps.ABO4 is None:
+        ps.ABO4 = cABO4(ps.H, ps.ABT, ps.Ks, ps.alphaB)
+
+    if ps.dBT is None:
+        ps.dBT = A11_2_d11(ps.ABT)
+    if ps.dBO3 is None:
+        ps.dBO3 = A11_2_d11(ps.ABO3)
+    if ps.dBO4 is None:
+        ps.dBO4 = A11_2_d11(ps.ABO4)
+    
+    # Handle Units
     for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk', 'OH', 'HSO4', 'HF', 'Hfree']:
         ps[p] *= orig_unit  # convert back to input units
 
