@@ -709,6 +709,8 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
                           "  - Two of [BT, BO3, BO4] and one of [DIC, CO2, HCO3, CO3]"))
 
     # Calculate Isotopes
+    if ps.dBT is None and ps.dBO3 is None and ps.dBO4 is None:
+        ps.dBT = 0
     # if deltas provided, calculate corresponding As
     if ps.dBT is not None:
         ps.ABT = d11_2_A11(ps.dBT)
