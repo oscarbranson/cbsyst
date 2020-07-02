@@ -689,7 +689,10 @@ def ABsys(
         ps.ABO4 = d11_2_A11(ps.dBO4)
 
     # calculate alpha
-    ps.alphaB = alphaB_calc(ps.T_in)
+    if alphaB is None:
+        ps.alphaB = alphaB_calc(ps.T_in)
+    else:
+        ps.alphaB = alphaB
 
     if ps.pHtot is not None and ps.ABT is not None:
         ps.H = ch(ps.pHtot)
@@ -1034,7 +1037,10 @@ def CBsys(
         ps.ABO4 = d11_2_A11(ps.dBO4)
 
     # calculate alpha
-    ps.alphaB = alphaB_calc(ps.T_in)
+    if alphaB is None:
+        ps.alphaB = alphaB_calc(ps.T_in)
+    else:
+        ps.alphaB = alphaB
 
     if ps.pHtot is not None and ps.ABT is not None:
         ps.H = ch(ps.pHtot)
