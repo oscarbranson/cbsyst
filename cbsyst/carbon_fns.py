@@ -696,5 +696,4 @@ def calc_revelle_factor(TA, DIC, BT, TP, TSi, TS, TF, Ks):
                    Ks=Ks)
     fCO2_lo = cCO2(ch(pH_lo), DIC, Ks) / Ks.K0
 
-    print((fCO2_hi - fCO2_lo) / dDIC)
     return (fCO2_hi - fCO2_lo) * DIC / (fCO2 * 2 * dDIC)
