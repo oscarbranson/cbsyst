@@ -60,7 +60,7 @@ def calc_Ks(T, S, P, Mg, Ca, TS, TF, Ks=None):
 
 def calc_Ks_TS(T, S, P, Ks={}):
     """
-    Helper function to calculate Ks given only T, S and P.
+    Helper function to calculate Ks given only T(C), S and P.
 
     If Ks is a dict, the Ks provided in the dict are used
     transparrently (i.e. no pressure modification).
@@ -97,6 +97,25 @@ def calc_Ks_TS(T, S, P, Ks={}):
     
     return Ks
 
+def pH_scale_converter(pH, scale, Temp, Sal, Press=None, TS=None, TF=None):
+    """
+    Returns pH on all scales.
+    """
+    pH_scales = ['Total', 'FREE', 'SWS', 'NBS']
+    if scale not in pH_scales:
+        raise ValueError('scale must be one of Total, NBS, SWS or FREE.')
+    if TS is None:
+        TS = calc_TS(Sal)
+    if TF is None:
+        TF = calc_TF(Sal)
+    TempK = Temp + 273.15
+
+    Ks = calc_Ks_TS(Temp, Sal, Press)
+
+    inp = [None, None, None, None]
+    inp[np.argwhere(scale == np.array(pH_scales))[0,0]] = pH
+
+    return calc_pH_scales(*inp, TS, TF, TempK, Sal, Ks)
 
 # C Speciation
 # ------------
@@ -224,6 +243,8 @@ def Csys(pHtot=None, DIC=None, CO2=None,
                              fCO2=ps.fCO2, pCO2=ps.pCO2,
                              T_in=ps.T_in, BT=ps.BT, TP=ps.TP, TSi=ps.TSi,
                              TS=ps.TS, TF=ps.TF, Ks=ps.Ks))
+    ps['revelle_factor'] = calc_revelle_factor(TA=ps.TA, DIC=ps.DIC, BT=ps.BT, TP=ps.TP, 
+                                               TSi=ps.TSi, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
     
     # calculate pHs on all scales, if not done before.
     if ps.pHNBS is None:
@@ -708,6 +729,26 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
                           "  - One of [DIC, CO2, HCO3, CO3], and TA and BT\n" +
                           "  - Two of [BT, BO3, BO4] and one of [DIC, CO2, HCO3, CO3]"))
 
+    ps['revelle_factor'] = calc_revelle_factor(TA=ps.TA, DIC=ps.DIC, BT=ps.BT, TP=ps.TP, 
+                                               TSi=ps.TSi, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
+
+    # If any isotope parameter specified, calculate the isotope systen.
+    if NnotNone(ps.ABT, ps.ABO3, ps.ABO4, ps.dBT, ps.dBO3, ps.dBO4) != 0:
+        ps.update(ABsys(pdict=ps))
+
+    # clean up output
+    outputs = ['BAlk', 'BT', 'CAlk', 'CO2', 'CO3',
+            'DIC', 'H', 'HCO3', 'HF',
+            'HSO4', 'Hfree', 'Ks', 'OH',
+            'PAlk', 'SiAlk', 'TA', 'TF', 'TP',
+            'TS', 'TSi', 'fCO2', 'pCO2',
+            'pHfree', 'pHsws', 'pHtot', 'pHNBS', 'BO3', 'BO4',
+            'ABO3', 'ABO4', 'dBO3', 'dBO4']
+    for k in outputs:
+        if not isinstance(ps[k], np.ndarray):
+            # convert all outputs to (min) 1D numpy arrays.
+            ps[k] = np.array(ps[k], ndmin=1)
+
     for p in upar + ['CAlk', 'BAlk', 'PAlk', 'SiAlk', 'OH', 'HSO4', 'HF', 'Hfree']:
         ps[p] *= orig_unit  # convert back to input units
 
@@ -727,14 +768,6 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
         out_cond.update(calc_pH_scales(out_cond.pHtot, out_cond.pHfree, out_cond.pHsws, out_cond.pHNBS,
                                        out_cond.TS, out_cond.TF, out_cond.T_in + 273.15, out_cond.S_in, out_cond.Ks))
         # rename parameters in output conditions
-        outputs = ['BAlk', 'BT', 'CAlk', 'CO2', 'CO3',
-                   'DIC', 'H', 'HCO3', 'HF',
-                   'HSO4', 'Hfree', 'Ks', 'OH',
-                   'PAlk', 'SiAlk', 'TA', 'TF', 'TP',
-                   'TS', 'TSi', 'fCO2', 'pCO2',
-                   'pHfree', 'pHsws', 'pHtot', 'pHNBS', 'BO3', 'BO4',
-                   'ABO3', 'ABO4', 'dBO3', 'dBO4']
-
         ps.update({k + '_out': out_cond[k] for k in outputs})
 
         # remove some superfluous outputs
