@@ -1,4 +1,10 @@
-# June 2017 : Oscar Branson : oscarbranson@gmail.com
+# March 2020 : Oscar Branson : ob266@cam.ac.uk
+# ----------------------------------------------------
+# 
+# Updated Ca-HCO3 pairing parameters following comment by Zeebe and Tyrrell (2018)
+# and response by Hain et al (2018). Change is to parameter `Equation_CaHCO32' on L350.
+#
+# June 2017 : Oscar Branson : ob266@cam.ac.uk
 # --------------------------------------------------
 #
 # Adapted Mathis Hain's original code to:
@@ -340,7 +346,8 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # Equation_MgHCO32 = np.array([0.329, 0.6072, 0.0])  # Harvie et al 1984
     Equation_MgHCO32 = np.array([0.03, 0.8, 0.0])  # Millero and Pierrot redetermined after Thurmond and Millero 1982
     Equation_CaHSO42 = np.array([0.2145, 2.53, 0.0])
-    Equation_CaHCO32 = np.array([0.4, 2.977, 0.0])  # np.array([0.2, 0.3, 0]) He and Morse 1993 after Pitzeretal85 np.array([0.4, 2.977, 0.0])
+    # Equation_CaHCO32 = np.array([0.4, 2.977, 0.0])  # Harvie et al. 1984  - ERRONEOUS, see comments by Zeebe and response by Hain
+    Equation_CaHCO32 = np.array([0.2, 0.3, 0])  # He and Morse 1993 after Pitzeretal85
     Equation_CaOH2 = np.array([-0.1747, -0.2303, -5.72])  # according to Harvie84, the -5.72 should be for beta2, not Cphi (which is zero) -- but likely typo in original ref since 2:1 electrolytes don't usually have a beta2
     Equation_SrHSO42 = Equation_CaHSO42
     Equation_SrHCO32 = Equation_CaHCO32
