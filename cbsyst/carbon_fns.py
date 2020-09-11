@@ -399,7 +399,7 @@ def cCO3(H, DIC, Ks):
 #             BT * Ks.KB / (Ks.KB + H) + unit * Ks.KW / H - H * unit)
 def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode='multi'):
     """
-    Calculate Alkalinity
+    Calculate Alkalinity. H is on Total scale.
 
     Returns
     -------
@@ -656,3 +656,45 @@ def calc_C_species(pHtot=None, DIC=None, CO2=None,
                   'Hfree': Hfree,
                   'HSO4': HSO4,
                   'HF': HF})
+
+def calc_revelle_factor(TA, DIC, BT, TP, TSi, TS, TF, Ks):
+    """
+    Calculate Revelle Factor
+
+    (dpCO2 / dDIC)
+    """
+    dDIC = 1e-6  # (1 umol kg-1)
+
+    pH = TA_DIC(TA=TA,
+                   DIC=DIC,
+                   BT=BT,
+                   TP=TP,
+                   TSi=TSi,
+                   TS=TS,
+                   TF=TF,
+                   Ks=Ks)
+    fCO2 = cCO2(ch(pH), DIC, Ks) / Ks.K0
+
+    # Calculate new fCO2 above and below given value
+    pH_hi = TA_DIC(TA=TA,
+                   DIC=DIC + dDIC,
+                   BT=BT,
+                   TP=TP,
+                   TSi=TSi,
+                   TS=TS,
+                   TF=TF,
+                   Ks=Ks)
+    fCO2_hi = cCO2(ch(pH_hi), DIC, Ks) / Ks.K0
+
+    pH_lo = TA_DIC(TA=TA,
+                   DIC=DIC - dDIC,
+                   BT=BT,
+                   TP=TP,
+                   TSi=TSi,
+                   TS=TS,
+                   TF=TF,
+                   Ks=Ks)
+    fCO2_lo = cCO2(ch(pH_lo), DIC, Ks) / Ks.K0
+
+    print((fCO2_hi - fCO2_lo) / dDIC)
+    return (fCO2_hi - fCO2_lo) * DIC / (fCO2 * 2 * dDIC)
