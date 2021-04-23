@@ -32,37 +32,54 @@ import numpy as np
 
 # Carbon system
 
-def K0(T, Sal, mode='Weiss1974'):
-    opts = ['Weiss1974']
-    if mode == 'Weiss1974':
-        return np.exp(-60.2409 + 93.4517 * 100 / T + 23.3585 * np.log(T / 100) +
-                      Sal * (0.023517 - 0.023656 * T / 100 +
-                             0.0047036 * (T / 100) * (T / 100)))  # Weiss74
 
-def K1K2(T, Sal, P, mode='Luecker2000'):
-    opts = ['Luecker2000']
-    if mode == 'Luecker2000':
+def K0(T, Sal, mode="Weiss1974"):
+    opts = ["Weiss1974"]
+    if mode == "Weiss1974":
+        return np.exp(
+            -60.2409
+            + 93.4517 * 100 / T
+            + 23.3585 * np.log(T / 100)
+            + Sal * (0.023517 - 0.023656 * T / 100 + 0.0047036 * (T / 100) * (T / 100))
+        )  # Weiss74
+
+
+def K1K2(T, Sal, P, mode="Luecker2000"):
+    opts = ["Luecker2000"]
+    if mode == "Luecker2000":
         pass
     return
 
-def KSO4(T, Sal, P, mode='Dickson1990'):
-    opts = ['Dickson1990', 'Khoo1977']
-    if mode == 'Dickson1990':
-        par = np.array([141.328, -4276.1, -23.093, 324.57,
-                                    -13856, -47.986, -771.54, 35474,
-                                    114.723, -2698, 1776])  # Dickson 1990
 
-        return np.exp(par[0] +
-                      par[1] / T +
-                      par[2] * np.log(T) + np.sqrt(Istr) *
-                      (par[3] +
-                       par[4] / T +
-                       par[5] * np.log(T)) + Istr *
-                      (par[6] +
-                       par[7] / T +
-                       par[8] * np.log(T)) +
-                      par[9] / T * Istr * np.sqrt(Istr) +
-                      par[10] / T * Istr**2 + np.log(1 - 0.001005 * Sal))
-    
-    elif mode == 'Khoo 1977':
+def KSO4(T, Sal, P, mode="Dickson1990"):
+    opts = ["Dickson1990", "Khoo1977"]
+    if mode == "Dickson1990":
+        par = np.array(
+            [
+                141.328,
+                -4276.1,
+                -23.093,
+                324.57,
+                -13856,
+                -47.986,
+                -771.54,
+                35474,
+                114.723,
+                -2698,
+                1776,
+            ]
+        )  # Dickson 1990
+
+        return np.exp(
+            par[0]
+            + par[1] / T
+            + par[2] * np.log(T)
+            + np.sqrt(Istr) * (par[3] + par[4] / T + par[5] * np.log(T))
+            + Istr * (par[6] + par[7] / T + par[8] * np.log(T))
+            + par[9] / T * Istr * np.sqrt(Istr)
+            + par[10] / T * Istr ** 2
+            + np.log(1 - 0.001005 * Sal)
+        )
+
+    elif mode == "Khoo 1977":
         pass

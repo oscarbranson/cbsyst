@@ -1,10 +1,11 @@
 import scipy.optimize as opt
 import numpy as np
 from cbsyst.helpers import ch, noms, cast_array, maxL, calc_pH_scales, Bunch, cp
+
 # from cbsyst.boron_fns import cBO4
 
 
-def _zero_wrapper(ps, fn, bounds=(10**-14, 10**-1)):
+def _zero_wrapper(ps, fn, bounds=(10 ** -14, 10 ** -1)):
     """
     Wrapper to handle zero finders.
     """
@@ -28,7 +29,7 @@ def CO2_pH(CO2, pH, Ks):
     Returns DIC
     """
     h = ch(pH)
-    return CO2 * (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h**2)
+    return CO2 * (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h ** 2)
 
 
 # 2. CO2 and HCO3 given
@@ -44,8 +45,8 @@ def CO2_HCO3(CO2, HCO3, Ks):
 
 def zero_CO2_HCO3(h, CO2, HCO3, K1, K2):
     # Roots: two negative, one positive - use positive.
-    LH = CO2 * (h**2 + K1 * h + K1 * K2)
-    RH = HCO3 * (h**2 + h**3 / K1 + K2 * h)
+    LH = CO2 * (h ** 2 + K1 * h + K1 * K2)
+    RH = HCO3 * (h ** 2 + h ** 3 / K1 + K2 * h)
     return LH - RH
 
 
@@ -62,8 +63,8 @@ def CO2_CO3(CO2, CO3, Ks):
 
 def zero_CO2_CO3(h, CO2, CO3, K1, K2):
     # Roots: one positive, three negative. Use positive.
-    LH = CO2 * (h**2 + K1 * h + K1 * K2)
-    RH = CO3 * (h**2 + h**3 / K2 + h**4 / (K1 * K2))
+    LH = CO2 * (h ** 2 + K1 * h + K1 * K2)
+    RH = CO3 * (h ** 2 + h ** 3 / K2 + h ** 4 / (K1 * K2))
     return LH - RH
 
 
@@ -92,21 +93,23 @@ def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
     """
     fCO2 = CO2 / Ks.K0
     L = maxL(TA, CO2, BT, TP, TSi, TS, TF, Ks.K1)
-    pHguess = 8.
+    pHguess = 8.0
     pHtol = 0.0000001
     pHx = np.full(L, pHguess)
     deltapH = np.array(pHtol + 1, ndmin=1)
     ln10 = np.log(10)
 
     while any(abs(deltapH) > pHtol):
-        H = 10**-pHx
+        H = 10 ** -pHx
         HCO3 = Ks.K0 * Ks.K1 * fCO2 / H
-        CO3 = Ks.K0 * Ks.K1 * Ks.K2 * fCO2 / H**2
+        CO3 = Ks.K0 * Ks.K1 * Ks.K2 * fCO2 / H ** 2
         CAlk = HCO3 + 2 * CO3
         BAlk = BT * Ks.KB / (Ks.KB + H)
         OH = Ks.KW / H
-        PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H**3
-        PhosBot = H**3 + Ks.KP1 * H**2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
+        PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H ** 3
+        PhosBot = (
+            H ** 3 + Ks.KP1 * H ** 2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
+        )
         PAlk = TP * PhosTop / PhosBot
         SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
         # positive
@@ -115,7 +118,7 @@ def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
         HF = TF / (1 + Ks.KF / Hfree)
 
         Residual = TA - CAlk - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
-        Slope = ln10 * (HCO3 + 4. * CO3 + BAlk * H / (Ks.KB + H) + OH + H)
+        Slope = ln10 * (HCO3 + 4.0 * CO3 + BAlk * H / (Ks.KB + H) + OH + H)
         deltapH = Residual / Slope
 
         while any(abs(deltapH) > 1):
@@ -140,8 +143,8 @@ def CO2_DIC(CO2, DIC, Ks):
 
 def zero_CO2_DIC(h, CO2, DIC, K1, K2):
     # Roots: one positive, one negative. Use positive.
-    LH = DIC * h**2
-    RH = CO2 * (h**2 + K1 * h + K1 * K2)
+    LH = DIC * h ** 2
+    RH = CO2 * (h ** 2 + K1 * h + K1 * K2)
     return LH - RH
 
 
@@ -160,7 +163,7 @@ def pH_CO3(pH, CO3, Ks):
     Returns DIC
     """
     h = ch(pH)
-    return CO3 * (1 + h / Ks.K2 + h**2 / (Ks.K1 * Ks.K2))
+    return CO3 * (1 + h / Ks.K2 + h ** 2 / (Ks.K1 * Ks.K2))
 
 
 # 8. pH and TA
@@ -177,12 +180,12 @@ def pH_TA(pH, TA, BT, TP, TSi, TS, TF, Ks):
 
     Taken directly from MATLAB CO2SYS.
     """
-    H = 10**-pH
+    H = 10 ** -pH
     # negative alk
     BAlk = BT * Ks.KB / (Ks.KB + H)
     OH = Ks.KW / H
-    PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H**3
-    PhosBot = H**3 + Ks.KP1 * H**2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
+    PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H ** 3
+    PhosBot = H ** 3 + Ks.KP1 * H ** 2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
     PAlk = TP * PhosTop / PhosBot
     SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
     # positive alk
@@ -191,7 +194,7 @@ def pH_TA(pH, TA, BT, TP, TSi, TS, TF, Ks):
     HF = TF / (1 + Ks.KF / Hfree)
     CAlk = TA - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
 
-    return CAlk * (H**2 + Ks.K1 * H + Ks.K1 * Ks.K2) / (Ks.K1 * (H + 2. * Ks.K2))
+    return CAlk * (H ** 2 + Ks.K1 * H + Ks.K1 * Ks.K2) / (Ks.K1 * (H + 2.0 * Ks.K2))
 
 
 # 9. pH and DIC
@@ -200,7 +203,7 @@ def pH_DIC(pH, DIC, Ks):
     Returns CO2
     """
     h = ch(pH)
-    return DIC / (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h**2)
+    return DIC / (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h ** 2)
 
 
 # 10. HCO3 and CO3
@@ -216,8 +219,8 @@ def HCO3_CO3(HCO3, CO3, Ks):
 
 def zero_HCO3_CO3(h, HCO3, CO3, K1, K2):
     # Roots: one pos, two neg. Use pos.
-    LH = HCO3 * (h + h**2 / K1 + K2)
-    RH = CO3 * (h + h**2 / K2 + h**3 / (K1 * K2))
+    LH = HCO3 * (h + h ** 2 / K1 + K2)
+    RH = CO3 * (h + h ** 2 / K2 + h ** 3 / (K1 * K2))
     return LH - RH
 
 
@@ -227,19 +230,24 @@ def HCO3_TA(HCO3, TA, BT, Ks):
     Returns H
     """
     HCO3, TA, BT = noms(HCO3, TA, BT)  # get nominal values of inputs
-    par = cast_array(HCO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
+    par = cast_array(
+        HCO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW
+    )  # cast parameters into array
 
     return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_TA)
 
 
 def zero_HCO3_TA(h, HCO3, TA, BT, K1, K2, KB, KW):
     # Roots: one pos, four neg. Use pos.
-    LH = TA * (KB + h) * (h**3 + K1 * h**2 + K1 * K2 * h)
-    RH = ((HCO3 * (h + h**2 / K1 + K2) *
-           ((KB + 2 * K2) * K1 * h +
-            2 * KB * K1 * K2 + K1 * h**2)) +
-          ((h**2 + K1 * h + K1 * K2) *
-           (KB * BT * h + KW * KB + KW * h - KB * h**2 - h**3)))
+    LH = TA * (KB + h) * (h ** 3 + K1 * h ** 2 + K1 * K2 * h)
+    RH = (
+        HCO3
+        * (h + h ** 2 / K1 + K2)
+        * ((KB + 2 * K2) * K1 * h + 2 * KB * K1 * K2 + K1 * h ** 2)
+    ) + (
+        (h ** 2 + K1 * h + K1 * K2)
+        * (KB * BT * h + KW * KB + KW * h - KB * h ** 2 - h ** 3)
+    )
     return LH - RH
 
 
@@ -256,7 +264,7 @@ def HCO3_DIC(HCO3, DIC, Ks):
 
 def zero_HCO3_DIC(h, HCO3, DIC, K1, K2):
     # Roots: two pos. Use smaller.
-    LH = HCO3 * (h + h**2 / K1 + K2)
+    LH = HCO3 * (h + h ** 2 / K1 + K2)
     RH = h * DIC
     return LH - RH
 
@@ -267,18 +275,24 @@ def CO3_TA(CO3, TA, BT, Ks):
     Returns H
     """
     CO3, TA, BT = noms(CO3, TA, BT)  # get nominal values of inputs
-    par = cast_array(CO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
+    par = cast_array(
+        CO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW
+    )  # cast parameters into array
 
     return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO3_TA)
 
 
 def zero_CO3_TA(h, CO3, TA, BT, K1, K2, KB, KW):
     # Roots: three neg, two pos. Use larger pos.
-    LH = TA * (KB + h) * (h**3 + K1 * h**2 + K1 * K2 * h)
-    RH = ((CO3 * (h + h**2 / K2 + h**3 / (K1 * K2)) *
-           (K1 * h**2 + K1 * h * (KB + 2 * K2) + 2 * KB * K1 * K2)) +
-          ((h**2 + K1 * h + K1 * K2) *
-           (KB * BT * h + KW * KB + KW * h - KB * h**2 - h**3)))
+    LH = TA * (KB + h) * (h ** 3 + K1 * h ** 2 + K1 * K2 * h)
+    RH = (
+        CO3
+        * (h + h ** 2 / K2 + h ** 3 / (K1 * K2))
+        * (K1 * h ** 2 + K1 * h * (KB + 2 * K2) + 2 * KB * K1 * K2)
+    ) + (
+        (h ** 2 + K1 * h + K1 * K2)
+        * (KB * BT * h + KW * KB + KW * h - KB * h ** 2 - h ** 3)
+    )
     return LH - RH
 
 
@@ -295,7 +309,7 @@ def CO3_DIC(CO3, DIC, Ks):
 
 def zero_CO3_DIC(h, CO3, DIC, K1, K2):
     # Roots: one pos, one neg. Use neg.
-    LH = CO3 * (1 + h / K2 + h**2 / (K1 * K2))
+    LH = CO3 * (1 + h / K2 + h ** 2 / (K1 * K2))
     RH = DIC
     return LH - RH
 
@@ -308,21 +322,23 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
     Taken directly from MATLAB CO2SYS.
     """
     L = maxL(TA, DIC, BT, TP, TSi, TS, TF, Ks.K1)
-    pHguess = 7.
+    pHguess = 7.0
     pHtol = 0.00000001
     pHx = np.full(L, pHguess)
     deltapH = np.array(pHtol + 1, ndmin=1)
     ln10 = np.log(10)
 
     while any(abs(deltapH) > pHtol):
-        H = 10**-pHx
+        H = 10 ** -pHx
         # negative
-        Denom = H**2 + Ks.K1 * H + Ks.K1 * Ks.K2
+        Denom = H ** 2 + Ks.K1 * H + Ks.K1 * Ks.K2
         CAlk = DIC * Ks.K1 * (H + 2 * Ks.K2) / Denom
         BAlk = BT * Ks.KB / (Ks.KB + H)
         OH = Ks.KW / H
-        PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H**3
-        PhosBot = H**3 + Ks.KP1 * H**2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
+        PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H ** 3
+        PhosBot = (
+            H ** 3 + Ks.KP1 * H ** 2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
+        )
         PAlk = TP * PhosTop / PhosBot
         SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
         # positive
@@ -332,12 +348,12 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
 
         Residual = TA - CAlk - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
 
-        Slope = ln10 * (DIC * Ks.K1 * H *
-                        (H**2 +
-                         Ks.K1 * Ks.K2 +
-                         4 * H * Ks.K2) /
-                        Denom / Denom +
-                        BAlk * H / (Ks.KB + H) + OH + H)
+        Slope = ln10 * (
+            DIC * Ks.K1 * H * (H ** 2 + Ks.K1 * Ks.K2 + 4 * H * Ks.K2) / Denom / Denom
+            + BAlk * H / (Ks.KB + H)
+            + OH
+            + H
+        )
         deltapH = Residual / Slope
 
         while any(abs(deltapH) > 1):
@@ -347,6 +363,7 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
         pHx += deltapH
 
     return pHx
+
 
 # def TA_DIC(TA, DIC, BT, Ks):
 #     """
@@ -360,9 +377,10 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
 
 def zero_TA_DIC(h, TA, DIC, BT, K1, K2, KB, KW):
     # Roots: one pos, four neg. Use pos.
-    LH = DIC * (KB + h) * (K1 * h**2 + 2 * K1 * K2 * h)
-    RH = ((TA * (KB + h) * h - KB * BT * h - KW * (KB + h) +
-           (KB + h) * h**2) * (h**2 + K1 * h + K1 * K2))
+    LH = DIC * (KB + h) * (K1 * h ** 2 + 2 * K1 * K2 * h)
+    RH = (TA * (KB + h) * h - KB * BT * h - KW * (KB + h) + (KB + h) * h ** 2) * (
+        h ** 2 + K1 * h + K1 * K2
+    )
     return LH - RH
 
 
@@ -371,7 +389,7 @@ def cCO2(H, DIC, Ks):
     """
     Returns CO2
     """
-    return DIC / (1 + Ks.K1 / H + Ks.K1 * Ks.K2 / H**2)
+    return DIC / (1 + Ks.K1 / H + Ks.K1 * Ks.K2 / H ** 2)
 
 
 # 1.1.10
@@ -387,7 +405,7 @@ def cCO3(H, DIC, Ks):
     """
     Returns CO3
     """
-    return DIC / (1 + H / Ks.K2 + H**2 / (Ks.K1 * Ks.K2))
+    return DIC / (1 + H / Ks.K2 + H ** 2 / (Ks.K1 * Ks.K2))
 
 
 # 1.5.80
@@ -397,7 +415,7 @@ def cCO3(H, DIC, Ks):
 #     """
 #     return (CO2 * (Ks.K1 / H + 2 * Ks.K1 * Ks.K2 / H**2) +
 #             BT * Ks.KB / (Ks.KB + H) + unit * Ks.KW / H - H * unit)
-def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode='multi'):
+def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode="multi"):
     """
     Calculate Alkalinity. H is on Total scale.
 
@@ -407,12 +425,12 @@ def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode='multi'):
     else: returns TA
     """
     # negative
-    Denom = H**2 + Ks.K1 * H + Ks.K1 * Ks.K2
+    Denom = H ** 2 + Ks.K1 * H + Ks.K1 * Ks.K2
     CAlk = DIC * Ks.K1 * (H + 2 * Ks.K2) / Denom
     BAlk = BT * Ks.KB / (Ks.KB + H)
     OH = Ks.KW / H
-    PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H**3
-    PhosBot = H**3 + Ks.KP1 * H**2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
+    PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H ** 3
+    PhosBot = H ** 3 + Ks.KP1 * H ** 2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
     PAlk = TP * PhosTop / PhosBot
     SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
     # positive
@@ -422,10 +440,11 @@ def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode='multi'):
 
     TA = CAlk + BAlk + OH + PAlk + SiAlk - Hfree - HSO4 - HF
 
-    if mode == 'multi':
+    if mode == "multi":
         return TA, CAlk, BAlk, PAlk, SiAlk, OH, Hfree, HSO4, HF
     else:
         return TA
+
 
 # # 1.2.28
 # def cTA(HCO3, CO3, BT, H, Ks):
@@ -472,7 +491,7 @@ def pCO2_to_fCO2(pCO2, Tc):
     a0, a1, a2, a3 = (-1636.75, 12.0408, -3.27957e-2, 3.16528e-05)
     b0, b1 = (57.7, -0.118)
 
-    B = a0 + a1 * Tk + a2 * Tk**2 + a3 * Tk**3
+    B = a0 + a1 * Tk + a2 * Tk ** 2 + a3 * Tk ** 3
     delta = b0 + b1 * Tk
 
     return pCO2 * np.exp(P * (B + 2 * delta) / RT)
@@ -498,17 +517,29 @@ def fCO2_to_pCO2(fCO2, Tc):
     a0, a1, a2, a3 = (-1636.75, 12.0408, -3.27957e-2, 3.16528e-05)
     b0, b1 = (57.7, -0.118)
 
-    B = a0 + a1 * Tk + a2 * Tk**2 + a3 * Tk**3
+    B = a0 + a1 * Tk + a2 * Tk ** 2 + a3 * Tk ** 3
     delta = b0 + b1 * Tk
 
     return fCO2 / np.exp(P * (B + 2 * delta) / RT)
 
 
-def calc_C_species(pHtot=None, DIC=None, CO2=None,
-                   HCO3=None, CO3=None, TA=None,
-                   fCO2=None, pCO2=None,
-                   T_in=None, BT=None, TP=0, TSi=0,
-                   TS=0, TF=0, Ks=None):
+def calc_C_species(
+    pHtot=None,
+    DIC=None,
+    CO2=None,
+    HCO3=None,
+    CO3=None,
+    TA=None,
+    fCO2=None,
+    pCO2=None,
+    T_in=None,
+    BT=None,
+    TP=0,
+    TSi=0,
+    TS=0,
+    TF=0,
+    Ks=None,
+):
     """
     Calculate all carbon species from minimal input.
     """
@@ -537,14 +568,7 @@ def calc_C_species(pHtot=None, DIC=None, CO2=None,
     elif CO2 is not None and TA is not None:
         # unit conversion because OH and H wrapped
         # up in TA fns - all need to be in same units.
-        pHtot = CO2_TA(CO2=CO2,
-                       TA=TA,
-                       BT=BT,
-                       TP=TP,
-                       TSi=TSi,
-                       TS=TS,
-                       TF=TF,
-                       Ks=Ks)
+        pHtot = CO2_TA(CO2=CO2, TA=TA, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
         H = ch(pHtot)
         DIC = CO2_pH(CO2, pHtot, Ks)
     # 5. CO2 and DIC
@@ -561,14 +585,7 @@ def calc_C_species(pHtot=None, DIC=None, CO2=None,
     # 8. pHtot and TA
     elif pHtot is not None and TA is not None:
         H = ch(pHtot)
-        DIC = pH_TA(pH=pHtot,
-                    TA=TA,
-                    BT=BT,
-                    TP=TP,
-                    TSi=TSi,
-                    TS=TS,
-                    TF=TF,
-                    Ks=Ks)
+        DIC = pH_TA(pH=pHtot, TA=TA, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
     # 9. pHtot and DIC
     elif pHtot is not None and DIC is not None:
         H = ch(pHtot)
@@ -578,36 +595,27 @@ def calc_C_species(pHtot=None, DIC=None, CO2=None,
         DIC = pH_CO3(cp(H), CO3, Ks)
     # 11. HCO3 and TA
     elif HCO3 is not None and TA is not None:
-        Warning('Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity.')
-        H = HCO3_TA(HCO3,
-                    TA,
-                    BT,
-                    Ks)
+        Warning(
+            "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
+        )
+        H = HCO3_TA(HCO3, TA, BT, Ks)
         DIC = pH_HCO3(cp(H), HCO3, Ks)
     # 12. HCO3 amd DIC
     elif HCO3 is not None and DIC is not None:
         H = HCO3_DIC(HCO3, DIC, Ks)
     # 13. CO3 and TA
     elif CO3 is not None and TA is not None:
-        Warning('Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity.')
-        H = CO3_TA(CO3,
-                   TA,
-                   BT,
-                   Ks)
+        Warning(
+            "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
+        )
+        H = CO3_TA(CO3, TA, BT, Ks)
         DIC = pH_CO3(cp(H), CO3, Ks)
     # 14. CO3 and DIC
     elif CO3 is not None and DIC is not None:
         H = CO3_DIC(CO3, DIC, Ks)
     # 15. TA and DIC
     elif TA is not None and DIC is not None:
-        pHtot = TA_DIC(TA=TA,
-                       DIC=DIC,
-                       BT=BT,
-                       TP=TP,
-                       TSi=TSi,
-                       TS=TS,
-                       TF=TF,
-                       Ks=Ks)
+        pHtot = TA_DIC(TA=TA, DIC=DIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
         H = ch(pHtot)
 
     # The above makes sure that DIC and H are known,
@@ -624,38 +632,36 @@ def calc_C_species(pHtot=None, DIC=None, CO2=None,
     if CO3 is None:
         CO3 = cCO3(H, DIC, Ks)
     # Calculate all elements of Alkalinity
-    (TA, CAlk, BAlk,
-     PAlk, SiAlk, OH,
-     Hfree, HSO4, HF) = cTA(H=H,
-                            DIC=DIC,
-                            BT=BT,
-                            TP=TP,
-                            TSi=TSi,
-                            TS=TS,
-                            TF=TF,
-                            Ks=Ks, mode='multi')
+    (TA, CAlk, BAlk, PAlk, SiAlk, OH, Hfree, HSO4, HF) = cTA(
+        H=H, DIC=DIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks, mode="multi"
+    )
 
     # if pH not calced yet, calculate on all scales.
     if pHtot is None:
         pHtot = np.array(cp(H), ndmin=1)
 
-    return Bunch({'pHtot': pHtot,
-                  'TA': TA,
-                  'DIC': DIC,
-                  'CO2': CO2,
-                  'H': H,
-                  'HCO3': HCO3,
-                  'fCO2': fCO2,
-                  'pCO2': pCO2,
-                  'CO3': CO3,
-                  'CAlk': CAlk,
-                  'BAlk': BAlk,
-                  'PAlk': PAlk,
-                  'SiAlk': SiAlk,
-                  'OH': OH,
-                  'Hfree': Hfree,
-                  'HSO4': HSO4,
-                  'HF': HF})
+    return Bunch(
+        {
+            "pHtot": pHtot,
+            "TA": TA,
+            "DIC": DIC,
+            "CO2": CO2,
+            "H": H,
+            "HCO3": HCO3,
+            "fCO2": fCO2,
+            "pCO2": pCO2,
+            "CO3": CO3,
+            "CAlk": CAlk,
+            "BAlk": BAlk,
+            "PAlk": PAlk,
+            "SiAlk": SiAlk,
+            "OH": OH,
+            "Hfree": Hfree,
+            "HSO4": HSO4,
+            "HF": HF,
+        }
+    )
+
 
 def calc_revelle_factor(TA, DIC, BT, TP, TSi, TS, TF, Ks):
     """
@@ -665,35 +671,14 @@ def calc_revelle_factor(TA, DIC, BT, TP, TSi, TS, TF, Ks):
     """
     dDIC = 1e-6  # (1 umol kg-1)
 
-    pH = TA_DIC(TA=TA,
-                   DIC=DIC,
-                   BT=BT,
-                   TP=TP,
-                   TSi=TSi,
-                   TS=TS,
-                   TF=TF,
-                   Ks=Ks)
+    pH = TA_DIC(TA=TA, DIC=DIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
     fCO2 = cCO2(ch(pH), DIC, Ks) / Ks.K0
 
     # Calculate new fCO2 above and below given value
-    pH_hi = TA_DIC(TA=TA,
-                   DIC=DIC + dDIC,
-                   BT=BT,
-                   TP=TP,
-                   TSi=TSi,
-                   TS=TS,
-                   TF=TF,
-                   Ks=Ks)
+    pH_hi = TA_DIC(TA=TA, DIC=DIC + dDIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
     fCO2_hi = cCO2(ch(pH_hi), DIC, Ks) / Ks.K0
 
-    pH_lo = TA_DIC(TA=TA,
-                   DIC=DIC - dDIC,
-                   BT=BT,
-                   TP=TP,
-                   TSi=TSi,
-                   TS=TS,
-                   TF=TF,
-                   Ks=Ks)
+    pH_lo = TA_DIC(TA=TA, DIC=DIC - dDIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
     fCO2_lo = cCO2(ch(pH_lo), DIC, Ks) / Ks.K0
 
     return (fCO2_hi - fCO2_lo) * DIC / (fCO2 * 2 * dDIC)

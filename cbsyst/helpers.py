@@ -30,13 +30,32 @@ def data_out(cbdat, path=None, include_constants=False):
 
     """
 
-    cols = ['pH', 'DIC', 'fCO2', 'pCO2', 'CO2', 'HCO3', 'CO3',
-            'TA', 'BT', 'BO3', 'BO4',
-            'dBT', 'dBO3', 'dBO4', 'ABT', 'ABO3', 'ABO4',
-            'T', 'S', 'P', 'Ca', 'Mg']
+    cols = [
+        "pH",
+        "DIC",
+        "fCO2",
+        "pCO2",
+        "CO2",
+        "HCO3",
+        "CO3",
+        "TA",
+        "BT",
+        "BO3",
+        "BO4",
+        "dBT",
+        "dBO3",
+        "dBO4",
+        "ABT",
+        "ABO3",
+        "ABO4",
+        "T",
+        "S",
+        "P",
+        "Ca",
+        "Mg",
+    ]
 
-    consts = ['K0', 'K1', 'K2', 'KB', 'KW', 'KSO4',
-              'KspA', 'KspC']
+    consts = ["K0", "K1", "K2", "KB", "KW", "KSO4", "KspA", "KspC"]
 
     size = cbdat.pH.size
     out = pd.DataFrame(index=range(size))
@@ -53,24 +72,30 @@ def data_out(cbdat, path=None, include_constants=False):
             if c in cbdat.Ks and cbdat.Ks[c] is not None:
                 if (np.ndim(cbdat.Ks[c]) == 1) & (cbdat.Ks[c].size == 1):
                     cbdat.Ks[c] = cbdat.Ks[c][0]
-                out.loc[:, 'p' + c] = -np.log10(cbdat.Ks[c])
-        if 'alphaB' in cbdat and cbdat.alphaB is not None:
+                out.loc[:, "p" + c] = -np.log10(cbdat.Ks[c])
+        if "alphaB" in cbdat and cbdat.alphaB is not None:
             if (np.ndim(cbdat.alphaB) == 1) & (cbdat.alphaB.size == 1):
                 cbdat.alphaB = cbdat.alphaB[0]
-            out.loc[:, 'alphaB'] = cbdat.alphaB
+            out.loc[:, "alphaB"] = cbdat.alphaB
 
     if path is not None:
-        fmt = path.split('.')[-1]
-        fdict = {'csv': 'to_csv',
-                 'html': 'to_html',
-                 'xls': 'to_excel',
-                 'pkl': 'to_pickle',
-                 'tex': 'to_latex'}
+        fmt = path.split(".")[-1]
+        fdict = {
+            "csv": "to_csv",
+            "html": "to_html",
+            "xls": "to_excel",
+            "pkl": "to_pickle",
+            "tex": "to_latex",
+        }
 
         if fmt not in fdict:
-            raise ValueError(('File extension does not match available output\n' +
-                              "options. Should be one of 'csv', 'html', 'xls',\n" +
-                              "'pkl' (pickle) or 'tex' (LaTeX)."))
+            raise ValueError(
+                (
+                    "File extension does not match available output\n"
+                    + "options. Should be one of 'csv', 'html', 'xls',\n"
+                    + "'pkl' (pickle) or 'tex' (LaTeX)."
+                )
+            )
         try:
             _ = getattr(out, fdict[fmt])(path, index=None)
         except TypeError:
@@ -157,7 +182,7 @@ def ch(pK):
     """
     Convert pK to K
     """
-    return np.power(10., np.multiply(pK, -1.))
+    return np.power(10.0, np.multiply(pK, -1.0))
 
 
 def cp(K):
@@ -180,7 +205,7 @@ def prescorr(P, Tc, a0, a1, a2, b0, b1):
     K_corr / K_orig = [output]
     Kcorr = [output] * K_orig
     """
-    dV = a0 + a1 * Tc + a2 * Tc**2
+    dV = a0 + a1 * Tc + a2 * Tc ** 2
     dk = (b0 + b1 * Tc) / 1000
     # factor of 1000 not mentioned in Millero,
     # but present in Zeebe book, and used in CO2SYS
@@ -208,22 +233,24 @@ def swdens(TempC, Sal):
     """
     # convert temperature to IPTS-68
     T68 = (TempC + 0.0002) / 0.99975
-    pSMOW = (999.842594 +
-             6.793952e-2 * T68 +
-             -9.095290e-3 * T68**2 +
-             1.001685e-4 * T68**3 +
-             -1.120083e-6 * T68**4 +
-             6.536332e-9 * T68**5)
-    A = (8.24493e-1 +
-         -4.0899e-3 * T68 +
-         7.6438e-5 * T68**2 +
-         -8.2467e-7 * T68**3 +
-         5.3875e-9 * T68**4)
-    B = (-5.72466e-3 +
-         1.0227e-4 * T68 +
-         -1.6546e-6 * T68**2)
+    pSMOW = (
+        999.842594
+        + 6.793952e-2 * T68
+        + -9.095290e-3 * T68 ** 2
+        + 1.001685e-4 * T68 ** 3
+        + -1.120083e-6 * T68 ** 4
+        + 6.536332e-9 * T68 ** 5
+    )
+    A = (
+        8.24493e-1
+        + -4.0899e-3 * T68
+        + 7.6438e-5 * T68 ** 2
+        + -8.2467e-7 * T68 ** 3
+        + 5.3875e-9 * T68 ** 4
+    )
+    B = -5.72466e-3 + 1.0227e-4 * T68 + -1.6546e-6 * T68 ** 2
     C = 4.8314e-4
-    return (pSMOW + A * Sal + B * Sal**1.5 + C * Sal**2) / 1000
+    return (pSMOW + A * Sal + B * Sal ** 1.5 + C * Sal ** 2) / 1000
 
 
 def calc_TS(Sal):
@@ -262,13 +289,13 @@ def calc_TF(Sal):
 def calc_TB(Sal):
     """
     Calculate total Boron
-    
+
     Directly from CO2SYS:
     Uppstrom, L., Deep-Sea Research 21:161-162, 1974:
     this is 0.000416 * Sal/35. = 0.0000119 * Sal
     TB(FF) = (0.000232 / 10.811) * (Sal / 1.80655) in mol/kg-SW
     """
-    a, b = (0.0004157, 35.)
+    a, b = (0.0004157, 35.0)
     return a * Sal / b
 
 
@@ -278,7 +305,7 @@ def calc_fH(TempK, Sal):
     # v. 3, 1982 (p. 80)
 
     a, b, c, d = (1.2948, -2.036e-3, 4.607e-4, -1.475e-6)
-    return a + b * TempK + (c + d * TempK) * Sal**2
+    return a + b * TempK + (c + d * TempK) * Sal ** 2
 
 
 # Convert between pH scales
@@ -293,25 +320,32 @@ def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, TS, TF, TempK, Sal, Ks):
     if npH == 1:
         # pH scale conversions
         FREEtoTOT = -np.log10((1 + TS / Ks.KSO4))
-        SWStoTOT = -np.log10((1 + TS / Ks.KSO4) /
-                             (1 + TS / Ks.KSO4 + TF / Ks.KF))
+        SWStoTOT = -np.log10((1 + TS / Ks.KSO4) / (1 + TS / Ks.KSO4 + TF / Ks.KF))
         fH = calc_fH(TempK, Sal)
 
         if pHtot is not None:
-            return {'pHfree': pHtot - FREEtoTOT,
-                    'pHsws': pHtot - SWStoTOT,
-                    'pHNBS': pHtot - SWStoTOT - np.log10(fH)}
+            return {
+                "pHfree": pHtot - FREEtoTOT,
+                "pHsws": pHtot - SWStoTOT,
+                "pHNBS": pHtot - SWStoTOT - np.log10(fH),
+            }
         elif pHsws is not None:
-            return {'pHfree': pHsws + SWStoTOT - FREEtoTOT,
-                    'pHtot': pHsws + SWStoTOT,
-                    'pHNBS': pHsws - np.log10(fH)}
+            return {
+                "pHfree": pHsws + SWStoTOT - FREEtoTOT,
+                "pHtot": pHsws + SWStoTOT,
+                "pHNBS": pHsws - np.log10(fH),
+            }
         elif pHfree is not None:
-            return {'pHsws': pHfree + FREEtoTOT - SWStoTOT,
-                    'pHtot': pHfree + FREEtoTOT,
-                    'pHNBS': pHfree + FREEtoTOT - SWStoTOT - np.log10(fH)}
+            return {
+                "pHsws": pHfree + FREEtoTOT - SWStoTOT,
+                "pHtot": pHfree + FREEtoTOT,
+                "pHNBS": pHfree + FREEtoTOT - SWStoTOT - np.log10(fH),
+            }
         elif pHNBS is not None:
-            return {'pHsws': pHNBS + np.log10(fH),
-                    'pHtot': pHNBS + np.log10(fH) + SWStoTOT,
-                    'pHfree': pHNBS + np.log10(fH) + SWStoTOT - FREEtoTOT}
+            return {
+                "pHsws": pHNBS + np.log10(fH),
+                "pHtot": pHNBS + np.log10(fH) + SWStoTOT,
+                "pHfree": pHNBS + np.log10(fH) + SWStoTOT - FREEtoTOT,
+            }
     else:
         return {}
