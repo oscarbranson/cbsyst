@@ -60,10 +60,11 @@ def pH_ABO3(pH, ABO3, Ks, alphaB):
     """
     H = ch(pH)
     chiB = chiB_calc(H, Ks)
-    return (ABO3 * (-ABO3 * alphaB * chiB +
-                    ABO3 * chiB + alphaB *
-                    chiB - chiB + 1) /
-            (-ABO3 * alphaB + ABO3 + alphaB))
+    return (
+        ABO3
+        * (-ABO3 * alphaB * chiB + ABO3 * chiB + alphaB * chiB - chiB + 1)
+        / (-ABO3 * alphaB + ABO3 + alphaB)
+    )
 
 
 # pH_ABO4 - ABT
@@ -73,42 +74,71 @@ def pH_ABO4(pH, ABO4, Ks, alphaB):
     """
     H = ch(pH)
     chiB = chiB_calc(H, Ks)
-    return (ABO4 * (-ABO4 * alphaB * chiB +
-                    ABO4 * alphaB + ABO4 *
-                    chiB - ABO4 + alphaB *
-                    chiB - chiB + 1) /
-            (ABO4 * alphaB - ABO4 + 1))
+    return (
+        ABO4
+        * (
+            -ABO4 * alphaB * chiB
+            + ABO4 * alphaB
+            + ABO4 * chiB
+            - ABO4
+            + alphaB * chiB
+            - chiB
+            + 1
+        )
+        / (ABO4 * alphaB - ABO4 + 1)
+    )
 
 
 def cABO3(H, ABT, Ks, alphaB):
     chiB = chiB_calc(H, Ks)
-    return ((ABT * alphaB - ABT + alphaB *
-            chiB - chiB -
-            np.sqrt(ABT ** 2 * alphaB ** 2 - 2 *
-                    ABT ** 2 * alphaB + ABT ** 2 -
-                    2 * ABT * alphaB ** 2 * chiB +
-                    2 * ABT * alphaB + 2 * ABT *
-                    chiB - 2 * ABT + alphaB ** 2 *
-                    chiB ** 2 - 2 * alphaB *
-                    chiB ** 2 + 2 * alphaB * chiB +
-                    chiB ** 2 - 2 * chiB + 1) + 1) /
-            (2 * chiB * (alphaB - 1)))
+    return (
+        ABT * alphaB
+        - ABT
+        + alphaB * chiB
+        - chiB
+        - np.sqrt(
+            ABT ** 2 * alphaB ** 2
+            - 2 * ABT ** 2 * alphaB
+            + ABT ** 2
+            - 2 * ABT * alphaB ** 2 * chiB
+            + 2 * ABT * alphaB
+            + 2 * ABT * chiB
+            - 2 * ABT
+            + alphaB ** 2 * chiB ** 2
+            - 2 * alphaB * chiB ** 2
+            + 2 * alphaB * chiB
+            + chiB ** 2
+            - 2 * chiB
+            + 1
+        )
+        + 1
+    ) / (2 * chiB * (alphaB - 1))
 
 
 def cABO4(H, ABT, Ks, alphaB):
     chiB = chiB_calc(H, Ks)
-    return (-(ABT * alphaB - ABT - alphaB *
-            chiB + chiB +
-            np.sqrt(ABT ** 2 * alphaB ** 2 - 2 *
-                    ABT ** 2 * alphaB + ABT ** 2 -
-                    2 * ABT * alphaB ** 2 * chiB +
-                    2 * ABT * alphaB + 2 * ABT *
-                    chiB - 2 * ABT + alphaB ** 2 *
-                    chiB ** 2 - 2 * alphaB *
-                    chiB ** 2 + 2 * alphaB *
-                    chiB + chiB ** 2 - 2 * chiB +
-                    1) - 1) / (2 * alphaB * chiB - 2 *
-                               alphaB - 2 * chiB + 2))
+    return -(
+        ABT * alphaB
+        - ABT
+        - alphaB * chiB
+        + chiB
+        + np.sqrt(
+            ABT ** 2 * alphaB ** 2
+            - 2 * ABT ** 2 * alphaB
+            + ABT ** 2
+            - 2 * ABT * alphaB ** 2 * chiB
+            + 2 * ABT * alphaB
+            + 2 * ABT * chiB
+            - 2 * ABT
+            + alphaB ** 2 * chiB ** 2
+            - 2 * alphaB * chiB ** 2
+            + 2 * alphaB * chiB
+            + chiB ** 2
+            - 2 * chiB
+            + 1
+        )
+        - 1
+    ) / (2 * alphaB * chiB - 2 * alphaB - 2 * chiB + 2)
 
 
 # Isotope Unit Converters
@@ -191,8 +221,4 @@ def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None):
     if pHtot is None:
         pHtot = np.array(cp(H), ndmin=1)
 
-    return Bunch({'pHtot': pHtot,
-                  'H': H,
-                  'BT': BT,
-                  'BO3': BO3,
-                  'BO4': BO4})
+    return Bunch({"pHtot": pHtot, "H": H, "BT": BT, "BO3": BO3, "BO4": BO4})

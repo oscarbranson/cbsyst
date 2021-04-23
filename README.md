@@ -1,3 +1,6 @@
+<div align="left">
+  <img src="https://raw.githubusercontent.com/oscarbranson/cbsyst/master/logo/cbsyst.png" alt="CBsyst" height="36">
+</div>
 <div align="right">
   <a href="https://travis-ci.org/oscarbranson/cbsyst"><img src="https://travis-ci.org/oscarbranson/cbsyst.svg?branch=master" alt="TravisCI build" height="18"></a>
   <a href="https://badge.fury.io/py/cbsyst"><img src="https://badge.fury.io/py/cbsyst.svg" alt="PyPI version" height="18"></a>
