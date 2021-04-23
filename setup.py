@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 import sys
+from cbsyst import __version__
 
 if sys.version_info[0] < 3:
     sys.exit(('*********************************************\n' +
@@ -8,7 +9,7 @@ if sys.version_info[0] < 3:
               '*********************************************\n'))
 
 setup(name='cbsyst',
-      version='0.3.6',
+      version=__version__,
       description='Tools for calculating ocean C and B chemistry.',
       url='https://github.com/oscarbranson/cbsyst',
       author='Oscar Branson',
