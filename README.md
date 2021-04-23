@@ -1,14 +1,13 @@
-<div align="left">
-  <img src="https://raw.githubusercontent.com/oscarbranson/cbsyst/master/logo/cbsyst.png" alt="CBsyst" height="36">
-</div>
 <div align="right">
   <a href="https://travis-ci.org/oscarbranson/cbsyst"><img src="https://travis-ci.org/oscarbranson/cbsyst.svg?branch=master" alt="TravisCI build" height="18"></a>
   <a href="https://badge.fury.io/py/cbsyst"><img src="https://badge.fury.io/py/cbsyst.svg" alt="PyPI version" height="18"></a>
   <a href="https://anaconda.org/conda-forge/cbsyst"> <img src="https://anaconda.org/conda-forge/cbsyst/badges/version.svg" alt="conda-forge version" height="18"/></a>
-  <a href="https://doi.org/10.5281/zenodo.1402261"> <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1402261.svg" alt="DOI" height="18">
+  <a href="https://doi.org/10.5281/zenodo.1402261"> <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1402261.svg" alt="DOI" height="18"></a>
 </div>
 
-# cbsyst
+<div align="left">
+  <img src="https://raw.githubusercontent.com/oscarbranson/cbsyst/master/logo/cbsyst.png" alt="CBsyst" height="96">
+</div>
 
 **A Python module for calculating seawater carbon and boron chemistry.** 
 
@@ -17,7 +16,6 @@ This will be particularly useful for anyone thinking about oceans in the distant
 ***Tested** in the modern ocean against GLODAPv2 data (see below). Performs as well as Matlab CO2SYS.*
 
 ## Work in Progress:
-- [ ] [Revelle factor reporting](https://github.com/oscarbranson/cbsyst/issues/8)
 - [ ] [Compare to CO2SYS](https://github.com/oscarbranson/cbsyst/issues/6), a la [Orr et al (2015)](http://www.biogeosciences.net/12/1483/2015/bg-12-1483-2015.pdf)?
 
 If anyone wants to help with any of this, please do contribute!
