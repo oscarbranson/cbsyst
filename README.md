@@ -16,7 +16,6 @@ This will be particularly useful for anyone thinking about oceans in the distant
 ***Tested** in the modern ocean against GLODAPv2 data (see below). Performs as well as Matlab CO2SYS.*
 
 ## Work in Progress:
-- [ ] [Revelle factor reporting](https://github.com/oscarbranson/cbsyst/issues/8)
 - [ ] [Compare to CO2SYS](https://github.com/oscarbranson/cbsyst/issues/6), a la [Orr et al (2015)](http://www.biogeosciences.net/12/1483/2015/bg-12-1483-2015.pdf)?
 
 If anyone wants to help with any of this, please do contribute!
