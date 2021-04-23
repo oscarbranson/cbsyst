@@ -125,7 +125,7 @@ def Csys(pHtot=None, DIC=None, CO2=None,
          BT=None, Ca=None, Mg=None,
          T_in=25., S_in=35., P_in=None,
          T_out=None, S_out=None, P_out=None,
-         TP=0., TSi=0.,
+         TP=0., TSi=0., TS=None, TF=None,
          pHsws=None, pHfree=None, pHNBS=None,
          Ks=None, pdict=None, unit='umol'):
     """
@@ -220,9 +220,9 @@ def Csys(pHtot=None, DIC=None, CO2=None,
                 ps[p] = np.divide(ps[p], ps.unit)  # convert to molar
 
     # Conserved seawater chemistry
-    if 'TS' not in ps:
+    if ps.TS is None:
         ps.TS = calc_TS(ps.S_in)
-    if 'TF' not in ps:
+    if ps.TF is None:
         ps.TF = calc_TF(ps.S_in)
     if ps.BT is None:
         ps.BT = calc_TB(ps.S_in)
@@ -310,7 +310,7 @@ def Bsys(pHtot=None, BT=None, BO3=None, BO4=None,
          alphaB=None,
          T_in=25., S_in=35., P_in=None,
          T_out=None, S_out=None, P_out=None,
-         Ca=None, Mg=None,
+         Ca=None, Mg=None, TS=None, TF=None,
          pHsws=None, pHfree=None, pHNBS=None,
          Ks=None, pdict=None):
     """
@@ -377,9 +377,9 @@ def Bsys(pHtot=None, BT=None, BO3=None, BO4=None,
         ps.update(pdict)
 
     # Conserved seawater chemistry
-    if 'TS' not in ps:
+    if ps.TS is None:
         ps.TS = calc_TS(ps.S_in)
-    if 'TF' not in ps:
+    if ps.TF is None:
         ps.TF = calc_TF(ps.S_in)
 
     # Calculate Ks
@@ -426,7 +426,7 @@ def ABsys(pHtot=None,
           dBT=None, dBO3=None, dBO4=None,
           alphaB=None,
           T_in=25., S_in=35., P_in=None,
-          Ca=None, Mg=None,
+          Ca=None, Mg=None, TS=None, TF=None,
           pHsws=None, pHfree=None, pHNBS=None,
           Ks=None, pdict=None):
     """
@@ -490,9 +490,9 @@ def ABsys(pHtot=None,
         ps.update(pdict)
 
     # Conserved seawater chemistry
-    if 'TS' not in ps:
+    if ps.TS is None:
         ps.TS = calc_TS(ps.S_in)
-    if 'TF' not in ps:
+    if ps.TF is None:
         ps.TF = calc_TF(ps.S_in)
 
     # Calculate Ks
@@ -559,7 +559,7 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
           alphaB=None,
           T_in=25., S_in=35., P_in=None,
           T_out=None, S_out=None, P_out=None,
-          Ca=None, Mg=None, TP=0., TSi=0.,
+          Ca=None, Mg=None, TP=0., TSi=0., TS=None, TF=None,
           pHsws=None, pHfree=None, pHNBS=None,
           Ks=None, pdict=None, unit='umol'):
     """
@@ -665,9 +665,9 @@ def CBsys(pHtot=None, DIC=None, CO2=None, HCO3=None, CO3=None, TA=None, fCO2=Non
     ps.unit = 1.
 
     # Conserved seawater chemistry
-    if 'TS' not in ps:
+    if ps.TS is None:
         ps.TS = calc_TS(ps.S_in)
-    if 'TF' not in ps:
+    if ps.TF is None:
         ps.TF = calc_TF(ps.S_in)
 
     # Calculate Ks
