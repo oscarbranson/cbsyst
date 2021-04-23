@@ -1,3 +1,7 @@
+<div align="left">
+  <img src="https://raw.githubusercontent.com/oscarbranson/cbsyst/master/logo/cbsyst.png" alt="CBsyst" height="36">
+</div>
+
 # cbsyst
 
 <div align="right">
