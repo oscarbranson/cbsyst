@@ -3,30 +3,41 @@
 Release History
 ---------------
 
-0.2.0 (2017-06-13)
+0.3.7 (2021-04-23)
+++++++++++++++++++
+(including changes from 0.3.6... shoddy record keeping)
+
+* Fixed MyAMI_V2 to match original Matlab version (typo in temperature parameter)
+* Revelle factor calculation.
+* pH scale conversion calculator
+* Allow specification of TS and TF
+* Test updates to reflect changes
+* general bug fixes
+* Makefile for testing and distribution.
+* Logo!
+
+Thanks to @douglascoenen for typo correction.
+
+
+0.3.5 (2016-06-23)
 ++++++++++++++++++
 
-* Initial Pypi Release
+* Bring CBsys in line with new changes.
 
 
-0.2.1 (2017-06-13)
+0.3.4 (2016-06-23)
 ++++++++++++++++++
 
-* Fixed missing dependency that made Pypi install fail.
+* CO2SYS comparison with GLODAPv2 Bottle data.
+* Minor parameter fixes and equation updates to match CO2SYS.
+* pH scale correction of KP1, KP2, KP3, KSi and KW
 
 
-0.3.0 (2017-06-13)
+0.3.3 (2016-06-21)
 ++++++++++++++++++
 
-* Comparison to GLODAPv2 dataset.
-* Implemented pressure corrections.
+* Implemented nutrient alkalinity for all except CO3_TA and HCO3_TA cases using parameterisation of Matlab CO2SYS.
 
-0.3.1 (2017-06-13)
-++++++++++++++++++
-
-**Moved pressure correction from MyAMI to cbsyst.**
-As the pressure correction factor is multiplicative, it makes no difference to the resulting constants, and is MUCH faster on the cbsyst side.
-In MyAMI, pressure correction was involved lower down in generating the K meshes parameter fitting, so a new parameter set had to be calculated for each P.
 
 0.3.2 (2017-06-14)
 ++++++++++++++++++
@@ -37,19 +48,29 @@ In MyAMI, pressure correction was involved lower down in generating the K meshes
 * Improved tests.
 * General cleanup.
 
-0.3.3 (2016-06-21)
+
+0.3.1 (2017-06-13)
 ++++++++++++++++++
 
-* Implemented nutrient alkalinity for all except CO3_TA and HCO3_TA cases using parameterisation of Matlab CO2SYS.
+**Moved pressure correction from MyAMI to cbsyst.**
+As the pressure correction factor is multiplicative, it makes no difference to the resulting constants, and is MUCH faster on the cbsyst side.
+In MyAMI, pressure correction was involved lower down in generating the K meshes parameter fitting, so a new parameter set had to be calculated for each P.
 
-0.3.4 (2016-06-23)
+
+0.3.0 (2017-06-13)
 ++++++++++++++++++
 
-* CO2SYS comparison with GLODAPv2 Bottle data.
-* Minor parameter fixes and equation updates to match CO2SYS.
-* pH scale correction of KP1, KP2, KP3, KSi and KW
+* Comparison to GLODAPv2 dataset.
+* Implemented pressure corrections.
 
-0.3.5 (2016-06-23)
+
+0.2.1 (2017-06-13)
 ++++++++++++++++++
 
-* Bring CBsys in line with new changes.
+* Fixed missing dependency that made Pypi install fail.
+
+
+0.2.0 (2017-06-13)
+++++++++++++++++++
+
+* Initial Pypi Release
