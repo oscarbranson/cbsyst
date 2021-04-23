@@ -432,7 +432,7 @@ def ABsys(pHtot=None,
         ps.ABO4 = d11_2_A11(ps.dBO4)
 
     # calculate alpha
-    ps.alphaB = alphaB_calc(ps.T)
+    ps.alphaB = alphaB_calc(ps.T_in)
 
     if ps.pHtot is not None and ps.ABT is not None:
         ps.H = ch(ps.pHtot)
@@ -456,7 +456,7 @@ def ABsys(pHtot=None,
         ps.dBO4 = A11_2_d11(ps.ABO4)
 
     for k in ['ABO3', 'ABO4', 'ABT', 'Ca',
-              'H', 'Mg', 'S', 'T', 'alphaB',
+              'H', 'Mg', 'S_in', 'T_in', 'alphaB',
               'dBO3', 'dBO4', 'dBT', 'pHtot']:
         if not isinstance(ps[k], np.ndarray):
             # convert all outputs to (min) 1D numpy arrays.
