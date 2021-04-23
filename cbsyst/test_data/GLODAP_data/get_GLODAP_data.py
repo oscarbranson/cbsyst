@@ -30,17 +30,28 @@ def get_GLODAP(path="./", leave_zip=True):
     if not os.path.exists(path + "/GLODAPv2 Merged Master File.csv.zip"):
         print("Fetching GLODAPv2 Data (Olsen et al, 2016)...")
 
-        GLODAP_url = "http://cdiac.ornl.gov/ftp/oceans/GLODAPv2/Data_Products/data_product/GLODAPv2%20Merged%20Master%20File.csv.zip"
-
+        GLODAP_urls = [
+            "https://cdiac.ess-dive.lbl.gov/ftp/oceans/GLODAPv2/Data_Products/data_product/GLODAPv2%20Merged%20Master%20File.csv.zip",
+            "http://cdiac.ornl.gov/ftp/oceans/GLODAPv2/Data_Products/data_product/GLODAPv2%20Merged%20Master%20File.csv.zip"  # this one stopped working April 2021?
+        ]
+        downloaded = False
         # download GLODAP data
-        with TqdmUpTo(
-            unit="B", unit_scale=True, miniters=1, desc="Downloading GLODAPv2"
-        ) as t:
-            ureq.urlretrieve(
-                GLODAP_url,
-                path + "/GLODAPv2 Merged Master File.csv.zip",
-                reporthook=t.update_to,
-            )
+        i = 0
+        while not downloaded:
+            GLODAP_url = GLODAP_urls[i]
+            try:
+                with TqdmUpTo(
+                    unit="B", unit_scale=True, miniters=1, desc="Downloading GLODAPv2"
+                ) as t:
+                    ureq.urlretrieve(
+                        GLODAP_url,
+                        path + "/GLODAPv2 Merged Master File.csv.zip",
+                        reporthook=t.update_to,
+                    )
+                downloaded = True
+            except:
+                pass
+            i += 1
 
         # # open URL
         # file = requests.get(GLODAP_url, stream=True)
