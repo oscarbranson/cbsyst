@@ -1,13 +1,14 @@
 <div align="left">
   <img src="https://raw.githubusercontent.com/oscarbranson/cbsyst/master/logo/cbsyst.png" alt="CBsyst" height="36">
 </div>
-
-# cbsyst
-
 <div align="right">
   <a href="https://travis-ci.org/oscarbranson/cbsyst"><img src="https://travis-ci.org/oscarbranson/cbsyst.svg?branch=master" alt="TravisCI build" height="18"></a>
   <a href="https://badge.fury.io/py/cbsyst"><img src="https://badge.fury.io/py/cbsyst.svg" alt="PyPI version" height="18"></a>
+  <a href="https://anaconda.org/conda-forge/cbsyst"> <img src="https://anaconda.org/conda-forge/cbsyst/badges/version.svg" alt="conda-forge version" height="18"/></a>
+  <a href="https://doi.org/10.5281/zenodo.1402261"> <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1402261.svg" alt="DOI" height="18">
 </div>
+
+# cbsyst
 
 **A Python module for calculating seawater carbon and boron chemistry.** 
 
@@ -20,7 +21,7 @@ This will be particularly useful for anyone thinking about oceans in the distant
 - [ ] [Compare to CO2SYS](https://github.com/oscarbranson/cbsyst/issues/6), a la [Orr et al (2015)](http://www.biogeosciences.net/12/1483/2015/bg-12-1483-2015.pdf)?
 
 If anyone wants to help with any of this, please do contribute!
-A full list of bite-sized tasks that need doing is available in the [TODO list]().
+A full list of bite-sized tasks that need doing is available on the [Issues](https://github.com/oscarbranson/cbsyst/issues) page.
 
 ## Acknowledgement
 The development of `cbsyst` has been greatly aided by [CO2SYS](http://cdiac.ornl.gov/oceans/co2rprt.html), and the [Matlab conversion of CO2SYS](http://cdiac.ornl.gov/ftp/oceans/co2sys/).
@@ -81,12 +82,15 @@ Delta values can be provided as an input, and are given as an output.
 **Requires Python 3.5+**. 
 Does *not* work in 2.7. Sorry.
 
+### PyPi
 ```bash
 pip install cbsyst
 ```
 
-## Build Status
-
+### Conda-Forge
+```bash
+conda install cbsyst -c conda-forge
+```
 
 ## Example Usage
 
