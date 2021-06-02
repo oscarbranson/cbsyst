@@ -1,0 +1,32 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ["3.5", "3.6", "3.7", "3.8", "3.9"]
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup python
+      uses: actions/setup-python@v2
+
+    - name: ${{ matrix.os }} python ${{ matrix.python-version }}
+      run: |
+        pip install numpy cython
+        pip install -r requirements.txt -r requirements-dev.txt
+        pip install -e . --no-deps --force-reinstall
+
+    - name: pip-tests
+      shell: bash -l {0}
+      run: |
+        pushd cbsyst/test_data/GLODAP_data && python get_GLODAP_data.py && popd
+        python setup.py test
