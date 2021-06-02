@@ -22,7 +22,7 @@ jobs:
     - name: ${{ matrix.os }} python ${{ matrix.python-version }}
       run: |
         pip install numpy cython
-        pip install -r requirements.txt -r requirements-dev.txt
+        pip install -r requirements.txt
         pip install -e . --no-deps --force-reinstall
 
     - name: pip-tests
