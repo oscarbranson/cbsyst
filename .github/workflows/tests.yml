@@ -18,14 +18,19 @@ jobs:
 
     - name: Setup python
       uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
 
-    - name: ${{ matrix.os }} python ${{ matrix.python-version }}
-      run: |
-        pip install -r requirements.txt
-        pip install -e . --no-deps --force-reinstall
-
-    - name: pip-tests
+    - name: Debug Python
       shell: bash -l {0}
       run: |
-        pushd cbsyst/test_data/GLODAP_data && python get_GLODAP_data.py && popd
-        python setup.py test
+        which python3
+        python3 --version
+
+    - name: ${{ matrix.os }} python ${{ matrix.python-version }}
+      shell: bash -l {0}
+      run: |
+        python3 -m pip install -r requirements.txt
+        python3 -m pip install -e . --no-deps --force-reinstall
+        pushd cbsyst/test_data/GLODAP_data && python3 get_GLODAP_data.py && popd
+        python3 setup.py test
