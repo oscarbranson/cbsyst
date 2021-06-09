@@ -53,7 +53,7 @@ def calc_Ks(T, S, P, Mg, Ca, TS, TF, Ks=None):
         conv = ["KP1", "KP2", "KP3", "KSi", "KW"]
         for c in conv:
             Ks[c] *= SWStoTOT
-
+    
     return Ks
 
 
@@ -1099,6 +1099,8 @@ def CBsys(
         "dBO4",
     ]
     for k in outputs:
+        if k == 'Ks':
+            continue
         if not isinstance(ps[k], np.ndarray):
             # convert all outputs to (min) 1D numpy arrays.
             ps[k] = np.array(ps[k], ndmin=1)
