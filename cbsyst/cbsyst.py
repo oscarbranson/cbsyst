@@ -250,7 +250,7 @@ def Csys(
     #     ps.BT = ps.BT * ps.S_in / 35.
 
     # Calculate Ks at input conditions
-    ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in, ps.Mg, ps.Ca, ps.TS, ps.TF, ps.Ks)
+    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
 
     # Calculate pH scales at input conditions (does nothing if no pH given)
     ps.update(
@@ -514,7 +514,7 @@ def Bsys(
         ps.TF = calc_TF(ps.S_in)
 
     # Calculate Ks
-    ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in, ps.Mg, ps.Ca, ps.TS, ps.TF, ps.Ks)
+    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
 
     # Calculate pH scales (does nothing if none pH given)
     ps.update(
@@ -663,7 +663,7 @@ def ABsys(
         ps.TF = calc_TF(ps.S_in)
 
     # Calculate Ks
-    ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in, ps.Mg, ps.Ca, ps.TS, ps.TF, ps.Ks)
+    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
 
     # Calculate pH scales (does nothing if none pH given)
     ps.update(
@@ -689,7 +689,8 @@ def ABsys(
         ps.ABO4 = d11_2_A11(ps.dBO4)
 
     # calculate alpha
-    ps.alphaB = alphaB_calc(ps.T_in)
+    if ps.alphaB is None:
+        ps.alphaB = alphaB_calc(ps.T_in)
 
     if ps.pHtot is not None and ps.ABT is not None:
         ps.H = ch(ps.pHtot)
@@ -903,7 +904,7 @@ def CBsys(
         ps.TF = calc_TF(ps.S_in)
 
     # Calculate Ks
-    ps.Ks = calc_Ks(ps.T_in, ps.S_in, ps.P_in, ps.Mg, ps.Ca, ps.TS, ps.TF, ps.Ks)
+    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
 
     # Calculate pH scales (does nothing if none pH given)
     ps.update(
@@ -1022,40 +1023,40 @@ def CBsys(
     if NnotNone(ps.ABT, ps.ABO3, ps.ABO4, ps.dBT, ps.dBO3, ps.dBO4) != 0:
         ps.update(ABsys(pdict=ps))
 
-    # Calculate Isotopes
-    if ps.dBT is None and ps.dBO3 is None and ps.dBO4 is None:
-        ps.dBT = 0
-    # if deltas provided, calculate corresponding As
-    if ps.dBT is not None:
-        ps.ABT = d11_2_A11(ps.dBT)
-    if ps.dBO3 is not None:
-        ps.ABO3 = d11_2_A11(ps.dBO3)
-    if ps.dBO4 is not None:
-        ps.ABO4 = d11_2_A11(ps.dBO4)
+    # # Calculate Isotopes
+    # if ps.dBT is None and ps.dBO3 is None and ps.dBO4 is None:
+    #     ps.dBT = 0
+    # # if deltas provided, calculate corresponding As
+    # if ps.dBT is not None:
+    #     ps.ABT = d11_2_A11(ps.dBT)
+    # if ps.dBO3 is not None:
+    #     ps.ABO3 = d11_2_A11(ps.dBO3)
+    # if ps.dBO4 is not None:
+    #     ps.ABO4 = d11_2_A11(ps.dBO4)
 
-    # calculate alpha
-    ps.alphaB = alphaB_calc(ps.T_in)
+    # # calculate alpha
+    # ps.alphaB = alphaB_calc(ps.T_in)
 
-    if ps.pHtot is not None and ps.ABT is not None:
-        ps.H = ch(ps.pHtot)
-    elif ps.pHtot is not None and ps.ABO3 is not None:
-        ps.ABT = pH_ABO3(ps.pHtot, ps.ABO3, ps.Ks, ps.alphaB)
-    elif ps.pHtot is not None and ps.ABO4 is not None:
-        ps.ABT = pH_ABO3(ps.pHtot, ps.ABO4, ps.Ks, ps.alphaB)
-    else:
-        raise ValueError("pH must be determined to calculate isotopes.")
+    # if ps.pHtot is not None and ps.ABT is not None:
+    #     ps.H = ch(ps.pHtot)
+    # elif ps.pHtot is not None and ps.ABO3 is not None:
+    #     ps.ABT = pH_ABO3(ps.pHtot, ps.ABO3, ps.Ks, ps.alphaB)
+    # elif ps.pHtot is not None and ps.ABO4 is not None:
+    #     ps.ABT = pH_ABO3(ps.pHtot, ps.ABO4, ps.Ks, ps.alphaB)
+    # else:
+    #     raise ValueError("pH must be determined to calculate isotopes.")
 
-    if ps.ABO3 is None:
-        ps.ABO3 = cABO3(ps.H, ps.ABT, ps.Ks, ps.alphaB)
-    if ps.ABO4 is None:
-        ps.ABO4 = cABO4(ps.H, ps.ABT, ps.Ks, ps.alphaB)
+    # if ps.ABO3 is None:
+    #     ps.ABO3 = cABO3(ps.H, ps.ABT, ps.Ks, ps.alphaB)
+    # if ps.ABO4 is None:
+    #     ps.ABO4 = cABO4(ps.H, ps.ABT, ps.Ks, ps.alphaB)
 
-    if ps.dBT is None:
-        ps.dBT = A11_2_d11(ps.ABT)
-    if ps.dBO3 is None:
-        ps.dBO3 = A11_2_d11(ps.ABO3)
-    if ps.dBO4 is None:
-        ps.dBO4 = A11_2_d11(ps.ABO4)
+    # if ps.dBT is None:
+    #     ps.dBT = A11_2_d11(ps.ABT)
+    # if ps.dBO3 is None:
+    #     ps.dBO3 = A11_2_d11(ps.ABO3)
+    # if ps.dBO4 is None:
+    #     ps.dBO4 = A11_2_d11(ps.ABO4)
 
     # clean up output
     outputs = [
@@ -1093,7 +1094,7 @@ def CBsys(
         "dBO4",
     ]
     for k in outputs:
-        if not isinstance(ps[k], np.ndarray):
+        if not isinstance(ps[k], np.ndarray) and not isinstance(ps[k], dict):
             # convert all outputs to (min) 1D numpy arrays.
             ps[k] = np.array(ps[k], ndmin=1)
 
