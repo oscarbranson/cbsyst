@@ -5,10 +5,10 @@ Functions for calculating the carbon and boron chemistry of seawater.
 import numpy as np
 from cbsyst.helpers import Bunch, maxL
 from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi
-from cbsyst.carbon_fns import *
-from cbsyst.boron_fns import *
+from cbsyst.carbon_fns import calc_C_species, calc_pH_scales, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
+from cbsyst.boron_fns import calc_B_species, d11_2_A11, A11_2_d11, pH_ABO3, alphaB_calc, cABO3, cABO4
 from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales
-from cbsyst.non_MyAMI_constants import *
+from cbsyst.non_MyAMI_constants import calc_KF, calc_KPs, calc_KSi
 
 
 # Helper functions
