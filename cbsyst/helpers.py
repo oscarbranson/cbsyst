@@ -258,6 +258,7 @@ def calc_TS(Sal):
     Calculate total Sulphur - lifted directly from CO2SYS.m
 
     From Dickson et al., 2007, Table 2
+    Note: Sal / 1.80655 = Chlorinity
     """
     return 0.14 * Sal / 1.80655 / 96.062 # mol/kg-SW
 
@@ -267,8 +268,9 @@ def calc_TF(Sal):
     Calculate total Fluorine
 
     From Dickson et al., 2007, Table 2
+    Note: Sal / 1.80655 = Chlorinity
     """
-    return 6.7e-7 * Sal / 1.80655 / 18.9984 # mol/kg-SW
+    return 6.7e-5 * Sal / 1.80655 / 18.9984 # mol/kg-SW
 
 
 # def calc_TB(Sal):
