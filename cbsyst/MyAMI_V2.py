@@ -39,7 +39,7 @@ from cbsyst.helpers import Bunch, prescorr
 # definition of the function that takes (Temp) as input and returns the K at that temp
 def CalculateKcond(Tc, Sal):
     """
-    Calculate thermodynamic Ks adjusted for salinity and pressure.
+    Calculate thermodynamic Ks adjusted for salinity and temperature.
 
     Parameters
     ----------
@@ -51,34 +51,29 @@ def CalculateKcond(Tc, Sal):
         Pressure in bar.
     """
     sqrtSal = np.sqrt(Sal)
+    sqSal = Sal * Sal
     T = Tc + 273.15
     lnT = np.log(T)
     Istr = (
         19.924 * Sal / (1000 - 1.005 * Sal)
     )  # Ionic strength after Dickson 1990a; see Dickson et al 2007
 
-    KspCcond = np.power(
-        10,
-        (
-            -171.9065
-            - 0.077993 * T
-            + 2839.319 / T
-            + 71.595 * np.log10(T)
-            + (-0.77712 + 0.0028426 * T + 178.34 / T) * sqrtSal
-            - 0.07711 * Sal
-            + 0.0041249 * Sal * sqrtSal
-        ),
-    )
+    K0cond = np.exp(
+        -60.2409
+        + 93.4517 * 100 / T
+        + 23.3585 * np.log(T / 100)
+        + Sal * (0.023517 - 0.023656 * T / 100 + 0.0047036 * (T / 100) * (T / 100))
+    )  # Weiss74
 
     K1cond = np.power(
         10,
-        -3633.86 / T + 61.2172 - 9.67770 * lnT + 0.011555 * Sal - 0.0001152 * Sal * Sal,
+        -3633.86 / T + 61.2172 - 9.67770 * lnT + 0.011555 * Sal - 0.0001152 * sqSal,
     )  # Dickson
     # K1cond = np.exp(290.9097 - 14554.21 / T - 45.0575 * lnT + (-228.39774 + 9714.36839 / T + 34.485796 * lnT) * sqrtSal + (54.20871 - 2310.48919 / T - 8.19515 * lnT) * Sal + (-3.969101 + 170.22169 / T + 0.603627 * lnT) * Sal * sqrtSal - 0.00258768 * Sal * Sal) #Millero95
 
     K2cond = np.power(
         10,
-        -471.78 / T - 25.9290 + 3.16967 * lnT + 0.01781 * Sal - 0.0001122 * Sal * Sal,
+        -471.78 / T - 25.9290 + 3.16967 * lnT + 0.01781 * Sal - 0.0001122 * sqSal,
     )
 
     KWcond = np.exp(
@@ -95,7 +90,7 @@ def CalculateKcond(Tc, Sal):
             - 2890.53 * sqrtSal
             - 77.942 * Sal
             + 1.728 * Sal * sqrtSal
-            - 0.0996 * Sal * Sal
+            - 0.0996 * sqSal
         )
         / T
         + (148.0248 + 137.1942 * sqrtSal + 1.62142 * Sal)
@@ -116,12 +111,18 @@ def CalculateKcond(Tc, Sal):
         ),
     )
 
-    K0cond = np.exp(
-        -60.2409
-        + 93.4517 * 100 / T
-        + 23.3585 * np.log(T / 100)
-        + Sal * (0.023517 - 0.023656 * T / 100 + 0.0047036 * (T / 100) * (T / 100))
-    )  # Weiss74
+    KspCcond = np.power(
+        10,
+        (
+            -171.9065
+            - 0.077993 * T
+            + 2839.319 / T
+            + 71.595 * np.log10(T)
+            + (-0.77712 + 0.0028426 * T + 178.34 / T) * sqrtSal
+            - 0.07711 * Sal
+            + 0.0041249 * Sal * sqrtSal
+        ),
+    )
 
     param_HSO4_cond = np.array(
         [
