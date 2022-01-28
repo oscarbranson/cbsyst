@@ -2003,10 +2003,10 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
     xtol = 1e-12  # fit tolerance
 
     param_dict = Bunch()
-    for k in fitfn_dict.keys():
+    for k, fn in fitfn_dict.items():
         p0 = np.ones(len(start_params[k]))
         p, cov = curve_fit(
-            fitfn_dict[k],
+            fn,
             (TempK_M.ravel(), Sal_M.ravel()),
             X_dict[k].ravel(),
             p0=p0,
@@ -2155,8 +2155,8 @@ def MyAMI_K_calc(
     TempC, Sal = [np.array(p) for p in (TempC, Sal)]
     TempK = TempC + 273.15
     Ks = Bunch()
-    for k in param_dict.keys():
-        Ks[k] = fn_dict[k]((TempK, Sal), *param_dict[k])
+    for k, params in param_dict.items():
+        Ks[k] = fn_dict[k]((TempK, Sal), *params)
 
     # Pressure correction
     if P is not None:
@@ -2257,7 +2257,7 @@ def MyAMI_K_calc_multi(TempC=25.0, Sal=35.0, Ca=0.0102821, Mg=0.0528171, P=None)
 
         Ks_tmp = MyAMI_K_calc(t, s, ca, mg, p)
 
-        for k in Ks.keys():
+        for k in Ks:
             Ks[k][ind] = Ks_tmp[k]
 
     return Ks

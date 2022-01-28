@@ -714,7 +714,7 @@ class MyAMIConsistency(unittest.TestCase):
             Ks = MyAMI_K_calc(param_dict=par)
             oKs = MyAMI_K_calc(param_dict=opar)
 
-            for k in Ks.keys():
+            for k in Ks:
                 diffs.append(Ks[k] - oKs[k])
             return all(abs(np.array(diffs)) < 1e-6)
 
