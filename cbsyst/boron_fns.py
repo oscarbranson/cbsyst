@@ -88,7 +88,7 @@ def pH_ABO4(pH, ABO4, Ks, alphaB):
         / (ABO4 * alphaB - ABO4 + 1)
     )
 
-# ABO4_ABT - H
+# ABO4_ABT - pH
 def ABO4_ABT(ABO4, ABT, Ks, alphaB):
     """
     Returns pHtot
@@ -105,8 +105,6 @@ def ABO4_ABT(ABO4, ABT, Ks, alphaB):
         fractionation factor between BO3 and BO4
     """
     return -np.log10(Ks.KB / ((alphaB / (1 - ABO4 + alphaB * ABO4) - 1) / (ABT / ABO4 - 1) - 1))
-
-
 
 def cABO3(H, ABT, Ks, alphaB):
     chiB = chiB_calc(H, Ks)

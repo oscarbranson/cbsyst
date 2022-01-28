@@ -53,7 +53,7 @@ def calc_Ks(T, S, P, Mg, Ca, TS, TF, Ks=None):
         conv = ["KP1", "KP2", "KP3", "KSi", "KW"]
         for c in conv:
             Ks[c] *= SWStoTOT
-
+    
     return Ks
 
 
@@ -689,8 +689,10 @@ def ABsys(
         ps.ABO4 = d11_2_A11(ps.dBO4)
 
     # calculate alpha
-    if ps.alphaB is None:
+    if alphaB is None:
         ps.alphaB = alphaB_calc(ps.T_in)
+    else:
+        ps.alphaB = alphaB
 
     if ps.pHtot is not None and ps.ABT is not None:
         ps.H = ch(ps.pHtot)
@@ -1034,8 +1036,11 @@ def CBsys(
     # if ps.dBO4 is not None:
     #     ps.ABO4 = d11_2_A11(ps.dBO4)
 
-    # # calculate alpha
-    # ps.alphaB = alphaB_calc(ps.T_in)
+    # calculate alpha
+    if alphaB is None:
+        ps.alphaB = alphaB_calc(ps.T_in)
+    else:
+        ps.alphaB = alphaB
 
     # if ps.pHtot is not None and ps.ABT is not None:
     #     ps.H = ch(ps.pHtot)
@@ -1094,7 +1099,9 @@ def CBsys(
         "dBO4",
     ]
     for k in outputs:
-        if not isinstance(ps[k], np.ndarray) and not isinstance(ps[k], dict):
+        if k == 'Ks':
+            continue
+        if not isinstance(ps[k], np.ndarray):
             # convert all outputs to (min) 1D numpy arrays.
             ps[k] = np.array(ps[k], ndmin=1)
 
