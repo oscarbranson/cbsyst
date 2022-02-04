@@ -1926,6 +1926,73 @@ fitfn_dict = {
 
 # Main (new) functions
 # --------------------------------------
+
+def MyAMI_Fcorr(XmCa=0.0102821, XmMg=0.0528171):
+    """
+    Calculate K correction factors as a fn of temp and salinity that can be applied to empirical Ks
+
+    Parameters
+    ----------
+    XmCa : float
+        Ca concentration in mol/kgSW.
+    XmMg : float
+        Mg concentration in mol/kgSW
+
+    Returns
+    -------
+    dict of gK grids for each parameter, where K_corr = K_cond * F_corr
+    """
+    
+    # Modern (M) concentration (m) of Ca and Mg case T=25C, I=0.7, seawatercomposition
+    MmMg = 0.0528171  # Mg Millero et al., 2008; Dickson OA-guide
+    MmCa = 0.0102821  # Ca Millero et al., 2008; Dickson OA-guide
+    
+    # number of Temp and Sal steps used as the basis dataset for the fitting of the pK's
+    n = 21  # number Temp and Sal levels
+
+    # create list of Temp's and Sal's defining the grid for fitting pK's
+    TempC = np.linspace(0, 40, n)  # 0-40degC in N steps
+    Sal = np.linspace(30, 40, n)  # 30-40 Sal
+    TempC_M, Sal_M = np.meshgrid(TempC, Sal)  # generate grid in matrix form
+    TempK_M = TempC_M + 273.15
+    
+    # Calculate gK's for modern (mod) and experimental (x) seawater composition
+    (
+        gKspC_mod,
+        gK1_mod,
+        gK2_mod,
+        gKW_mod,
+        gKB_mod,
+        gKspA_mod,
+        gK0_mod,
+        gKSO4_mod,
+    ) = calculate_gKs(TempC_M, Sal_M, MmCa, MmMg)
+    
+    (
+        gKspC_X, 
+        gK1_X, 
+        gK2_X, 
+        gKW_X, 
+        gKB_X, 
+        gKspA_X, 
+        gK0_X, 
+        gKSO4_X) = calculate_gKs(TempC_M, Sal_M, XmCa, XmMg)
+
+    # Calculate conditional K's predicted for seawater composition X
+    F_dict = {
+        "K0": gK0_X / gK0_mod,
+        "K1": gK1_X / gK1_mod,
+        "K2": gK2_X / gK2_mod,
+        "KB": gKB_X / gKB_mod,
+        "KW": gKW_X / gKW_mod,
+        "KspC": gKspC_X / gKspC_mod,
+        "KspA": gKspA_X / gKspA_mod,
+        "KSO4": gKSO4_X / gKSO4_mod,
+    }
+    
+    return (TempC_M, Sal_M), F_dict
+
+
 def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
     """
     Calculate equilibrium constant parameters using MyAMI model.
@@ -1936,8 +2003,6 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
         Ca concentration in mol/kgSW.
     XmMg : float
         Mg concentration in mol/kgSW
-    P : float or array-like
-        Pressure in bar.
 
     Returns
     -------
