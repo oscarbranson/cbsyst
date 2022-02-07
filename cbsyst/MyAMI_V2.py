@@ -1195,23 +1195,11 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     E_an = -sum(m_anion * Z_anion)
     E_cat = -E_an
 
-    # BMX_phi
-    BMX_phi = np.zeros((6, 7, *Tc.shape))
-    BMX = np.zeros((6, 7, *Tc.shape))
-    BMX_apostroph = np.zeros((6, 7, *Tc.shape))
-    CMX = np.zeros((6, 7, *Tc.shape))
-
-    for cat in range(0, 6):
-        for an in range(0, 7):
-            BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * np.exp(-2 * sqrtI)
-            BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (2 * Istr)) * (
-                1 - (1 + 2 * sqrtI) * np.exp(-2 * sqrtI)
-            )
-            BMX_apostroph[cat, an] = (beta_1[cat, an] / (2 * Istr * Istr)) * (
-                -1 + (1 + (2 * sqrtI) + (2 * sqrtI)) * np.exp(-2 * sqrtI)
-            )
-            CMX[cat, an] = C_phi[cat, an] / (2 * np.sqrt(-Z_anion[an] * Z_cation[cat]))
-
+    BMX_phi = beta_0 + beta_1 * np.exp(-2 * sqrtI)
+    BMX = beta_0 + (beta_1 / (2 * Istr)) * (1 - (1 + 2 * sqrtI) * np.exp(-2 * sqrtI))
+    BMX_apostroph = (beta_1 / (2 * Istr * Istr)) * (-1 + (1 + (2 * sqrtI) + (2 * sqrtI)) * np.exp(-2 * sqrtI))
+    CMX = C_phi / (2 * np.sqrt(-np.expand_dims(Z_anion, 0) * np.expand_dims(Z_cation, 1)))
+    
     # BMX* and CMX are calculated differently for 2:2 ion pairs, corrections
     # below  # § alpha2= 6 for borates ... see Simonson et al 1988
     
