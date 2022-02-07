@@ -2363,7 +2363,7 @@ def MyAMI_K_calc_direct(TempC=25.0, Sal=35.0, Ca=0.0102821, Mg=0.0528171, P=None
         for k in ["K1", "K2", "KW", "KB", "KspA", "KspC", "KSO4"]:
             Ks[k] *= prescorr(P, TempC, *ppar[k])
 
-    return Ks
+    return Bunch(Ks)
 
 
 def MyAMI_K_calc_multi(TempC=25.0, Sal=35.0, Ca=0.0102821, Mg=0.0528171, P=None):
