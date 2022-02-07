@@ -1146,21 +1146,14 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     T = Tc + 273.15
     sqrtI = np.sqrt(Istr)
     
+    # make tables of ion charges used in later calculations
+
     # cation order: [H, Na, K, Mg, Ca, Sr]
     cation_charges = np.array([1, 1, 1, 2, 2, 2])
-
     Z_cation = np.full(
         (cation_charges.size, *Tc.shape),
         np.expand_dims(cation_charges, (1,2))
         )
-
-    # Z_cation = np.zeros((6, *Tc.shape))
-    # Z_cation[0] = 1
-    # Z_cation[1] = 1
-    # Z_cation[2] = 1
-    # Z_cation[3] = 2
-    # Z_cation[4] = 2
-    # Z_cation[5] = 2
 
     # anion order: [OH, Cl, B(OH)4, HCO3, HSO4, CO3, SO4]
     anion_charges = np.array([-1, -1, -1, -1, -1, -2, -2])
@@ -1168,15 +1161,6 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
         (anion_charges.size, *Tc.shape),
         np.expand_dims(anion_charges, (1,2))
         )   
-
-    # Z_anion = np.zeros((7, *Tc.shape))
-    # Z_anion[0] = -1
-    # Z_anion[1] = -1
-    # Z_anion[2] = -1
-    # Z_anion[3] = -1
-    # Z_anion[4] = -1
-    # Z_anion[5] = -2
-    # Z_anion[6] = -2
 
     ##########################################################################
     [
