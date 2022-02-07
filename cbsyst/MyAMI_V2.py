@@ -1663,33 +1663,67 @@ def gammaCO2_fn(Tc, m_an, m_cat):
 # --------------------------------------
 def calculate_gKs(Tc, Sal, mCa, mMg):
     Istr = 19.924 * Sal / (1000 - 1.005 * Sal)
+   
+    cation_concs = np.array([
+        0.00000001,  # H ion; pH of about 8
+        0.4689674,  # Na Millero et al., 2008; Dickson OA-guide
+        0.0102077,  # K Millero et al., 2008; Dickson OA-guide
+        0.0528171,  # Mg Millero et al., 2008; Dickson OA-guide
+        0.0102821,  # Ca Millero et al., 2008; Dickson OA-guide
+        0.0000907  # Sr Millero et al., 2008; Dickson OA-guide
+    ])
 
-    m_cation = np.zeros((6, *Tc.shape))
-    m_cation[0] = 0.00000001 * Sal / 35.0  # H ion; pH of about 8
-    # Na Millero et al., 2008; Dickson OA-guide
-    m_cation[1] = 0.4689674 * Sal / 35.0
-    # K Millero et al., 2008; Dickson OA-guide
-    m_cation[2] = 0.0102077 * Sal / 35.0
-    m_cation[3] = mMg * Sal / 35.0  # Mg Millero et al., 2008; Dickson OA-guide
-    m_cation[4] = mCa * Sal / 35.0  # Ca Millero et al., 2008; Dickson OA-guide
-    # Sr Millero et al., 2008; Dickson OA-guide
-    m_cation[5] = 0.0000907 * Sal / 35.0
+    m_cation = np.full(
+        (cation_concs.size, *Tc.shape),
+        reshaper(cation_concs, Tc)
+        )
+    
+    m_cation[3] = mMg
+    m_cation[4] = mCa
 
-    m_anion = np.zeros((7, *Tc.shape))
-    m_anion[0] = 0.0000010 * Sal / 35.0  # OH ion; pH of about 8
-    # Cl Millero et al., 2008; Dickson OA-guide
-    m_anion[1] = 0.5458696 * Sal / 35.0
-    # BOH4 Millero et al., 2008; Dickson OA-guide; pH of about 8 -- borate,
-    # not Btotal
-    m_anion[2] = 0.0001008 * Sal / 35.0
-    # HCO3 Millero et al., 2008; Dickson OA-guide
-    m_anion[3] = 0.0017177 * Sal / 35.0
-    # HSO4 Millero et al., 2008; Dickson OA-guide
-    m_anion[4] = 0.0282352 * 1e-6 * Sal / 35.0
-    # CO3 Millero et al., 2008; Dickson OA-guide
-    m_anion[5] = 0.0002390 * Sal / 35.0
-    # SO4 Millero et al., 2008; Dickson OA-guide
-    m_anion[6] = 0.0282352 * Sal / 35.0
+    m_cation *= Sal / 35.  # salinity correction
+
+    anion_concs = np.array([
+        0.0000010,  # OH ion; pH of about 8
+        0.5458696,  # Cl Millero et al., 2008; Dickson OA-guide
+        0.0001008,  # BOH4 Millero et al., 2008; Dickson OA-guide; pH of about 8 -- borate,
+        0.0017177,  # HCO3 Millero et al., 2008; Dickson OA-guide
+        0.0282352e-6,  # HSO4 Millero et al., 2008; Dickson OA-guide
+        0.0002390,  # CO3 Millero et al., 2008; Dickson OA-guide
+        0.0282352  # SO4 Millero et al., 2008; Dickson OA-guide
+    ])
+
+    m_anion = np.full(
+        (anion_concs.size, *Tc.shape),
+        reshaper(anion_concs, Tc)
+        ) * Sal / 35.  # salinity correction
+
+    # m_cation = np.zeros((6, *Tc.shape))
+    # m_cation[0] = 0.00000001 * Sal / 35.0  # H ion; pH of about 8
+    # # Na Millero et al., 2008; Dickson OA-guide
+    # m_cation[1] = 0.4689674 * Sal / 35.0
+    # # K Millero et al., 2008; Dickson OA-guide
+    # m_cation[2] = 0.0102077 * Sal / 35.0
+    # m_cation[3] = mMg * Sal / 35.0  # Mg Millero et al., 2008; Dickson OA-guide
+    # m_cation[4] = mCa * Sal / 35.0  # Ca Millero et al., 2008; Dickson OA-guide
+    # # Sr Millero et al., 2008; Dickson OA-guide
+    # m_cation[5] = 0.0000907 * Sal / 35.0
+
+    # m_anion = np.zeros((7, *Tc.shape))
+    # m_anion[0] = 0.0000010 * Sal / 35.0  # OH ion; pH of about 8
+    # # Cl Millero et al., 2008; Dickson OA-guide
+    # m_anion[1] = 0.5458696 * Sal / 35.0
+    # # BOH4 Millero et al., 2008; Dickson OA-guide; pH of about 8 -- borate,
+    # # not Btotal
+    # m_anion[2] = 0.0001008 * Sal / 35.0
+    # # HCO3 Millero et al., 2008; Dickson OA-guide
+    # m_anion[3] = 0.0017177 * Sal / 35.0
+    # # HSO4 Millero et al., 2008; Dickson OA-guide
+    # m_anion[4] = 0.0282352 * 1e-6 * Sal / 35.0
+    # # CO3 Millero et al., 2008; Dickson OA-guide
+    # m_anion[5] = 0.0002390 * Sal / 35.0
+    # # SO4 Millero et al., 2008; Dickson OA-guide
+    # m_anion[6] = 0.0282352 * Sal / 35.0
 
     [
         gamma_cation,
