@@ -71,7 +71,10 @@ def calc_KPs(TempC, Sal, P=None):
         + (b5 / TempK + b6) * Sal
     )
     KP3 = np.exp(
-        c0 / TempK + c1 + (c3 / TempK + c4) * Sal ** 0.5 + (c5 / TempK + c6) * Sal
+        c0 / TempK 
+        + c1 
+        + (c3 / TempK + c4) * Sal ** 0.5 
+        + (c5 / TempK + c6) * Sal
     )
 
     # parameters from Table 5 of Millero 2007 (doi:10.1021/cr0503557)
