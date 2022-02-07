@@ -1120,11 +1120,33 @@ def supplyKHF(T, sqrtI):
 # Functions from gammaANDalpha.py
 # --------------------------------------
 def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
+    """Calculate Gammas and Alphas for K calculations.
+
+    Parameters
+    ----------
+    Tc : array-like
+        Temperature in Celcius
+    S : array-like
+        Salinity in PSU
+    Istr : array-like
+        Ionic strength of solution
+    m_cation : array-like
+        Matrix of major cations in seawater in mol/kg in order:
+        [H, Na, K, Mg, Ca, Sr]
+    m_anion : array-like
+        Matrix of major anions in seawater in mol/kg in order:
+        [OH, Cl, B(OH)4, HCO3, HSO4, CO3, SO4]
+
+    Returns
+    -------
+    list of arrays
+        [gamma_cation, gamma_anion, alpha_Hsws, alpha_Ht, alpha_OH, alpha_CO3]
+    """
     # Testbed case T=25C, I=0.7, seawatercomposition
     T = Tc + 273.15
     sqrtI = np.sqrt(Istr)
 
-    Z_cation = np.zeros((6, 1, 1))
+    Z_cation = np.zeros((6, *Tc.shape))
     Z_cation[0] = 1
     Z_cation[1] = 1
     Z_cation[2] = 1
@@ -1132,7 +1154,7 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     Z_cation[4] = 2
     Z_cation[5] = 2
 
-    Z_anion = np.zeros((7, 1, 1))
+    Z_anion = np.zeros((7, *Tc.shape))
     Z_anion[0] = -1
     Z_anion[1] = -1
     Z_anion[2] = -1
@@ -1173,27 +1195,16 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     E_an = -sum(m_anion * Z_anion)
     E_cat = -E_an
 
-    # BMX_phi
-    BMX_phi = np.zeros((6, 7, *Tc.shape))
-    BMX = np.zeros((6, 7, *Tc.shape))
-    BMX_apostroph = np.zeros((6, 7, *Tc.shape))
-    CMX = np.zeros((6, 7, *Tc.shape))
-
-    for cat in range(0, 6):
-        for an in range(0, 7):
-            BMX_phi[cat, an] = beta_0[cat, an] + beta_1[cat, an] * np.exp(-2 * sqrtI)
-            BMX[cat, an] = beta_0[cat, an] + (beta_1[cat, an] / (2 * Istr)) * (
-                1 - (1 + 2 * sqrtI) * np.exp(-2 * sqrtI)
-            )
-            BMX_apostroph[cat, an] = (beta_1[cat, an] / (2 * Istr * Istr)) * (
-                -1 + (1 + (2 * sqrtI) + (2 * sqrtI)) * np.exp(-2 * sqrtI)
-            )
-            CMX[cat, an] = C_phi[cat, an] / (2 * np.sqrt(-Z_anion[an] * Z_cation[cat]))
-
+    BMX_phi = beta_0 + beta_1 * np.exp(-2 * sqrtI)
+    BMX = beta_0 + (beta_1 / (2 * Istr)) * (1 - (1 + 2 * sqrtI) * np.exp(-2 * sqrtI))
+    BMX_apostroph = (beta_1 / (2 * Istr * Istr)) * (-1 + (1 + (2 * sqrtI) + (2 * sqrtI)) * np.exp(-2 * sqrtI))
+    CMX = C_phi / (2 * np.sqrt(-np.expand_dims(Z_anion, 0) * np.expand_dims(Z_cation, 1)))
+    
     # BMX* and CMX are calculated differently for 2:2 ion pairs, corrections
     # below  # § alpha2= 6 for borates ... see Simonson et al 1988
-    cat = 3
-    an = 2  # MgBOH42
+    
+    # MgBOH42
+    cat, an = 3, 2
     BMX_phi[cat, an] = (
         beta_0[cat, an]
         + beta_1[cat, an] * np.exp(-1.4 * sqrtI)
@@ -1210,8 +1221,9 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     ) + (beta_2[cat, an] / (18 * Istr)) * (
         -1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI)
     )
-    cat = 3
-    an = 6  # MgSO4
+    
+    # MgSO4
+    cat, an = 3, 6 
     BMX_phi[cat, an] = (
         beta_0[cat, an]
         + beta_1[cat, an] * np.exp(-1.4 * sqrtI)
@@ -1233,8 +1245,9 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     # Istr)) * (-1-(1 + 12 * sqrtI + 72 * Istr) * np.exp(-12 * sqrtI)) # not 1 /
     # (0.98 * Istr * Istr) ... compare M&P98 equation A17 with Pabalan and Pitzer
     # 1987 equation 15c / 16b
-    cat = 4
-    an = 2  # CaBOH42
+    
+    # CaBOH42
+    cat, an = 4, 2 
     BMX_phi[cat, an] = (
         beta_0[cat, an]
         + beta_1[cat, an] * np.exp(-1.4 * sqrtI)
@@ -1251,8 +1264,9 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     ) + (beta_2[cat, an] / (18 * Istr)) * (
         -1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI)
     )
-    cat = 4
-    an = 6  # CaSO4
+    
+    # CaSO4
+    cat, an = 4, 6
     BMX_phi[cat, an] = (
         beta_0[cat, an]
         + beta_1[cat, an] * np.exp(-1.4 * sqrtI)
@@ -1270,8 +1284,8 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
         -1 - (1 + 12 * sqrtI + 72 * Istr) * np.exp(-12 * sqrtI)
     )
 
-    cat = 5
-    an = 2  # SrBOH42
+    # SrBOH42
+    cat, an = 5, 2 
     BMX_phi[cat, an] = (
         beta_0[cat, an]
         + beta_1[cat, an] * np.exp(-1.4 * sqrtI)
@@ -1321,13 +1335,17 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
             S = S + m_anion[an] * m_cation[cat] * CMX[cat, an]
 
     gamma_anion = np.zeros((7, *Tc.shape))
-    ln_gamma_anion = np.zeros((7, *Tc.shape))
+    # ln_gamma_anion = np.zeros((7, *Tc.shape))
+    ln_gamma_anion = Z_anion * Z_anion * (f_gamma + R) + Z_anion * S
+    
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
     # print (np.exp(ln_gammaCl), ln_gammaCl)
 
+    # return ln_gamma_anion, m_cation, BMX, CMX, E_cat, Z_anion, f_gamma, R, S
+    
     # XX = 99
     for an in range(0, 7):
-        ln_gamma_anion[an] = Z_anion[an] * Z_anion[an] * (f_gamma + R) + Z_anion[an] * S
+        # ln_gamma_anion[an] = Z_anion[an] * Z_anion[an] * (f_gamma + R) + Z_anion[an] * S
         # if an == XX:
         #     print (ln_gamma_anion[an], "init")
         for cat in range(0, 6):
@@ -1926,6 +1944,73 @@ fitfn_dict = {
 
 # Main (new) functions
 # --------------------------------------
+
+def MyAMI_Fcorr(XmCa=0.0102821, XmMg=0.0528171, TempC=None, Sal=None):
+    """
+    Calculate K correction factors as a fn of temp and salinity that can be applied to empirical Ks
+
+    Parameters
+    ----------
+    XmCa : float
+        Ca concentration in mol/kgSW.
+    XmMg : float
+        Mg concentration in mol/kgSW
+    n : int
+        The number of Temp and Sal steps generated.
+
+    Returns
+    -------
+    dict of gK grids for each parameter, where K_corr = K_cond * F_corr
+    """
+    
+    # Modern (M) concentration (m) of Ca and Mg case T=25C, I=0.7, seawatercomposition
+    MmMg = 0.0528171  # Mg Millero et al., 2008; Dickson OA-guide
+    MmCa = 0.0102821  # Ca Millero et al., 2008; Dickson OA-guide
+    
+    # create list of Temp's and Sal's defining the grid for fitting pK's
+    if TempC is None or Sal is None:
+        n = 21
+        TempC = np.linspace(0, 40, n)  # 0-40degC in N steps
+        Sal = np.linspace(30, 40, n)  # 30-40 Sal
+        TempC, Sal = np.meshgrid(TempC, Sal)  # generate grid in matrix form
+    
+    # Calculate gK's for modern (mod) and experimental (x) seawater composition
+    (
+        gKspC_mod,
+        gK1_mod,
+        gK2_mod,
+        gKW_mod,
+        gKB_mod,
+        gKspA_mod,
+        gK0_mod,
+        gKSO4_mod,
+    ) = calculate_gKs(TempC, Sal, MmCa, MmMg)
+    
+    (
+        gKspC_X, 
+        gK1_X, 
+        gK2_X, 
+        gKW_X, 
+        gKB_X, 
+        gKspA_X, 
+        gK0_X, 
+        gKSO4_X) = calculate_gKs(TempC, Sal, XmCa, XmMg)
+
+    # Calculate conditional K's predicted for seawater composition X
+    F_dict = {
+        "K0": gK0_X / gK0_mod,
+        "K1": gK1_X / gK1_mod,
+        "K2": gK2_X / gK2_mod,
+        "KB": gKB_X / gKB_mod,
+        "KW": gKW_X / gKW_mod,
+        "KspC": gKspC_X / gKspC_mod,
+        "KspA": gKspA_X / gKspA_mod,
+        "KSO4": gKSO4_X / gKSO4_mod,
+    }
+    
+    return F_dict
+
+
 def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
     """
     Calculate equilibrium constant parameters using MyAMI model.
@@ -1936,8 +2021,6 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
         Ca concentration in mol/kgSW.
     XmMg : float
         Mg concentration in mol/kgSW
-    P : float or array-like
-        Pressure in bar.
 
     Returns
     -------
@@ -1983,9 +2066,16 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
         gK0_mod,
         gKSO4_mod,
     ) = calculate_gKs(TempC_M, Sal_M, MmCa, MmMg)
-    (gKspC_X, gK1_X, gK2_X, gKW_X, gKB_X, gKspA_X, gK0_X, gKSO4_X) = calculate_gKs(
-        TempC_M, Sal_M, XmCa, XmMg
-    )
+    (
+        gKspC_X, 
+        gK1_X, 
+        gK2_X, 
+        gKW_X, 
+        gKB_X, 
+        gKspA_X, 
+        gK0_X, 
+        gKSO4_X
+    ) = calculate_gKs(TempC_M, Sal_M, XmCa, XmMg)
 
     # Calculate conditional K's predicted for seawater composition X
     X_dict = {
@@ -2024,6 +2114,11 @@ def MyAMI_K_calc(
 ):
     """
     Calculate K constants at given salinities and temperatures.
+    
+    Function workflow:
+        1. Calculate a grid of MyAMI-corrected Ks from T=0-40, S=30-40 at prescribed Mg and Ca.
+        2. Fit the empirical K functions to the new grid to get new parameters.
+        3. Apply these Mg and Ca corrected parameters to calculate Ks
 
     Note: if both inputs are array-like, they must be the same
     length.
@@ -2189,6 +2284,74 @@ def MyAMI_K_calc(
             Ks[k] *= prescorr(P, TempC, *ppar[k])
 
     return Ks
+
+def MyAMI_K_calc_direct(TempC=25.0, Sal=35.0, Ca=0.0102821, Mg=0.0528171, P=None):
+    """
+    Calculate K constants at given salinities and temperatures.
+    
+    Function Logic:
+        1. Run MyAMI to directly calculate the Ks for each of your input conditions. 
+
+    Note: if both inputs are array-like, they must be the same
+    length.
+
+    Parameters
+    ----------
+    TempC : float or array-like
+        Temperature in centigrade.
+    Sal : float or array-like
+        Salinity in psu.
+    Ca : float or array-like
+        Ca concentration in mol/kgSW.
+    Mg : float or array-like
+        Mg concentration in mol/kgSW.
+    P : float or array-like
+        Pressure in bar.
+
+    Returns
+    -------
+    dict of K values
+    """
+    
+    TempC, Sal = [np.array(p) for p in (TempC, Sal)]
+    
+    if Ca == 0.0102821 and Mg == 0.0528171:
+        Ks = {k: v for k, v in zip(['KspC', 'K1', 'K2', 'KW', 'KB', 'KspA', 'K0', 'KSO4'], CalculateKcond(Tc=TempC, Sal=Sal))}
+    else:
+        f_corr = MyAMI_Fcorr(XmCa=Ca, XmMg=Mg, TempC=TempC, Sal=Sal)
+        Ks = {k: v * f_corr[k] for k, v in zip(['KspC', 'K1', 'K2', 'KW', 'KB', 'KspA', 'K0', 'KSO4'], CalculateKcond(Tc=TempC, Sal=Sal))}
+
+    # Pressure correction
+    if P is not None:
+        # parameters from Table 5 of Millero 2007 (doi:10.1021/cr0503557)
+        # TYPO: KW parameters in Millero 2007 are for fresh water. Used
+        #       Millero '83 seawater parameters instead (as in CO2SYS)
+        # TYPO: Third parameter for KB was positive in original, shoul
+        #       have been negative
+        # TYPO: All 'b' parameters were missing a factor of 1e-3.
+        #       this is implemented in the prescorr function, rather
+        #       than in the parameters.
+        ppar = {
+            "K1": [-25.50, 0.1271, 0, -3.08, 0.0877],
+            "K2": [-15.82, -0.0219, 0, 1.13, -0.1475],
+            "KB": [-29.48, 0.1622, -2.608e-3, -2.84, 0],
+            # 'KW': [-25.60, 0.2324, -3.6246e-3, -5.13, 0.0794],
+            "KW": [-20.02, 0.1119, -1.409e-3, -5.13, 0.0794],  # Millero '83
+            "KSO4": [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
+            "KHF": [-9.78, -0.0090, -0.942e-3, -3.91, 0.054],
+            "KH2S": [-14.80, 0.0020, -0.400e-3, 2.89, 0.054],
+            "KNH4": [-26.43, 0.0889, -0.905e-3, -5.03, 0.0814],
+            "KH3PO4": [-14.51, 0.1211, -0.321e-3, -2.67, 0.0427],
+            "KH2PO4": [-23.12, 0.1758, -2.647e-3, -5.15, 0.09],
+            "KHPO42": [-26.57, 0.2020, -3.042e-3, -4.08, 0.0714],
+            "KspC": [-48.76, 0.5304, 0, -11.76, 0.3692],
+            "KspA": [-35, 0.5304, 0, -11.76, 0.3692],
+        }
+
+        for k in ["K1", "K2", "KW", "KB", "KspA", "KspC", "KSO4"]:
+            Ks[k] *= prescorr(P, TempC, *ppar[k])
+
+    return Bunch(Ks)
 
 
 def MyAMI_K_calc_multi(TempC=25.0, Sal=35.0, Ca=0.0102821, Mg=0.0528171, P=None):
