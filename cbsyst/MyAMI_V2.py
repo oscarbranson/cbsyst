@@ -1622,12 +1622,17 @@ def gammaCO2_fn(Tc, m_an, m_cat):
 
     ##########################
     # CALCULATION OF gammaB
-
     lamdaB = np.array([0, -0.097, -0.14, 0, 0, 0.091, 0.018])  # Felmy and Wear 1986
     # lamdaB = np.array([0.109, 0.028, -0.026, 0.191, 0.165, 0, -0.205]) #Chanson and Millero 2006
-    ln_gammaB = m_ion[1] * m_ion[6] * 0.046  # tripple ion interaction Na-SO4
-    for ion in range(0, 7):
-        ln_gammaB = ln_gammaB + m_ion[ion] * 2 * lamdaB[ion]
+    
+    # original calculation:
+
+    # ln_gammaB = m_ion[1] * m_ion[6] * 0.046  # tripple ion interaction Na-SO4
+    # for ion in range(0, 7):
+    #     ln_gammaB = ln_gammaB + m_ion[ion] * 2 * lamdaB[ion]
+
+    # vectorised calculation:
+    ln_gammaB = m_ion[1] * m_ion[6] * 0.046 + (m_ion * 2 * np.expand_dims(lamdaB, (1, 2))).sum(0)
 
     gammaB = np.exp(ln_gammaB)  # as according to Felmy and Wear 1986
     # print gammaB
