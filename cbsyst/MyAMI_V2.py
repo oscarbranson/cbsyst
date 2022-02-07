@@ -1327,15 +1327,9 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     # BMX[1, 6] = beta_0[1, 6] + (beta_1[1, 6] / (1.7 * Istr)) * (1 - (1 + 1.7 * sqrtI) * np.exp(-1.7 * sqrtI))
 
     # BMX[4, 6] =BMX[4, 6] * 0  # knock out Ca-SO4
-
-    # TODO: Speed this up? It might actually be the fastest way to do it, though...
-    # tricky to do an outer product along one dimension?
-    R = 0
-    S = 0
-    for cat in range(0, 6):
-        for an in range(0, 7):
-            R = R + m_anion[an] * m_cation[cat] * BMX_apostroph[cat, an]
-            S = S + m_anion[an] * m_cation[cat] * CMX[cat, an]
+    
+    R = (m_anion * np.expand_dims(m_cation, 1) * BMX_apostroph).sum((0,1))
+    S = (m_anion * np.expand_dims(m_cation, 1) * CMX).sum((0,1))
 
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
     ln_gamma_anion = Z_anion * Z_anion * (f_gamma + R) + Z_anion * S
