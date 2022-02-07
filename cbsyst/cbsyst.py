@@ -4,7 +4,7 @@ Functions for calculating the carbon and boron chemistry of seawater.
 
 import numpy as np
 from cbsyst.helpers import Bunch, maxL
-from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi
+from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi, MyAMI_K_calc_direct
 from cbsyst.carbon_fns import calc_C_species, calc_pH_scales, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
 from cbsyst.boron_fns import calc_B_species, d11_2_A11, A11_2_d11, pH_ABO3, alphaB_calc, cABO3, cABO4
 from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales
@@ -23,20 +23,26 @@ def calc_Ks(T, S, P, Mg, Ca, TS, TF, Ks=None):
     if isinstance(Ks, dict):
         Ks = Bunch(Ks)
     else:
-        if maxL(Mg, Ca) == 1:
-            if Mg is None:
-                Mg = 0.0528171
-            if Ca is None:
-                Ca = 0.0102821
-            Ks = MyAMI_K_calc(TempC=T, Sal=S, P=P, Mg=Mg, Ca=Ca)
-        else:
-            # if only Ca or Mg provided, fill in other with modern
-            if Mg is None:
-                Mg = 0.0528171
-            if Ca is None:
-                Ca = 0.0102821
-            # calculate Ca and Mg specific Ks
-            Ks = MyAMI_K_calc_multi(TempC=T, Sal=S, P=P, Ca=Ca, Mg=Mg)
+        if Mg is None:
+            Mg = 0.0528171
+        if Ca is None:
+            Ca = 0.0102821
+        Ks = MyAMI_K_calc_direct(TempC=T, Sal=S, Ca=Ca, Mg=Mg, P=P)
+        
+        # if maxL(Mg, Ca) == 1:
+        #     if Mg is None:
+        #         Mg = 0.0528171
+        #     if Ca is None:
+        #         Ca = 0.0102821
+        #     Ks = MyAMI_K_calc(TempC=T, Sal=S, P=P, Mg=Mg, Ca=Ca)
+        # else:
+        #     # if only Ca or Mg provided, fill in other with modern
+        #     if Mg is None:
+        #         Mg = 0.0528171
+        #     if Ca is None:
+        #         Ca = 0.0102821
+        #     # calculate Ca and Mg specific Ks
+        #     Ks = MyAMI_K_calc_multi(TempC=T, Sal=S, P=P, Ca=Ca, Mg=Mg)
 
         # non-MyAMI Constants
         Ks.update(calc_KPs(T, S, P))
@@ -70,7 +76,7 @@ def calc_Ks_TS(T, S, P, Ks={}):
     if isinstance(Ks, dict):
         given_Ks = Ks
 
-    Ks = MyAMI_K_calc(TempC=T, Sal=S, P=P, Mg=Mg, Ca=Ca)
+    Ks = MyAMI_K_calc_direct(TempC=T, Sal=S, P=P, Mg=Mg, Ca=Ca)
 
     # non-MyAMI Constants
     Ks.update(calc_KPs(T, S, P))
