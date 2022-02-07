@@ -2020,7 +2020,7 @@ def MyAMI_Fcorr(XmCa=0.0102821, XmMg=0.0528171, TempC=None, Sal=None):
         "KSO4": gKSO4_X / gKSO4_mod,
     }
     
-    return (XmCa, XmMg, TempC, Sal), F_dict
+    return F_dict
 
 
 def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
@@ -2078,9 +2078,16 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
         gK0_mod,
         gKSO4_mod,
     ) = calculate_gKs(TempC_M, Sal_M, MmCa, MmMg)
-    (gKspC_X, gK1_X, gK2_X, gKW_X, gKB_X, gKspA_X, gK0_X, gKSO4_X) = calculate_gKs(
-        TempC_M, Sal_M, XmCa, XmMg
-    )
+    (
+        gKspC_X, 
+        gK1_X, 
+        gK2_X, 
+        gKW_X, 
+        gKB_X, 
+        gKspA_X, 
+        gK0_X, 
+        gKSO4_X
+    ) = calculate_gKs(TempC_M, Sal_M, XmCa, XmMg)
 
     # Calculate conditional K's predicted for seawater composition X
     X_dict = {
@@ -2119,6 +2126,11 @@ def MyAMI_K_calc(
 ):
     """
     Calculate K constants at given salinities and temperatures.
+    
+    Function workflow:
+        1. Calculate a grid of MyAMI-corrected Ks from T=0-40, S=30-40 at prescribed Mg and Ca.
+        2. Fit the empirical K functions to the new grid to get new parameters.
+        3. Apply these Mg and Ca corrected parameters to calculate Ks
 
     Note: if both inputs are array-like, they must be the same
     length.
@@ -2252,6 +2264,74 @@ def MyAMI_K_calc(
     Ks = Bunch()
     for k, params in param_dict.items():
         Ks[k] = fn_dict[k]((TempK, Sal), *params)
+
+    # Pressure correction
+    if P is not None:
+        # parameters from Table 5 of Millero 2007 (doi:10.1021/cr0503557)
+        # TYPO: KW parameters in Millero 2007 are for fresh water. Used
+        #       Millero '83 seawater parameters instead (as in CO2SYS)
+        # TYPO: Third parameter for KB was positive in original, shoul
+        #       have been negative
+        # TYPO: All 'b' parameters were missing a factor of 1e-3.
+        #       this is implemented in the prescorr function, rather
+        #       than in the parameters.
+        ppar = {
+            "K1": [-25.50, 0.1271, 0, -3.08, 0.0877],
+            "K2": [-15.82, -0.0219, 0, 1.13, -0.1475],
+            "KB": [-29.48, 0.1622, -2.608e-3, -2.84, 0],
+            # 'KW': [-25.60, 0.2324, -3.6246e-3, -5.13, 0.0794],
+            "KW": [-20.02, 0.1119, -1.409e-3, -5.13, 0.0794],  # Millero '83
+            "KSO4": [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
+            "KHF": [-9.78, -0.0090, -0.942e-3, -3.91, 0.054],
+            "KH2S": [-14.80, 0.0020, -0.400e-3, 2.89, 0.054],
+            "KNH4": [-26.43, 0.0889, -0.905e-3, -5.03, 0.0814],
+            "KH3PO4": [-14.51, 0.1211, -0.321e-3, -2.67, 0.0427],
+            "KH2PO4": [-23.12, 0.1758, -2.647e-3, -5.15, 0.09],
+            "KHPO42": [-26.57, 0.2020, -3.042e-3, -4.08, 0.0714],
+            "KspC": [-48.76, 0.5304, 0, -11.76, 0.3692],
+            "KspA": [-35, 0.5304, 0, -11.76, 0.3692],
+        }
+
+        for k in ["K1", "K2", "KW", "KB", "KspA", "KspC", "KSO4"]:
+            Ks[k] *= prescorr(P, TempC, *ppar[k])
+
+    return Ks
+
+def MyAMI_K_calc_direct(TempC=25.0, Sal=35.0, Ca=0.0102821, Mg=0.0528171, P=None):
+    """
+    Calculate K constants at given salinities and temperatures.
+    
+    Function Logic:
+        1. Run MyAMI to directly calculate the Ks for each of your input conditions. 
+
+    Note: if both inputs are array-like, they must be the same
+    length.
+
+    Parameters
+    ----------
+    TempC : float or array-like
+        Temperature in centigrade.
+    Sal : float or array-like
+        Salinity in psu.
+    Ca : float or array-like
+        Ca concentration in mol/kgSW.
+    Mg : float or array-like
+        Mg concentration in mol/kgSW.
+    P : float or array-like
+        Pressure in bar.
+
+    Returns
+    -------
+    dict of K values
+    """
+    
+    TempC, Sal = [np.array(p) for p in (TempC, Sal)]
+    
+    if Ca == 0.0102821 and Mg == 0.0528171:
+        Ks = {k: v for k, v in zip(['KspC', 'K1', 'K2', 'KW', 'KB', 'KspA', 'K0', 'KSO4'], CalculateKcond(Tc=TempC, Sal=Sal))}
+    else:
+        f_corr = MyAMI_Fcorr(XmCa=Ca, XmMg=Mg, TempC=TempC, Sal=Sal)
+        Ks = {k: v * f_corr[k] for k, v in zip(['KspC', 'K1', 'K2', 'KW', 'KB', 'KspA', 'K0', 'KSO4'], CalculateKcond(Tc=TempC, Sal=Sal))}
 
     # Pressure correction
     if P is not None:
