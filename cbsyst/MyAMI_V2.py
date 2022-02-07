@@ -1688,7 +1688,7 @@ def calculate_gKs(Tc, Sal, mCa, mMg):
         0.5458696,  # Cl Millero et al., 2008; Dickson OA-guide
         0.0001008,  # BOH4 Millero et al., 2008; Dickson OA-guide; pH of about 8 -- borate,
         0.0017177,  # HCO3 Millero et al., 2008; Dickson OA-guide
-        0.0282352e-6,  # HSO4 Millero et al., 2008; Dickson OA-guide
+        0.0282352 * 1e-6,  # HSO4 Millero et al., 2008; Dickson OA-guide
         0.0002390,  # CO3 Millero et al., 2008; Dickson OA-guide
         0.0282352  # SO4 Millero et al., 2008; Dickson OA-guide
     ])
@@ -2041,7 +2041,7 @@ def MyAMI_Fcorr(XmCa=0.0102821, XmMg=0.0528171, TempC=25., Sal=35.):
         "KSO4": gKSO4_X / gKSO4_mod,
     }
     
-    return F_dict
+    return Bunch(F_dict)
 
 
 def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
