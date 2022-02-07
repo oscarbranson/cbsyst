@@ -1328,6 +1328,8 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
 
     # BMX[4, 6] =BMX[4, 6] * 0  # knock out Ca-SO4
 
+    # TODO: Speed this up? It might actually be the fastest way to do it, though...
+    # tricky to do an outer product along one dimension?
     R = 0
     S = 0
     for cat in range(0, 6):
@@ -1335,91 +1337,48 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
             R = R + m_anion[an] * m_cation[cat] * BMX_apostroph[cat, an]
             S = S + m_anion[an] * m_cation[cat] * CMX[cat, an]
 
-    print(m_anion.shape, m_cation.shape, BMX_apostroph.shape)
-    # Rn = np.sum()
-
-    gamma_anion = np.zeros((7, *Tc.shape))
-    # ln_gamma_anion = np.zeros((7, *Tc.shape))
-    ln_gamma_anion = Z_anion * Z_anion * (f_gamma + R) + Z_anion * S
-    
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
-    # print (np.exp(ln_gammaCl), ln_gammaCl)
-
-    # return ln_gamma_anion, m_cation, BMX, CMX, E_cat, Z_anion, f_gamma, R, S
-    
-    # XX = 99
+    ln_gamma_anion = Z_anion * Z_anion * (f_gamma + R) + Z_anion * S
     for an in range(0, 7):
-        # ln_gamma_anion[an] = Z_anion[an] * Z_anion[an] * (f_gamma + R) + Z_anion[an] * S
-        # if an == XX:
-        #     print (ln_gamma_anion[an], "init")
         for cat in range(0, 6):
-            ln_gamma_anion[an] = ln_gamma_anion[an] + 2 * m_cation[cat] * (
+            ln_gamma_anion[an] += 2 * m_cation[cat] * (
                 BMX[cat, an] + E_cat * CMX[cat, an]
             )
-            # if an == XX:
-            #     print (ln_gamma_anion[an], cat)
         for an2 in range(0, 7):
-            ln_gamma_anion[an] = ln_gamma_anion[an] + m_anion[an2] * (
+            ln_gamma_anion[an] += m_anion[an2] * (
                 2 * Theta_negative[an, an2]
             )
-            # if an == XX:
-            #     print (ln_gamma_anion[an], an2)
         for an2 in range(0, 7):
             for cat in range(0, 6):
-                ln_gamma_anion[an] = (
-                    ln_gamma_anion[an]
-                    + m_anion[an2] * m_cation[cat] * Phi_NNP[an, an2, cat]
+                ln_gamma_anion[an] += (
+                    m_anion[an2] * m_cation[cat] * Phi_NNP[an, an2, cat]
                 )
-                # if an == XX:
-                #     print (ln_gamma_anion[an], an2, cat)
         for cat in range(0, 6):
             for cat2 in range(cat + 1, 6):
-                ln_gamma_anion[an] = (
-                    ln_gamma_anion[an]
-                    + m_cation[cat] * m_cation[cat2] * Phi_PPN[cat, cat2, an]
+                ln_gamma_anion[an] += (
+                    m_cation[cat] * m_cation[cat2] * Phi_PPN[cat, cat2, an]
                 )
-                # if an == XX:
-                #     print (ln_gamma_anion[an], cat, cat2)
-
-    gamma_cation = np.zeros((6, *Tc.shape))
-    ln_gamma_cation = np.zeros((6, *Tc.shape))
+    
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
-    # print (np.exp(ln_gammaCl), ln_gammaCl)
-    # XX = 99
+
+    ln_gamma_cation = Z_cation * Z_cation * (f_gamma + R) + Z_cation * S
     for cat in range(0, 6):
-        ln_gamma_cation[cat] = (
-            Z_cation[cat] * Z_cation[cat] * (f_gamma + R) + Z_cation[cat] * S
-        )
-        # if cat == XX:
-        #     print (ln_gamma_cation[cat], "init")
         for an in range(0, 7):
-            ln_gamma_cation[cat] = ln_gamma_cation[cat] + 2 * m_anion[an] * (
+            ln_gamma_cation[cat] += 2 * m_anion[an] * (
                 BMX[cat, an] + E_cat * CMX[cat, an]
             )
-            # if cat == XX:
-            #     print (ln_gamma_cation[cat], an, BMX[cat, an], E_cat * CMX[cat, an])
         for cat2 in range(0, 6):
-            ln_gamma_cation[cat] = ln_gamma_cation[cat] + m_cation[cat2] * (
-                2 * Theta_positive[cat, cat2]
-            )
-            # if cat == XX:
-            #     print (ln_gamma_cation[cat], cat2)
+            ln_gamma_cation[cat] += m_cation[cat2] * (2 * Theta_positive[cat, cat2])
         for cat2 in range(0, 6):
             for an in range(0, 7):
-                ln_gamma_cation[cat] = (
-                    ln_gamma_cation[cat]
-                    + m_cation[cat2] * m_anion[an] * Phi_PPN[cat, cat2, an]
+                ln_gamma_cation[cat] += (
+                    m_cation[cat2] * m_anion[an] * Phi_PPN[cat, cat2, an]
                 )
-                # if cat == XX:
-                #     print (ln_gamma_cation[cat], cat2, an)
         for an in range(0, 7):
             for an2 in range(an + 1, 7):
-                ln_gamma_cation[cat] = (
-                    ln_gamma_cation[cat]
+                ln_gamma_cation[cat] += (
                     + m_anion[an] * m_anion[an2] * Phi_NNP[an, an2, cat]
                 )
-                # if cat == XX:
-                #     print (ln_gamma_cation[cat], an, an2)
 
     gamma_anion = np.exp(ln_gamma_anion)
     gamma_cation = np.exp(ln_gamma_cation)
@@ -1664,66 +1623,66 @@ def gammaCO2_fn(Tc, m_an, m_cat):
 def calculate_gKs(Tc, Sal, mCa, mMg):
     Istr = 19.924 * Sal / (1000 - 1.005 * Sal)
    
-    cation_concs = np.array([
-        0.00000001,  # H ion; pH of about 8
-        0.4689674,  # Na Millero et al., 2008; Dickson OA-guide
-        0.0102077,  # K Millero et al., 2008; Dickson OA-guide
-        0.0528171,  # Mg Millero et al., 2008; Dickson OA-guide
-        0.0102821,  # Ca Millero et al., 2008; Dickson OA-guide
-        0.0000907  # Sr Millero et al., 2008; Dickson OA-guide
-    ])
+    # cation_concs = np.array([
+    #     0.00000001,  # H ion; pH of about 8
+    #     0.4689674,  # Na Millero et al., 2008; Dickson OA-guide
+    #     0.0102077,  # K Millero et al., 2008; Dickson OA-guide
+    #     0.0528171,  # Mg Millero et al., 2008; Dickson OA-guide
+    #     0.0102821,  # Ca Millero et al., 2008; Dickson OA-guide
+    #     0.0000907  # Sr Millero et al., 2008; Dickson OA-guide
+    # ])
 
-    m_cation = np.full(
-        (cation_concs.size, *Tc.shape),
-        reshaper(cation_concs, Tc)
-        )
+    # m_cation = np.full(
+    #     (cation_concs.size, *Tc.shape),
+    #     reshaper(cation_concs, Tc)
+    #     )
     
-    m_cation[3] = mMg
-    m_cation[4] = mCa
+    # m_cation[3] = mMg
+    # m_cation[4] = mCa
 
-    m_cation *= Sal / 35.  # salinity correction
+    # m_cation *= Sal / 35.  # salinity correction
 
-    anion_concs = np.array([
-        0.0000010,  # OH ion; pH of about 8
-        0.5458696,  # Cl Millero et al., 2008; Dickson OA-guide
-        0.0001008,  # BOH4 Millero et al., 2008; Dickson OA-guide; pH of about 8 -- borate,
-        0.0017177,  # HCO3 Millero et al., 2008; Dickson OA-guide
-        0.0282352 * 1e-6,  # HSO4 Millero et al., 2008; Dickson OA-guide
-        0.0002390,  # CO3 Millero et al., 2008; Dickson OA-guide
-        0.0282352  # SO4 Millero et al., 2008; Dickson OA-guide
-    ])
+    # anion_concs = np.array([
+    #     0.0000010,  # OH ion; pH of about 8
+    #     0.5458696,  # Cl Millero et al., 2008; Dickson OA-guide
+    #     0.0001008,  # BOH4 Millero et al., 2008; Dickson OA-guide; pH of about 8 -- borate,
+    #     0.0017177,  # HCO3 Millero et al., 2008; Dickson OA-guide
+    #     0.0282352 * 1e-6,  # HSO4 Millero et al., 2008; Dickson OA-guide
+    #     0.0002390,  # CO3 Millero et al., 2008; Dickson OA-guide
+    #     0.0282352  # SO4 Millero et al., 2008; Dickson OA-guide
+    # ])
 
-    m_anion = np.full(
-        (anion_concs.size, *Tc.shape),
-        reshaper(anion_concs, Tc)
-        ) * Sal / 35.  # salinity correction
+    # m_anion = np.full(
+    #     (anion_concs.size, *Tc.shape),
+    #     reshaper(anion_concs, Tc)
+    #     ) * Sal / 35.  # salinity correction
 
-    # m_cation = np.zeros((6, *Tc.shape))
-    # m_cation[0] = 0.00000001 * Sal / 35.0  # H ion; pH of about 8
-    # # Na Millero et al., 2008; Dickson OA-guide
-    # m_cation[1] = 0.4689674 * Sal / 35.0
-    # # K Millero et al., 2008; Dickson OA-guide
-    # m_cation[2] = 0.0102077 * Sal / 35.0
-    # m_cation[3] = mMg * Sal / 35.0  # Mg Millero et al., 2008; Dickson OA-guide
-    # m_cation[4] = mCa * Sal / 35.0  # Ca Millero et al., 2008; Dickson OA-guide
-    # # Sr Millero et al., 2008; Dickson OA-guide
-    # m_cation[5] = 0.0000907 * Sal / 35.0
+    m_cation = np.zeros((6, *Tc.shape))
+    m_cation[0] = 0.00000001 * Sal / 35.0  # H ion; pH of about 8
+    # Na Millero et al., 2008; Dickson OA-guide
+    m_cation[1] = 0.4689674 * Sal / 35.0
+    # K Millero et al., 2008; Dickson OA-guide
+    m_cation[2] = 0.0102077 * Sal / 35.0
+    m_cation[3] = mMg * Sal / 35.0  # Mg Millero et al., 2008; Dickson OA-guide
+    m_cation[4] = mCa * Sal / 35.0  # Ca Millero et al., 2008; Dickson OA-guide
+    # Sr Millero et al., 2008; Dickson OA-guide
+    m_cation[5] = 0.0000907 * Sal / 35.0
 
-    # m_anion = np.zeros((7, *Tc.shape))
-    # m_anion[0] = 0.0000010 * Sal / 35.0  # OH ion; pH of about 8
-    # # Cl Millero et al., 2008; Dickson OA-guide
-    # m_anion[1] = 0.5458696 * Sal / 35.0
-    # # BOH4 Millero et al., 2008; Dickson OA-guide; pH of about 8 -- borate,
-    # # not Btotal
-    # m_anion[2] = 0.0001008 * Sal / 35.0
-    # # HCO3 Millero et al., 2008; Dickson OA-guide
-    # m_anion[3] = 0.0017177 * Sal / 35.0
-    # # HSO4 Millero et al., 2008; Dickson OA-guide
-    # m_anion[4] = 0.0282352 * 1e-6 * Sal / 35.0
-    # # CO3 Millero et al., 2008; Dickson OA-guide
-    # m_anion[5] = 0.0002390 * Sal / 35.0
-    # # SO4 Millero et al., 2008; Dickson OA-guide
-    # m_anion[6] = 0.0282352 * Sal / 35.0
+    m_anion = np.zeros((7, *Tc.shape))
+    m_anion[0] = 0.0000010 * Sal / 35.0  # OH ion; pH of about 8
+    # Cl Millero et al., 2008; Dickson OA-guide
+    m_anion[1] = 0.5458696 * Sal / 35.0
+    # BOH4 Millero et al., 2008; Dickson OA-guide; pH of about 8 -- borate,
+    # not Btotal
+    m_anion[2] = 0.0001008 * Sal / 35.0
+    # HCO3 Millero et al., 2008; Dickson OA-guide
+    m_anion[3] = 0.0017177 * Sal / 35.0
+    # HSO4 Millero et al., 2008; Dickson OA-guide
+    m_anion[4] = 0.0282352 * 1e-6 * Sal / 35.0
+    # CO3 Millero et al., 2008; Dickson OA-guide
+    m_anion[5] = 0.0002390 * Sal / 35.0
+    # SO4 Millero et al., 2008; Dickson OA-guide
+    m_anion[6] = 0.0282352 * Sal / 35.0
 
     [
         gamma_cation,
