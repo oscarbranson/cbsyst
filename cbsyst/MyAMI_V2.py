@@ -1331,21 +1331,9 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     R = (m_anion * np.expand_dims(m_cation, 1) * BMX_apostroph).sum((0,1))
     S = (m_anion * np.expand_dims(m_cation, 1) * CMX).sum((0,1))
 
-    # vectorised calculation of below loop
-    cat, cat2 = np.triu_indices(6, 1)
-    ln_gamma_anion = (
-        Z_anion * Z_anion * (f_gamma + R) + Z_anion * S + 
-        (2 * np.expand_dims(m_cation, 1) * (BMX + E_cat * CMX)).sum(0) + 
-        (np.expand_dims(m_anion, 1) * 2 * Theta_negative).sum(0) + 
-        (np.expand_dims(m_anion, (0,2)) * np.expand_dims(m_cation, (0,1)) * Phi_NNP).sum(axis=(1,2)) +
-        (np.expand_dims(m_cation[cat], 1) * np.expand_dims(m_cation[cat2], 1) * Phi_PPN[cat, cat2]).sum(axis=0)
-    )  # TODO - this could probably be simplified further.
-
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
 
-
-    # The above is a vectorised version of:
-
+    # Original calculation loop for ln_gamma_anion:
     # ln_gamma_anion = Z_anion * Z_anion * (f_gamma + R) + Z_anion * S
     # for an in range(0, 7):
     #     for cat in range(0, 6):
@@ -1367,28 +1355,49 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     #                 m_cation[cat] * m_cation[cat2] * Phi_PPN[cat, cat2, an]
     #             )
     
+    # vectorised calculation:
+    cat, cat2 = np.triu_indices(6, 1)
+    ln_gamma_anion = (
+        Z_anion * Z_anion * (f_gamma + R) + Z_anion * S + 
+        (2 * np.expand_dims(m_cation, 1) * (BMX + E_cat * CMX)).sum(0) + 
+        (np.expand_dims(m_anion, 1) * 2 * Theta_negative).sum(0) + 
+        (np.expand_dims(m_anion, (0,2)) * np.expand_dims(m_cation, (0,1)) * Phi_NNP).sum(axis=(1,2)) +
+        (np.expand_dims(m_cation[cat], 1) * np.expand_dims(m_cation[cat2], 1) * Phi_PPN[cat, cat2]).sum(axis=0)
+    )  # TODO - this could probably be simplified further.
+    gamma_anion = np.exp(ln_gamma_anion)
+
+
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
 
-    ln_gamma_cation = Z_cation * Z_cation * (f_gamma + R) + Z_cation * S
-    for cat in range(0, 6):
-        for an in range(0, 7):
-            ln_gamma_cation[cat] += 2 * m_anion[an] * (
-                BMX[cat, an] + E_cat * CMX[cat, an]
-            )
-        for cat2 in range(0, 6):
-            ln_gamma_cation[cat] += m_cation[cat2] * (2 * Theta_positive[cat, cat2])
-        for cat2 in range(0, 6):
-            for an in range(0, 7):
-                ln_gamma_cation[cat] += (
-                    m_cation[cat2] * m_anion[an] * Phi_PPN[cat, cat2, an]
-                )
-        for an in range(0, 7):
-            for an2 in range(an + 1, 7):
-                ln_gamma_cation[cat] += (
-                    + m_anion[an] * m_anion[an2] * Phi_NNP[an, an2, cat]
-                )
+    # Original calculation loop for ln_gamma_cation:
+    # ln_gamma_cation = Z_cation * Z_cation * (f_gamma + R) + Z_cation * S
+    # for cat in range(0, 6):
+    #     for an in range(0, 7):
+    #         ln_gamma_cation[cat] += 2 * m_anion[an] * (
+    #             BMX[cat, an] + E_cat * CMX[cat, an]
+    #         )
+    #     for cat2 in range(0, 6):
+    #         ln_gamma_cation[cat] += m_cation[cat2] * (2 * Theta_positive[cat, cat2])
+    #     for cat2 in range(0, 6):
+    #         for an in range(0, 7):
+    #             ln_gamma_cation[cat] += (
+    #                 m_cation[cat2] * m_anion[an] * Phi_PPN[cat, cat2, an]
+    #             )
+    #     for an in range(0, 7):
+    #         for an2 in range(an + 1, 7):
+    #             ln_gamma_cation[cat] += (
+    #                 + m_anion[an] * m_anion[an2] * Phi_NNP[an, an2, cat]
+    #             )
 
-    gamma_anion = np.exp(ln_gamma_anion)
+    # vectorised calculation:
+    an, an2 = np.triu_indices(7, 1)
+    ln_gamma_cation = (
+        Z_cation * Z_cation * (f_gamma + R) + Z_cation * S +
+        (2 * np.expand_dims(m_anion, 0) * (BMX + E_cat * CMX)).sum(axis=1) +
+        (np.expand_dims(m_cation, 1) * (2 * Theta_positive)).sum(axis=0) +
+        (np.expand_dims(m_cation, (0,2)) * np.expand_dims(m_anion, (0,1)) * Phi_PPN).sum(axis=(1,2))+
+        (np.expand_dims(m_anion[an], 1) * np.expand_dims(m_anion[an2], 1) * Phi_NNP[an, an2]).sum(axis=0)
+    )  # TODO - this could probably be simplified further.
     gamma_cation = np.exp(ln_gamma_cation)
 
     # choice of pH-scale = total pH-scale [H]T = [H]F + [HSO4]
