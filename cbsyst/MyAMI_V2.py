@@ -1602,9 +1602,15 @@ def gammaCO2_fn(Tc, m_an, m_cat):
             + param_zetaCO2[1, ion, 4] * lnT
         )
 
-    ln_gammaCO2 = 0
-    for ion in range(0, 7):
-        ln_gammaCO2 = ln_gammaCO2 + m_ion[ion] * 2 * lamdaCO2[ion]
+    
+    # original calculation:
+    # ln_gammaCO2 = 0
+    # for ion in range(0, 7):
+    #     ln_gammaCO2 = ln_gammaCO2 + m_ion[ion] * 2 * lamdaCO2[ion]
+    
+    # vectorised calculation:
+    ln_gammaCO2 = (m_ion * 2 * lamdaCO2).sum(0)
+
     # for cat in range(0, 5):
     # ln_gammaCO2 = ln_gammaCO2 + m_ion[5] * m_ion[cat] * zetaCO2[0, cat] + m_ion[6] * m_ion[cat] * zetaCO2[1, cat]
 
