@@ -163,14 +163,14 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Return Pitzer params for given T (Kelvin).
     """
     if isinstance(T, (float, int)):
-        T = [T]
+        T = np.asanyarray(T)
 
-    Tinv = 1 / T
+    Tinv = 1. / T
     lnT = np.log(T)
     # ln_of_Tdiv29815 = np.log(T / 298.15)
-    Tpower2 = T ** 2
-    Tpower3 = T ** 3
-    Tpower4 = T ** 4
+    Tpower2 = T ** 2.
+    Tpower3 = T ** 3.
+    Tpower4 = T ** 4.
     Tabs = T - 298.15
 
     # PART 1 -- calculate thermodynamic pK's for acids, gases and complexes
@@ -1623,6 +1623,7 @@ def gammaCO2_fn(Tc, m_an, m_cat):
 def calculate_gKs(Tc, Sal, mCa, mMg):
     Istr = 19.924 * Sal / (1000 - 1.005 * Sal)
    
+    # print('new seawater definition')
     # cation_concs = np.array([
     #     0.00000001,  # H ion; pH of about 8
     #     0.4689674,  # Na Millero et al., 2008; Dickson OA-guide
@@ -1657,6 +1658,7 @@ def calculate_gKs(Tc, Sal, mCa, mMg):
     #     reshaper(anion_concs, Tc)
     #     ) * Sal / 35.  # salinity correction
 
+    # print('old seawater definition')
     m_cation = np.zeros((6, *Tc.shape))
     m_cation[0] = 0.00000001 * Sal / 35.0  # H ion; pH of about 8
     # Na Millero et al., 2008; Dickson OA-guide
