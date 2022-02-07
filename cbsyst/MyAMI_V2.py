@@ -1152,14 +1152,14 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     cation_charges = np.array([1, 1, 1, 2, 2, 2])
     Z_cation = np.full(
         (cation_charges.size, *Tc.shape),
-        np.expand_dims(cation_charges, (1,2))
+        reshaper(cation_charges, Tc)
         )
 
     # anion order: [OH, Cl, B(OH)4, HCO3, HSO4, CO3, SO4]
     anion_charges = np.array([-1, -1, -1, -1, -1, -2, -2])
     Z_anion = np.full(
         (anion_charges.size, *Tc.shape),
-        np.expand_dims(anion_charges, (1,2))
+        reshaper(anion_charges, Tc)
         )   
 
     ##########################################################################
@@ -1302,6 +1302,8 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
         -1 - (1 + 6 * sqrtI + 18 * Istr) * np.exp(-6 * sqrtI)
     )
 
+    # H-SO4
+    cat, an = 0, 6
     # BMX* is calculated with T-dependent alpha for H-SO4; see Clegg et al.,
     # 1994 --- Millero and Pierrot are completly off for this ion pair
     xClegg = (2 - 1842.843 * (1 / T - 1 / 298.15)) * sqrtI
@@ -1309,10 +1311,10 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     gClegg = 2 * (1 - (1 + xClegg) * np.exp(-xClegg)) / (xClegg * xClegg)
     # alpha = (2 - 1842.843 * (1 / T - 1 / 298.15)) see Table 6 in Clegg et al
     # 1994
-    BMX[0, 6] = beta_0[0, 6] + beta_1[0, 6] * gClegg
-    BMX_apostroph[0, 6] = beta_1[0, 6] / Istr * (np.exp(-xClegg) - gClegg)
+    BMX[cat, an] = beta_0[cat, an] + beta_1[cat, an] * gClegg
+    BMX_apostroph[cat, an] = beta_1[cat, an] / Istr * (np.exp(-xClegg) - gClegg)
 
-    CMX[0, 6] = C_phi[0, 6] + 4 * C1_HSO4 * (
+    CMX[cat, an] = C_phi[cat, an] + 4 * C1_HSO4 * (
         6
         - (6 + 2.5 * sqrtI * (6 + 3 * 2.5 * sqrtI + 2.5 * sqrtI * 2.5 * sqrtI))
         * np.exp(-2.5 * sqrtI)
@@ -1332,6 +1334,9 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
         for an in range(0, 7):
             R = R + m_anion[an] * m_cation[cat] * BMX_apostroph[cat, an]
             S = S + m_anion[an] * m_cation[cat] * CMX[cat, an]
+
+    print(m_anion.shape, m_cation.shape, BMX_apostroph.shape)
+    # Rn = np.sum()
 
     gamma_anion = np.zeros((7, *Tc.shape))
     # ln_gamma_anion = np.zeros((7, *Tc.shape))
@@ -1944,7 +1949,7 @@ fitfn_dict = {
 # Main (new) functions
 # --------------------------------------
 
-def MyAMI_Fcorr(XmCa=0.0102821, XmMg=0.0528171, TempC=None, Sal=None):
+def MyAMI_Fcorr(XmCa=0.0102821, XmMg=0.0528171, TempC=25., Sal=35.):
     """
     Calculate K correction factors as a fn of temp and salinity that can be applied to empirical Ks
 
@@ -1961,17 +1966,12 @@ def MyAMI_Fcorr(XmCa=0.0102821, XmMg=0.0528171, TempC=None, Sal=None):
     -------
     dict of gK grids for each parameter, where K_corr = K_cond * F_corr
     """
+
+    TempC = np.asanyarray(TempC)  # check TempC is an array
     
     # Modern (M) concentration (m) of Ca and Mg case T=25C, I=0.7, seawatercomposition
     MmMg = 0.0528171  # Mg Millero et al., 2008; Dickson OA-guide
     MmCa = 0.0102821  # Ca Millero et al., 2008; Dickson OA-guide
-    
-    # create list of Temp's and Sal's defining the grid for fitting pK's
-    if TempC is None or Sal is None:
-        n = 21
-        TempC = np.linspace(0, 40, n)  # 0-40degC in N steps
-        Sal = np.linspace(30, 40, n)  # 30-40 Sal
-        TempC, Sal = np.meshgrid(TempC, Sal)  # generate grid in matrix form
     
     # Calculate gK's for modern (mod) and experimental (x) seawater composition
     (
