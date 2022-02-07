@@ -1331,27 +1331,41 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     R = (m_anion * np.expand_dims(m_cation, 1) * BMX_apostroph).sum((0,1))
     S = (m_anion * np.expand_dims(m_cation, 1) * CMX).sum((0,1))
 
+    # vectorised calculation of below loop
+    cat, cat2 = np.triu_indices(6, 1)
+    ln_gamma_anion = (
+        Z_anion * Z_anion * (f_gamma + R) + Z_anion * S + 
+        (2 * np.expand_dims(m_cation, 1) * (BMX + E_cat * CMX)).sum(0) + 
+        (np.expand_dims(m_anion, 1) * 2 * Theta_negative).sum(0) + 
+        (np.expand_dims(m_anion, (0,2)) * np.expand_dims(m_cation, (0,1)) * Phi_NNP).sum(axis=(1,2)) +
+        (np.expand_dims(m_cation[cat], 1) * np.expand_dims(m_cation[cat2], 1) * Phi_PPN[cat, cat2]).sum(axis=0)
+    )  # TODO - this could probably be simplified further.
+
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
-    ln_gamma_anion = Z_anion * Z_anion * (f_gamma + R) + Z_anion * S
-    for an in range(0, 7):
-        for cat in range(0, 6):
-            ln_gamma_anion[an] += 2 * m_cation[cat] * (
-                BMX[cat, an] + E_cat * CMX[cat, an]
-            )
-        for an2 in range(0, 7):
-            ln_gamma_anion[an] += m_anion[an2] * (
-                2 * Theta_negative[an, an2]
-            )
-        for an2 in range(0, 7):
-            for cat in range(0, 6):
-                ln_gamma_anion[an] += (
-                    m_anion[an2] * m_cation[cat] * Phi_NNP[an, an2, cat]
-                )
-        for cat in range(0, 6):
-            for cat2 in range(cat + 1, 6):
-                ln_gamma_anion[an] += (
-                    m_cation[cat] * m_cation[cat2] * Phi_PPN[cat, cat2, an]
-                )
+
+
+    # The above is a vectorised version of:
+
+    # ln_gamma_anion = Z_anion * Z_anion * (f_gamma + R) + Z_anion * S
+    # for an in range(0, 7):
+    #     for cat in range(0, 6):
+    #         ln_gamma_anion[an] += 2 * m_cation[cat] * (
+    #             BMX[cat, an] + E_cat * CMX[cat, an]
+    #         )
+    #     for an2 in range(0, 7):
+    #         ln_gamma_anion[an] += m_anion[an2] * (
+    #             2 * Theta_negative[an, an2]
+    #         )
+    #     for an2 in range(0, 7):
+    #         for cat in range(0, 6):
+    #             ln_gamma_anion[an] += (
+    #                 m_anion[an2] * m_cation[cat] * Phi_NNP[an, an2, cat]
+    #             )
+    #     for cat in range(0, 6):
+    #         for cat2 in range(cat + 1, 6):
+    #             ln_gamma_anion[an] += (
+    #                 m_cation[cat] * m_cation[cat2] * Phi_PPN[cat, cat2, an]
+    #             )
     
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
 
