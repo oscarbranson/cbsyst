@@ -345,7 +345,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
         ]
     )
     # note that second value is changed to original ref (e-3 instead e01)
-    param_NaCl = reshaper(param_NaCl, T)
+    param_NaCl = expand_dims(param_NaCl, T)
     param_KCl = np.array(
         [
             [
@@ -371,7 +371,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             ],
         ]
     )
-    param_KCl = reshaper(param_KCl, T)
+    param_KCl = expand_dims(param_KCl, T)
     param_K2SO4 = np.array(
         [
             [
@@ -388,7 +388,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             [-1.88e-2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         ]
     )
-    param_K2SO4 = reshaper(param_K2SO4, T)
+    param_K2SO4 = expand_dims(param_K2SO4, T)
     param_CaCl2 = np.array(
         [
             [
@@ -414,7 +414,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             ],
         ]
     )
-    param_CaCl2 = reshaper(param_CaCl2, T)
+    param_CaCl2 = expand_dims(param_CaCl2, T)
     # [-3.03578731e1, 1.36264728e-2, 7.64582238e2, 5.50458061e0, -3.27377782e-1, 5.69405869e-6, -5.36231106e-1, 0]])
     # param_CaCl2_Spencer = np.array([[-5.62764702e1, -3.00771997e-2, 1.05630400e-5, 3.3331626e-9, 1.11730349e3, 1.06664743e1],
     #                                    [3.4787e0, -1.5417e-2, 3.1791e-5, 0, 0, 0],
@@ -435,7 +435,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             [0.059532, -2.49949e-04, 2.41831e-07],
         ]
     )
-    param_MgCl2 = reshaper(param_MgCl2, T)
+    param_MgCl2 = expand_dims(param_MgCl2, T)
     param_MgSO4 = np.array(
         [
             [-1.0282, 8.4790e-03, -2.33667e-05, 2.1575e-08, 6.8402e-04, 0.21499],
@@ -443,7 +443,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             [4.2164e-01, -3.5726e-03, 1.0040e-05, -9.3744e-09, -3.5160e-04, 2.7972e-02],
         ]
     )
-    param_MgSO4 = reshaper(param_MgSO4, T)
+    param_MgSO4 = expand_dims(param_MgSO4, T)
     # param_MgSO4 = np.array([[-1.0282, 8.4790E-03, -2.33667E-05, 2.1575E-08, 6.8402E-04, 0.21499],[-2.9596E-01, 9.4564E-04, 0.0, 0.0, 1.1028E-02, 3.3646], [1.0541E-01, -8.9316E-04, 2.51E-06, -2.3436E-09, -8.7899E-05, 0.006993]])  # Cparams corrected after Pabalan and Pitzer ... but note that column lists Cmx not Cphi(=4xCmx) ... MP98 is correct
 
     # Table A3 (Millero and Pierrot, 1998; after mutiple studies, at least valid 0 to 50degC)
@@ -455,14 +455,14 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             [0.003905, 0.0, 0.0],
         ]
     )  # corrected after Pierrot and Millero, 1997
-    param_NaHSO4 = reshaper(param_NaHSO4, T)
+    param_NaHSO4 = expand_dims(param_NaHSO4, T)
     param_NaHCO3 = np.array(
         [[0.028, 1.0e-3, -2.6e-5 / 2], [0.044, 1.1e-3, -4.3e-5 / 2], [0.0, 0.0, 0.0]]
     )  # corrected after Peiper and Pitzer 1982
     # param_Na2SO4 = np.array([[6.536438E-3, -30.197349, -0.20084955],
     #                             [0.8742642, -70.014123, 0.2962095],
     #                             [7.693706E-3, 4.5879201, 0.019471746]])  # corrected according to Hovey et al 1993; note also that alpha = 1.7, not 2
-    param_NaHCO3 = reshaper(param_NaHCO3, T)
+    param_NaHCO3 = expand_dims(param_NaHCO3, T)
     param_Na2SO4_Moller = np.array(
         [
             [
@@ -504,13 +504,13 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             [0.0052, 0.0, 0.0],
         ]
     )  # Peiper and Pitzer 1982
-    param_Na2CO3 = reshaper(param_Na2CO3, T)
+    param_Na2CO3 = expand_dims(param_Na2CO3, T)
     # XXXX check below if Haynes 2003 is being used.
 
     param_NaBOH4 = np.array(
         [[-0.051, 5.264e-3, 0.0], [0.0961, -1.068e-2, 0.0], [0.01498, -15.7e-4, 0.0]]
     )  # corrected after Simonson et al 1987 5th param should be e-2
-    param_NaBOH4 = reshaper(param_NaBOH4, T)
+    param_NaBOH4 = expand_dims(param_NaBOH4, T)
 
     # def Equation_Na2SO4_TabA3(T, ln_of_Tdiv29815, a):
     #     return (a[:, 0] + a[:, 1] * ((1 / T) - (1 / 298.15)) + a[:, 2] * ln_of_Tdiv29815)
@@ -519,11 +519,11 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     param_KHCO3 = np.array(
         [[-0.0107, 0.001, 0.0], [0.0478, 0.0011, 6.776e-21], [0.0, 0.0, 0.0]]
     )
-    param_KHCO3 = reshaper(param_KHCO3, T)
+    param_KHCO3 = expand_dims(param_KHCO3, T)
     param_K2CO3 = np.array(
         [[0.1288, 1.1e-3, -5.1e-6], [1.433, 4.36e-3, 2.07e-5], [0.0005, 0.0, 0.0]]
     )
-    param_K2CO3 = reshaper(param_K2CO3, T)
+    param_K2CO3 = expand_dims(param_K2CO3, T)
     param_KBOH4 = np.array(
         [
             [0.1469, 2.881e-3, 0.0],
@@ -531,18 +531,18 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             [-56.43 / 1000, -9.56e-3, 0.0],
         ]
     )  # corrected after Simonson et al 1988
-    param_KBOH4 = reshaper(param_KBOH4, T)
+    param_KBOH4 = expand_dims(param_KBOH4, T)
     # same function as TabA3 "Equation_TabA3andTabA4andTabA5(Tabs,a)"
 
     # Table A5 (Millero and Pierrot, 1998; after Simonson et al, 1987b; valid 5 - 55degC
     param_MgBOH42 = np.array(
         [[-0.623, 6.496e-3, 0.0], [0.2515, -0.01713, 0.0], [0.0, 0.0, 0.0]]
     )  # corrected after Simonson et al 1988 first param is negative
-    param_MgBOH42 = reshaper(param_MgBOH42, T)
+    param_MgBOH42 = expand_dims(param_MgBOH42, T)
     param_CaBOH42 = np.array(
         [[-0.4462, 5.393e-3, 0.0], [-0.868, -0.0182, 0.0], [0.0, 0.0, 0.0]]
     )
-    param_CaBOH42 = reshaper(param_CaBOH42, T)
+    param_CaBOH42 = expand_dims(param_CaBOH42, T)
     param_SrBOH42 = param_CaBOH42  # see Table A6
 
     # Table A7 (Millero and Pierrot, 1998; after multiple studies; valid 0 - 50degC
@@ -553,7 +553,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             [0.0041, 0.0638e-5, -0.944e-4],
         ]
     )
-    param_KOH = reshaper(param_KOH, T)
+    param_KOH = expand_dims(param_KOH, T)
     param_SrCl2 = np.array(
         [
             [0.28575, -0.18367e-5, 7.1e-4],
@@ -561,7 +561,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             [-0.0013, 0.0e-5, 0.0e-4],
         ]
     )
-    param_SrCl2 = reshaper(param_SrCl2, T)
+    param_SrCl2 = expand_dims(param_SrCl2, T)
 
     # Table A8 - - - Pitzer parameters unknown; beta's known for 25degC
     Equation_KHSO4 = np.array([-0.0003, 0.1735, 0.0])
@@ -601,7 +601,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             [-0.305156, 5.16e-4, 45.521540],
         ]
     )  # beta1 first param corrected to negative according to original reference (Campbell et al)
-    param_HCl = reshaper(param_HCl, T)
+    param_HCl = expand_dims(param_HCl, T)
     # param_HSO4 = np.array([[0.065, 0.134945, 0.022374, 7.2E-5],
     #                           [-15.009, -2.405945, 0.335839, -0.004379],
     #                           [0.008073, -0.113106, -0.003553, 3.57E-5]])  # XXXXX two equations for C
@@ -1162,14 +1162,14 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     cation_charges = np.array([1, 1, 1, 2, 2, 2])
     Z_cation = np.full(
         (cation_charges.size, *Tc.shape),
-        reshaper(cation_charges, Tc)
+        expand_dims(cation_charges, Tc)
         )
 
     # anion order: [OH, Cl, B(OH)4, HCO3, HSO4, CO3, SO4]
     anion_charges = np.array([-1, -1, -1, -1, -1, -2, -2])
     Z_anion = np.full(
         (anion_charges.size, *Tc.shape),
-        reshaper(anion_charges, Tc)
+        expand_dims(anion_charges, Tc)
         )   
 
     ##########################################################################
@@ -1646,10 +1646,10 @@ def gammaCO2_fn(Tc, m_an, m_cat):
     # ln_gammaB = m_ion[1] * m_ion[6] * 0.046  # tripple ion interaction Na-SO4
     # for ion in range(0, 7):
     #     ln_gammaB = ln_gammaB + m_ion[ion] * 2 * lamdaB[ion]
-
+    
     # vectorised calculation:
-    ln_gammaB = m_ion[1] * m_ion[6] * 0.046 + (m_ion * 2 * reshaper(lamdaB, m_ion)).sum(0)
-
+    ln_gammaB = m_ion[1] * m_ion[6] * 0.046 + (m_ion * 2 * match_dims(lamdaB, m_ion)).sum(0)
+    
     gammaB = np.exp(ln_gammaB)  # as according to Felmy and Wear 1986
     # print gammaB
 
@@ -1673,7 +1673,7 @@ def calculate_gKs(Tc, Sal, mCa, mMg):
 
     # m_cation = np.full(
     #     (cation_concs.size, *Tc.shape),
-    #     reshaper(cation_concs, Tc)
+    #     expand_dims(cation_concs, Tc)
     #     )
     
     # m_cation[3] = mMg
@@ -1693,7 +1693,7 @@ def calculate_gKs(Tc, Sal, mCa, mMg):
 
     # m_anion = np.full(
     #     (anion_concs.size, *Tc.shape),
-    #     reshaper(anion_concs, Tc)
+    #     expand_dims(anion_concs, Tc)
     #     ) * Sal / 35.  # salinity correction
 
     # print('old seawater definition')
@@ -1749,7 +1749,7 @@ def calculate_gKs(Tc, Sal, mCa, mMg):
     gK1 = 1 / gammaT_Ht / gammaT_HCO3 * gammaCO2
     gK2 = 1 / gammaT_Ht / gammaT_CO3 * gammaT_HCO3
     gKW = 1 / gammaT_Ht / gammaT_OH
-    gKB = 1 / gammaT_BOH4 / gammaT_Ht * (gammaB)
+    gKB = 1 / gammaT_BOH4 / gammaT_Ht * gammaB
     gK0 = 1 / gammaCO2 * gammaCO2gas
     gKHSO4 = 1 / gamma_anion[6] / gammaT_Ht * gamma_anion[4]
 
@@ -1758,15 +1758,22 @@ def calculate_gKs(Tc, Sal, mCa, mMg):
 
 # Helper functions
 # ----------------
-def reshaper(orig, target):
+def expand_dims(orig, target):
     """
     Adds additional dimensions to orig so it can be broadcast on target.
     """
-    on = orig.copy()
-    while on.ndim < (target.ndim + orig.ndim):
-        on = np.expand_dims(on, -1)
-    return on
+    return np.expand_dims(orig, tuple(range(orig.ndim, target.ndim + orig.ndim)))
+    
+    # on = orig.copy()
+    # while on.ndim < (target.ndim + orig.ndim):
+    #     on = np.expand_dims(on, -1)
+    # return on
 
+def match_dims(orig, target):
+    """
+    Adds additional dimensions to orig to match the number of dimensions in target.
+    """
+    return np.expand_dims(orig, tuple(range(orig.ndim, target.ndim)))
 
 start_params = {
     "K0": np.array([-60.2409, 93.4517, 23.3585, 0.023517, -0.023656, 0.0047036]),
@@ -2177,7 +2184,7 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
         gK0_X, 
         gKSO4_X
     ) = calculate_gKs(TempC_M, Sal_M, XmCa, XmMg)
-
+    
     # Calculate conditional K's predicted for seawater composition X
     X_dict = {
         "K0": K0_mod * gK0_X / gK0_mod,
