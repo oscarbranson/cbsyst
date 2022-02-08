@@ -158,6 +158,89 @@ def CalculateKcond(Tc, Sal):
 
 # Functions from PitzerParams.py
 # --------------------------------------
+
+# functions from inside SupplyParams
+
+def Equation_TabA1(T, Tinv, lnT, a):
+    return (
+        a[:, 0]
+        + a[:, 1] * T
+        + a[:, 2] * Tinv
+        + a[:, 3] * lnT
+        + a[:, 4] / (T - 263)
+        + a[:, 5] * T ** 2
+        + a[:, 6] / (680 - T)
+        + a[:, 7] / (T - 227)
+    )
+
+def EquationSpencer(T, lnT, q):
+    return (
+        q[:, 0]
+        + q[:, 1] * T
+        + q[:, 2] * T * T
+        + q[:, 3] * T ** 3
+        + q[:, 4] / T
+        + q[:, 5] * lnT
+    )
+
+def Equation1_TabA2(T, q):
+    return q[:, 0] + q[:, 1] * T + q[:, 2] * T ** 2
+
+def Equation2_TabA2(T, Tpower2, Tpower3, Tpower4, q):
+    return (
+        q[:, 0] * ((T / 2) + (88804) / (2 * T) - 298)
+        + q[:, 1] * ((Tpower2 / 6) + (26463592) / (3 * T) - (88804 / 2))
+        + q[:, 2] * (Tpower3 / 12 + 88804 * 88804 / (4 * T) - 26463592 / 3)
+        + q[:, 3]
+        * ((Tpower4 / 20) + 88804 * 26463592 / (5 * T) - 88804 * 88804 / 4)
+        + q[:, 4] * (298 - (88804 / T))
+        + q[:, 5]
+    )
+
+def Equation_TabA3andTabA4andTabA5(Tabs, a):
+    return a[:, 0] + a[:, 1] * Tabs + a[:, 2] * Tabs ** 2
+
+def Equation_TabA3andTabA4andTabA5_Simonson(T, a):
+    return a[:, 0] + a[:, 1] * (T - 298.15) + a[:, 2] * (T - 303.15) * (T - 303.15)
+
+def Equation_TabA7(T, P):
+    return (
+        P[:, 0]
+        + P[:, 1] * (8834524.639 - 88893.4225 * P[:, 2]) * (1 / T - (1 / 298.15))
+        + P[:, 1] / 6 * (T ** 2 - 88893.4225)
+    )
+
+def Equation_HCl(T, a):
+    return a[:, 0] + a[:, 1] * T + a[:, 2] / T
+
+def Equation_HSO4(T, a):
+    return a[:, 0] + (T - 328.15) * 1e-3 * (
+        a[:, 1] + (T - 328.15) * ((a[:, 2] / 2) + (T - 328.15) * (a[:, 3] / 6))
+    )
+
+def Equation_HSO4_Clegg94(T, a):
+    return a[:, 0] + (T - 328.15) * (
+        1e-3 * a[:, 1]
+        + (T - 328.15) * ((1e-3 * a[:, 2] / 2) + (T - 328.15) * 1e-3 * a[:, 3] / 6)
+    )
+
+def Eq_b2_MgSO4(T, Tpower2, Tpower3, Tpower4, q):
+    return (
+        q[0] * ((T / 2) + (88804) / (2 * T) - 298)
+        + q[1] * ((Tpower2 / 6) + (26463592) / (3 * T) - (88804 / 2))
+        + q[2] * (Tpower3 / 12 + 88804 * 88804 / (4 * T) - 26463592 / 3)
+        + q[3] * ((Tpower4 / 20) + 88804 * 26463592 / (5 * T) - 88804 * 88804 / 4)
+        + q[4] * (298 - (88804 / T))
+        + q[5]
+    )
+
+def Eq_b2_MgANDCaBOH42(T, a):
+    return a[0] + a[1] * (T - 298.15) + a[2] * (T - 303.15) * (T - 303.15)
+
+def Eq_b2_CaSO4(T, a):
+    return a[0] + a[1] * T
+
+
 def SupplyParams(T):  # assumes T [K] -- not T [degC]
     """
     Return Pitzer params for given T (Kelvin).
@@ -339,28 +422,6 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # param_CaSO4_Spencer = np.array([[0.795e-1, -0.122e-3, 0.5001e-5, 0.6704e-8, -0.15228e3, -0.6885e-2],
     #                                    [0.28945e1, 0.7434e-2, 0.5287e-5, -0.101513e-6, -0.208505e4, 0.1345e1]])
 
-    def Equation_TabA1(T, Tinv, lnT, a):
-        return (
-            a[:, 0]
-            + a[:, 1] * T
-            + a[:, 2] * Tinv
-            + a[:, 3] * lnT
-            + a[:, 4] / (T - 263)
-            + a[:, 5] * T ** 2
-            + a[:, 6] / (680 - T)
-            + a[:, 7] / (T - 227)
-        )
-
-    def EquationSpencer(T, lnT, q):
-        return (
-            q[:, 0]
-            + q[:, 1] * T
-            + q[:, 2] * T * T
-            + q[:, 3] * T ** 3
-            + q[:, 4] / T
-            + q[:, 5] * lnT
-        )
-
     # Table A2 (Millero and Pierrot, 1998; after Pabalan and Pitzer, 1987) valid 25 to 200degC
     param_MgCl2 = np.array(
         [
@@ -379,20 +440,6 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     )
     param_MgSO4 = reshaper(param_MgSO4, T)
     # param_MgSO4 = np.array([[-1.0282, 8.4790E-03, -2.33667E-05, 2.1575E-08, 6.8402E-04, 0.21499],[-2.9596E-01, 9.4564E-04, 0.0, 0.0, 1.1028E-02, 3.3646], [1.0541E-01, -8.9316E-04, 2.51E-06, -2.3436E-09, -8.7899E-05, 0.006993]])  # Cparams corrected after Pabalan and Pitzer ... but note that column lists Cmx not Cphi(=4xCmx) ... MP98 is correct
-
-    def Equation1_TabA2(T, q):
-        return q[:, 0] + q[:, 1] * T + q[:, 2] * T ** 2
-
-    def Equation2_TabA2(T, Tpower2, Tpower3, Tpower4, q):
-        return (
-            q[:, 0] * ((T / 2) + (88804) / (2 * T) - 298)
-            + q[:, 1] * ((Tpower2 / 6) + (26463592) / (3 * T) - (88804 / 2))
-            + q[:, 2] * (Tpower3 / 12 + 88804 * 88804 / (4 * T) - 26463592 / 3)
-            + q[:, 3]
-            * ((Tpower4 / 20) + 88804 * 26463592 / (5 * T) - 88804 * 88804 / 4)
-            + q[:, 4] * (298 - (88804 / T))
-            + q[:, 5]
-        )
 
     # Table A3 (Millero and Pierrot, 1998; after mutiple studies, at least valid 0 to 50degC)
     # param_NaHSO4 = np.array([[0.030101, -0.362E-3, 0.0], [0.818686, -0.019671, 0.0], [0.0, 0.0, 0.0]])  # corrected after Pierrot et al., 1997
@@ -460,9 +507,6 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     )  # corrected after Simonson et al 1987 5th param should be e-2
     param_NaBOH4 = reshaper(param_NaBOH4, T)
 
-    def Equation_TabA3andTabA4andTabA5(Tabs, a):
-        return a[:, 0] + a[:, 1] * Tabs + a[:, 2] * Tabs ** 2
-
     # def Equation_Na2SO4_TabA3(T, ln_of_Tdiv29815, a):
     #     return (a[:, 0] + a[:, 1] * ((1 / T) - (1 / 298.15)) + a[:, 2] * ln_of_Tdiv29815)
 
@@ -496,9 +540,6 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     param_CaBOH42 = reshaper(param_CaBOH42, T)
     param_SrBOH42 = param_CaBOH42  # see Table A6
 
-    def Equation_TabA3andTabA4andTabA5_Simonson(T, a):
-        return a[:, 0] + a[:, 1] * (T - 298.15) + a[:, 2] * (T - 303.15) * (T - 303.15)
-
     # Table A7 (Millero and Pierrot, 1998; after multiple studies; valid 0 - 50degC
     param_KOH = np.array(
         [
@@ -516,13 +557,6 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
         ]
     )
     param_SrCl2 = reshaper(param_SrCl2, T)
-
-    def Equation_TabA7(T, P):
-        return (
-            P[:, 0]
-            + P[:, 1] * (8834524.639 - 88893.4225 * P[:, 2]) * (1 / T - (1 / 298.15))
-            + P[:, 1] / 6 * (T ** 2 - 88893.4225)
-        )
 
     # Table A8 - - - Pitzer parameters unknown; beta's known for 25degC
     Equation_KHSO4 = np.array([-0.0003, 0.1735, 0.0])
@@ -571,19 +605,6 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     #                                  [0.00764778951, -0.314698817, -0.0211926525, 0.000586708222],
     #                                  [0.0, -0.176776695, -0.731035345, 0.0]])
 
-    def Equation_HCl(T, a):
-        return a[:, 0] + a[:, 1] * T + a[:, 2] / T
-
-    def Equation_HSO4(T, a):
-        return a[:, 0] + (T - 328.15) * 1e-3 * (
-            a[:, 1] + (T - 328.15) * ((a[:, 2] / 2) + (T - 328.15) * (a[:, 3] / 6))
-        )
-
-    def Equation_HSO4_Clegg94(T, a):
-        return a[:, 0] + (T - 328.15) * (
-            1e-3 * a[:, 1]
-            + (T - 328.15) * ((1e-3 * a[:, 2] / 2) + (T - 328.15) * 1e-3 * a[:, 3] / 6)
-        )
 
     ############################################################
     # beta_0, beta_1 and C_phi values arranged into arrays
@@ -694,28 +715,12 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     beta_2 = np.zeros((N_cations, N_anions, *T.shape))
     b2_param_MgSO4 = np.array([-13.764, 0.12121, -2.7642e-4, 0, -0.21515, -32.743])
 
-    def Eq_b2_MgSO4(T, Tpower2, Tpower3, Tpower4, q):
-        return (
-            q[0] * ((T / 2) + (88804) / (2 * T) - 298)
-            + q[1] * ((Tpower2 / 6) + (26463592) / (3 * T) - (88804 / 2))
-            + q[2] * (Tpower3 / 12 + 88804 * 88804 / (4 * T) - 26463592 / 3)
-            + q[3] * ((Tpower4 / 20) + 88804 * 26463592 / (5 * T) - 88804 * 88804 / 4)
-            + q[4] * (298 - (88804 / T))
-            + q[5]
-        )
-
     b2_param_MgBOH42 = np.array([-11.47, 0.0, -3.24e-3])
     b2_param_CaBOH42 = np.array([-15.88, 0.0, -2.858e-3])
-
-    def Eq_b2_MgANDCaBOH42(T, a):
-        return a[0] + a[1] * (T - 298.15) + a[2] * (T - 303.15) * (T - 303.15)
 
     b2_param_CaSO4 = np.array(
         [-55.7, 0]
     )  # Pitzer and Mayorga74 # [-1.29399287e2, 4.00431027e-1]) Moller88
-
-    def Eq_b2_CaSO4(T, a):
-        return a[0] + a[1] * T
 
     beta_2[3, 6] = Eq_b2_MgSO4(T, Tpower2, Tpower3, Tpower4, b2_param_MgSO4)
     beta_2[3, 2] = Eq_b2_MgANDCaBOH42(T, b2_param_MgBOH42)
@@ -2100,7 +2105,7 @@ def MyAMI_K_calc_direct(TempC=25.0, Sal=35.0, Ca=0.0102821, Mg=0.0528171, P=None
             Ks[k] *= prescorr(P, TempC, *ppar[k])
 
     return Bunch(Ks)
-    
+
 
 def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
     """
