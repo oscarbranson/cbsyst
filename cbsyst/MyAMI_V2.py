@@ -713,56 +713,42 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
 
     # H - Sr
     Theta_positive[[0,5], [5,0]] = 0.0591 + 4.5e-4 * Tabs
-    # Theta_positive[5, 0] = Theta_positive[0, 5]
 
     # H - Na
     Theta_positive[[0,1], [1,0]] = 0.03416 - 2.09e-4 * Tabs
-    # Theta_positive[1, 0] = Theta_positive[0, 1]
 
     # H - K
     Theta_positive[[0,2], [2,0]] = 0.005 - 2.275e-4 * Tabs
-    # Theta_positive[2, 0] = Theta_positive[0, 2]
 
     # H - Mg
     Theta_positive[[0,3], [3,0]] = 0.062 + 3.275e-4 * Tabs
-    # Theta_positive[3, 0] = Theta_positive[0, 3]
 
     # H - Ca
     Theta_positive[[0,4], [4,0]] = 0.0612 + 3.275e-4 * Tabs
-    # Theta_positive[4, 0] = Theta_positive[0, 4]
 
     # Na - K
     Theta_positive[[1,2], [2,1]] = -5.02312111e-2 + 14.0213141 / T
-    # Theta_positive[2, 1] = Theta_positive[1, 2]
 
     # Na - Mg
     Theta_positive[[1, 3], [3, 1]] = 0.07
-    # Theta_positive[3, 1] = 0.07
 
     # Na - Ca
     Theta_positive[[1, 4], [4, 1]] = 0.05
-    # Theta_positive[4, 1] = 0.05
 
     # K - Mg
     # Theta_positive[[2,3], [3,2]] = 0.0
-    # Theta_positive[3, 2] = 0.0
 
     # K - Ca
     Theta_positive[[2,4], [4,2]] = 0.1156
-    # Theta_positive[4, 2] = 0.1156
 
     # Sr - Na
     Theta_positive[[5,1], [1,5]] = 0.07
-    # Theta_positive[1, 5] = 0.07
 
     # Sr - K
     Theta_positive[[5,2], [2,5]] = 0.01
-    # Theta_positive[2, 5] = 0.01
 
     # Mg - Ca
     Theta_positive[[3,4], [4,3]] = 0.007
-    # Theta_positive[4, 3] = 0.007
-    # print 5.31274136 - 6.3424248e-3 * T - 9.83113847e2 / T, "ca - mg" #Spencer et al 1990
 
     # Theta of negative ions  OH-=0; Cl-=1; B(OH)4-=2; HCO3-=3; HSO4-=4; CO3-=5; SO4-=6;
     # Array to hold Theta values between ion two ions (for numbering see list above)
@@ -770,55 +756,42 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
 
     # Cl - SO4
     Theta_negative[[1,6], [6,1]] = 0.07
-    # Theta_negative[6, 1] = 0.07
 
     # Cl - CO3
     Theta_negative[[1,5], [5,1]] = -0.092  # corrected after Pitzer and Peiper 1982
-    # Theta_negative[5, 1] = -0.092  # corrected after Pitzer and Peiper 1982
 
     # Cl - HCO3
     Theta_negative[[1,3], [3,1]] = 0.0359
-    # Theta_negative[3, 1] = 0.0359
 
     # Cl - BOH4
     Theta_negative[[1,2], [2,1]] = -0.0323 - 0.42333 * 1e-4 * Tabs - 21.926 * 1e-6 * Tabs ** 2
-    # Theta_negative[2, 1] = Theta_negative[1, 2]
 
     # CO3 - HCO3
     # Theta_negative[[3,5], [5,3]] = 0.0
-    # Theta_negative[5, 3] = 0.0
 
     # SO4 - HSO4
     Theta_negative[[4,6], [6,4]] = 0.0
-    # Theta_negative[6, 4] = 0.0
 
     # OH - Cl
     Theta_negative[[0,1], [1,0]] = -0.05 + 3.125 * 1e-4 * Tabs - 8.362 * 1e-6 * Tabs ** 2
-    # Theta_negative[1, 0] = Theta_negative[0, 1]
 
     # SO4 - CO3
     Theta_negative[[5,6], [6,5]] = 0.02
-    # Theta_negative[6, 5] = 0.02
 
     # SO4 - HCO3
     Theta_negative[[3,6], [6,3]] = 0.01
-    # Theta_negative[6, 3] = 0.01
 
     # SO4 - BOH4
     Theta_negative[[2,6], [6,2]] = -0.012
-    # Theta_negative[6, 2] = -0.012
 
     # HSO4 - Cl
     Theta_negative[[1,4], [4,1]] = -0.006
-    # Theta_negative[4, 1] = -0.006
 
     # OH - SO4
     Theta_negative[[0,6], [6,0]] = -0.013
-    # Theta_negative[6, 0] = -0.013
 
     # CO3 - OH #http: / /www.aim.env.uea.ac.uk / aim / accent4 / parameters.html
     Theta_negative[[3,0], [0,3]] = 0.1
-    # Theta_negative[0, 3] = 0.1
 
     # Phi
     # positive ions H+=0; Na+=1; K+=2; Mg2+=3; Ca2+=4; Sr2+=5
@@ -829,90 +802,70 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
 
     # Na - K-Cl
     Phi_PPN[[1,2], [2,1], 1] = 1.34211308e-2 - 5.10212917 / T
-    # Phi_PPN[2, 1, 1] = Phi_PPN[1, 2, 1]
 
     # Na - K-SO4
     Phi_PPN[[1,2], [2,1], 6] = 3.48115174e-2 - 8.21656777 / T
-    # Phi_PPN[2, 1, 6] = Phi_PPN[1, 2, 6]
 
     # Na - Mg - Cl
     Phi_PPN[[1,3], [3,1], 1] = 0.0199 - 9.51 / T
-    # Phi_PPN[3, 1, 1] = Phi_PPN[1, 3, 1]
 
     # Na - Ca - Cl
     Phi_PPN[[1,4], [4,1], 1] = (-7.6398 - 1.2990e-2 * T + 1.1060e-5 * T**2 + 1.8475 * lnT)  # Spencer et al 1990 # -0.003
-    # Phi_PPN[4, 1, 1] = Phi_PPN[1, 4, 1]
-    # print -7.6398 -1.2990e-2 * T + 1.1060e-5 * T*T + 1.8475 * lnT
 
     # Na - Ca - SO4
     Phi_PPN[[1,4], [4,1], 6] = -0.012
-    # Phi_PPN[4, 1, 6] = Phi_PPN[1, 4, 6]
 
     # K - Mg - Cl
     Phi_PPN[[2,3], [3,2], 1] = 0.02586 - 14.27 / T
-    # Phi_PPN[3, 2, 1] = Phi_PPN[2, 3, 1]
 
     # K - Ca - Cl
     Phi_PPN[[2,4], [4,2], 1] = 0.047627877 - 27.0770507 / T
-    # Phi_PPN[4, 2, 1] = Phi_PPN[2, 4, 1]
 
     # K - Ca - SO4
     # Phi_PPN[[2,4], [4,2], 6] = 0.0
-    # Phi_PPN[4, 2, 6] = 0.0
 
     # H - Sr - Cl
     Phi_PPN[[0,5], [5,0], 1] = 0.0054 - 2.1e-4 * Tabs
-    # Phi_PPN[5, 0, 1] = Phi_PPN[0, 5, 1]
 
     # H - Mg - Cl
     Phi_PPN[[0,3], [3,0], 1] = 0.001 - 7.325e-4 * Tabs
-    # Phi_PPN[3, 0, 1] = Phi_PPN[0, 3, 1]
 
     # H - Ca - Cl
     Phi_PPN[[0,4], [4,0], 1] = 0.0008 - 7.25e-4 * Tabs
-    # Phi_PPN[4, 0, 1] = Phi_PPN[0, 4, 1]
 
     # Sr - Na - Cl
     Phi_PPN[[5,1], [1,5], 1] = -0.015
-    # Phi_PPN[1, 5, 1] = -0.015
 
     # Sr - K-Cl
     Phi_PPN[[5,2], [2,5], 1] = -0.015
-    # Phi_PPN[2, 5, 1] = -0.015
 
     # Na - Mg - SO4
     Phi_PPN[[1,3], [3,1], 6] = -0.015
-    # Phi_PPN[3, 1, 6] = -0.015
 
     # K - Mg - SO4
     Phi_PPN[[2,3], [3,2], 6] = -0.048
-    # Phi_PPN[3, 2, 6] = -0.048
 
     # Mg - Ca - Cl
     Phi_PPN[[3,4], [4,3], 1] = 4.15790220e1 + 1.30377312e-2 * T - 9.81658526e2 / T - 7.4061986 * lnT  # Spencer et al 1990 # - 0.012
-    # Phi_PPN[4, 3, 1] = Phi_PPN[3, 4, 1]
-    # print 4.15790220e1 + 1.30377312e-2 * T -9.81658526e2 / T -7.4061986 * lnT
 
     # Mg - Ca - SO4
     Phi_PPN[[3,4], [4,3], 6] = 0.024
-    # Phi_PPN[4, 3, 6] = 0.024
 
     # H - Na - Cl
     Phi_PPN[[0,1], [1,0], 1] = 0.0002
-    # Phi_PPN[1, 0, 1] = 0.0002
 
     # H - Na - SO4
     # Phi_PPN[[0,1], [1,0], 6] = 0.0
-    # Phi_PPN[1, 0, 6] = 0.0
 
     # H - K-Cl
     Phi_PPN[[0,2], [2,0], 1] = -0.011
-    # Phi_PPN[2, 0, 1] = -0.011
 
     # H - K-SO4
     Phi_PPN[[0,2], [2,0], 6] = 0.197
-    # Phi_PPN[[0,2], [2,0], 1] = 0.197  # typo in original - doesn't seem to make any difference?
-    # Phi_PPN[2, 0, 1] = 0.197
+    # Phi_PPN[[0,2], [2,0], 1] = 0.197  # typo in original
+    # this overwrites H-K-Cl with H-K-SO4 parameter, and leaves out H-K-SO4 parameter
+    # Doesn't seem to make much difference for [Ca] and [Mg], but may be important if
+    # changing [SO4]?
 
     # Phi_PPN holds the values for anion - anion - cation
     # Array to hold Theta values between ion two ions (for numbering see list above)
@@ -920,99 +873,75 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
 
     # Cl - SO4 - Na
     Phi_NNP[[1,6], [6,1], 1] = -0.009
-    # Phi_NNP[6, 1, 1] = -0.009
 
     # Cl - SO4 - K
     Phi_NNP[[1,6], [6,1], 2] = -0.21248147 + 37.5619614 / T + 2.8469833 * 1e-3 * T
-    # Phi_NNP[6, 1, 2] = Phi_NNP[1, 6, 2]
 
     # Cl - SO4 - Ca
     Phi_NNP[[1,6], [6,1], 4] = -0.018
-    # Phi_NNP[6, 1, 4] = -0.018
 
     # Cl - CO3 - Ca
     Phi_NNP[[1,5], [5,1], 4] = 0.016
-    # Phi_NNP[5, 1, 4] = 0.016
 
     # Cl - HCO3 - Na
     Phi_NNP[[1,3], [3,1], 1] = -0.0143
-    # Phi_NNP[3, 1, 1] = -0.0143
 
     # Cl - BOH4 - Na
     Phi_NNP[[1,2], [2,1], 1] = -0.0132
-    # Phi_NNP[2, 1, 1] = -0.0132
 
     # Cl - BOH4 - Mg
     Phi_NNP[[1,2], [2,1], 3] = -0.235
-    # Phi_NNP[2, 1, 3] = -0.235
 
     # Cl - BOH4 - Ca
     Phi_NNP[[1,2], [2,1], 4] = -0.8
-    # Phi_NNP[2, 1, 4] = -0.8
 
     # HSO4 - SO4 - Na
     # Phi_NNP[[4,6], [6,4], 1] = 0.0
-    # Phi_NNP[6, 4, 1] = 0.0
 
     # CO3 - HCO3 - Na
     # Phi_NNP[[3,5], [5,3], 1] = 0.0
-    # Phi_NNP[5, 3, 1] = 0.0
 
     # CO3 - HCO3 - K
     # Phi_NNP[[3,5], [5,3], 2] = 0.0
-    # Phi_NNP[5, 3, 2] = 0.0
 
     # Cl - SO4 - Mg
     Phi_NNP[[1,6], [6,1], 3] = -0.004
-    # Phi_NNP[6, 1, 3] = -0.004
 
     # Cl - HCO3 - Mg
     Phi_NNP[[1,3], [3,1], 3] = -0.0196
-    # Phi_NNP[3, 1, 3] = -0.0196
 
     # SO4 - CO3 - Na
     Phi_NNP[[6,5], [5,6], 1] = -0.005
-    # Phi_NNP[5, 6, 1] = -0.005
 
     # SO4 - CO3 - K
     Phi_NNP[[6,5], [5,6], 2] = -0.009
-    # Phi_NNP[5, 6, 2] = -0.009
 
     # SO4 - HCO3 - Na
     Phi_NNP[[6,3], [3,6], 1] = -0.005
-    # Phi_NNP[3, 6, 1] = -0.005
 
     # SO4 - HCO3 - Mg
     Phi_NNP[[6,3], [3,6], 3] = -0.161
-    # Phi_NNP[3, 6, 3] = -0.161
 
     # HSO4 - Cl - Na
     Phi_NNP[[4,1], [1,4], 1] = -0.006
-    # Phi_NNP[1, 4, 1] = -0.006
 
     # HSO4 - SO4 - K
     Phi_NNP[[4,6], [6,4], 2] = -0.0677
-    # Phi_NNP[6, 4, 2] = -0.0677
 
     # OH - Cl - Na
     Phi_NNP[[0,1], [1,0], 1] = -0.006
-    # Phi_NNP[1, 0, 1] = -0.006
 
     # OH - Cl - K
     Phi_NNP[[0,1], [1,0], 2] = -0.006
-    # Phi_NNP[1, 0, 2] = -0.006
 
     # OH - Cl - Ca
     Phi_NNP[[0,1], [1,0], 4] = -0.025
-    # Phi_NNP[1, 0, 4] = -0.025
 
     # OH - SO4 - Na
     Phi_NNP[[0,6], [6,0], 1] = -0.009
-    # Phi_NNP[6, 0, 1] = -0.009
 
     # OH - SO4 - K
     Phi_NNP[[0,6], [6,0], 2] = -0.05
-    # Phi_NNP[6, 0, 2] = -0.05
 
     return (
         beta_0,
