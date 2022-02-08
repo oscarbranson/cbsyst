@@ -463,6 +463,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     #                             [0.8742642, -70.014123, 0.2962095],
     #                             [7.693706E-3, 4.5879201, 0.019471746]])  # corrected according to Hovey et al 1993; note also that alpha = 1.7, not 2
     param_NaHCO3 = expand_dims(param_NaHCO3, T)
+
     param_Na2SO4_Moller = np.array(
         [
             [
@@ -497,18 +498,18 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # XXXXX - - > need to go to the calculation of beta's (to switch Hovey / Moller) and of B et al (to switch alpha1
 
     # param_Na2CO3 = np.array([[0.0362, 1.79E-3, 1.694E-21], [1.51, 2.05E-3, 1.626E-19], [0.0052, 0.0, 0.0]])  # Millero and Pierrot referenced to Peiper and Pitzer
-    param_Na2CO3 = np.array(
-        [
+    param_Na2CO3 = np.array([
             [0.0362, 1.79e-3, -4.22e-5 / 2],
             [1.51, 2.05e-3, -16.8e-5 / 2],
             [0.0052, 0.0, 0.0],
-        ]
-    )  # Peiper and Pitzer 1982
+        ])  # Peiper and Pitzer 1982
     param_Na2CO3 = expand_dims(param_Na2CO3, T)
     # XXXX check below if Haynes 2003 is being used.
 
-    param_NaBOH4 = np.array(
-        [[-0.051, 5.264e-3, 0.0], [0.0961, -1.068e-2, 0.0], [0.01498, -15.7e-4, 0.0]]
+    param_NaBOH4 = np.array([
+        [-0.051, 5.264e-3, 0.0],
+        [0.0961, -1.068e-2, 0.0],
+        [0.01498, -15.7e-4, 0.0]]
     )  # corrected after Simonson et al 1987 5th param should be e-2
     param_NaBOH4 = expand_dims(param_NaBOH4, T)
 
@@ -516,55 +517,62 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     #     return (a[:, 0] + a[:, 1] * ((1 / T) - (1 / 298.15)) + a[:, 2] * ln_of_Tdiv29815)
 
     # Table A4 (Millero and Pierrot, 1998; after mutiple studies, at least valid 5 to 45degC)
-    param_KHCO3 = np.array(
-        [[-0.0107, 0.001, 0.0], [0.0478, 0.0011, 6.776e-21], [0.0, 0.0, 0.0]]
-    )
+    param_KHCO3 = np.array([
+        [-0.0107, 0.001, 0.0],
+        [0.0478, 0.0011, 6.776e-21],
+        [0.0, 0.0, 0.0]
+        ])
     param_KHCO3 = expand_dims(param_KHCO3, T)
-    param_K2CO3 = np.array(
-        [[0.1288, 1.1e-3, -5.1e-6], [1.433, 4.36e-3, 2.07e-5], [0.0005, 0.0, 0.0]]
-    )
+
+    param_K2CO3 = np.array([
+        [0.1288, 1.1e-3, -5.1e-6],
+        [1.433, 4.36e-3, 2.07e-5],
+        [0.0005, 0.0, 0.0]
+        ])
     param_K2CO3 = expand_dims(param_K2CO3, T)
-    param_KBOH4 = np.array(
-        [
+
+    param_KBOH4 = np.array([
             [0.1469, 2.881e-3, 0.0],
             [-0.0989, -6.876e-3, 0.0],
             [-56.43 / 1000, -9.56e-3, 0.0],
-        ]
-    )  # corrected after Simonson et al 1988
+        ])  # corrected after Simonson et al 1988
     param_KBOH4 = expand_dims(param_KBOH4, T)
     # same function as TabA3 "Equation_TabA3andTabA4andTabA5(Tabs,a)"
 
     # Table A5 (Millero and Pierrot, 1998; after Simonson et al, 1987b; valid 5 - 55degC
-    param_MgBOH42 = np.array(
-        [[-0.623, 6.496e-3, 0.0], [0.2515, -0.01713, 0.0], [0.0, 0.0, 0.0]]
-    )  # corrected after Simonson et al 1988 first param is negative
+    param_MgBOH42 = np.array([
+        [-0.623, 6.496e-3, 0.0],
+        [0.2515, -0.01713, 0.0],
+        [0.0, 0.0, 0.0]
+        ])  # corrected after Simonson et al 1988 first param is negative
     param_MgBOH42 = expand_dims(param_MgBOH42, T)
-    param_CaBOH42 = np.array(
-        [[-0.4462, 5.393e-3, 0.0], [-0.868, -0.0182, 0.0], [0.0, 0.0, 0.0]]
-    )
+
+    param_CaBOH42 = np.array([
+        [-0.4462, 5.393e-3, 0.0], 
+        [-0.868, -0.0182, 0.0], 
+        [0.0, 0.0, 0.0]
+        ])
     param_CaBOH42 = expand_dims(param_CaBOH42, T)
     param_SrBOH42 = param_CaBOH42  # see Table A6
 
     # Table A7 (Millero and Pierrot, 1998; after multiple studies; valid 0 - 50degC
-    param_KOH = np.array(
-        [
+    param_KOH = np.array([
             [0.1298, -0.946e-5, 9.914e-4],
             [0.32, -2.59e-5, 11.86e-4],
             [0.0041, 0.0638e-5, -0.944e-4],
-        ]
-    )
+        ])
     param_KOH = expand_dims(param_KOH, T)
-    param_SrCl2 = np.array(
-        [
+
+    param_SrCl2 = np.array([
             [0.28575, -0.18367e-5, 7.1e-4],
             [1.66725, 0.0e-5, 28.425e-4],
             [-0.0013, 0.0e-5, 0.0e-4],
-        ]
-    )
+        ])
     param_SrCl2 = expand_dims(param_SrCl2, T)
 
     # Table A8 - - - Pitzer parameters unknown; beta's known for 25degC
     Equation_KHSO4 = np.array([-0.0003, 0.1735, 0.0])
+
     # Equation_MgHSO42 = np.array([0.4746, 1.729, 0.0])  #  XX no Cphi #from Harvie et al 1984 as referenced in MP98
     Equation_MgHSO42 = np.array(
         [
@@ -575,33 +583,26 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     )  # from Pierrot and Millero 1997 as used in the Excel file
 
     # Equation_MgHCO32 = np.array([0.329, 0.6072, 0.0])  # Harvie et al 1984
-    Equation_MgHCO32 = np.array(
-        [0.03, 0.8, 0.0]
-    )  # Millero and Pierrot redetermined after Thurmond and Millero 1982
+    Equation_MgHCO32 = np.array([0.03, 0.8, 0.0])  # Millero and Pierrot redetermined after Thurmond and Millero 1982
     Equation_CaHSO42 = np.array([0.2145, 2.53, 0.0])
     # Equation_CaHCO32 = np.array([0.4, 2.977, 0.0])  # Harvie et al. 1984  - ERRONEOUS, see comments by Zeebe and response by Hain
     Equation_CaHCO32 = np.array([0.2, 0.3, 0])  # He and Morse 1993 after Pitzeretal85
-    Equation_CaOH2 = np.array(
-        [-0.1747, -0.2303, -5.72]
-    )  # according to Harvie84, the -5.72 should be for beta2, not Cphi (which is zero) -- but likely typo in original ref since 2:1 electrolytes don't usually have a beta2
+    Equation_CaOH2 = np.array([-0.1747, -0.2303, -5.72])  # according to Harvie84, the -5.72 should be for beta2, not Cphi (which is zero) -- but likely typo in original ref since 2:1 electrolytes don't usually have a beta2
     Equation_SrHSO42 = Equation_CaHSO42
     Equation_SrHCO32 = Equation_CaHCO32
     Equation_SrOH2 = Equation_CaOH2
     # Equation_MgOHCl = np.array([-0.1, 1.658, 0.0])
-    Equation_NaOH = np.array(
-        [0.0864, 0.253, 0.0044]
-    )  # Rai et al 2002 ref to Pitzer91(CRC Press)
+    Equation_NaOH = np.array([0.0864, 0.253, 0.0044])  # Rai et al 2002 ref to Pitzer91(CRC Press)
     Equation_CaSO4_PnM74 = np.array([0.2, 2.65, 0])  # Pitzer and Mayorga74
 
     # Table A9 - - - (Millero and Pierrot, 1998; after multiple studies; valid 0 - 50degC
-    param_HCl = np.array(
-        [
+    param_HCl = np.array([
             [1.2859, -2.1197e-3, -142.58770],
             [-4.4474, 8.425698e-3, 665.7882],
             [-0.305156, 5.16e-4, 45.521540],
-        ]
-    )  # beta1 first param corrected to negative according to original reference (Campbell et al)
+        ])  # beta1 first param corrected to negative according to original reference (Campbell et al)
     param_HCl = expand_dims(param_HCl, T)
+
     # param_HSO4 = np.array([[0.065, 0.134945, 0.022374, 7.2E-5],
     #                           [-15.009, -2.405945, 0.335839, -0.004379],
     #                           [0.008073, -0.113106, -0.003553, 3.57E-5]])  # XXXXX two equations for C
@@ -609,6 +610,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     #                                  [-1.06641231, -74.6840429, -2.26268944, -0.0352968547],
     #                                  [0.00764778951, -0.314698817, -0.0211926525, 0.000586708222],
     #                                  [0.0, -0.176776695, -0.731035345, 0.0]])
+
 
 
     ############################################################
