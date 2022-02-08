@@ -1471,7 +1471,7 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
 
 # Functions from gammaNeutral.py
 # --------------------------------------
-def gammaCO2_fn(Tc, m_an, m_cat):
+def gammaCO2_gammaB_fn(Tc, m_an, m_cat):
     T = Tc + 273.15
     lnT = np.log(T)
 
@@ -1742,7 +1742,7 @@ def calculate_gKs(Tc, Sal, mCa, mMg):
     gammaT_Ht = gamma_cation[0] * alpha_Ht
     gammaT_Ca = gamma_cation[4]
 
-    [gammaCO2, gammaCO2gas, gammaB] = gammaCO2_fn(Tc, m_anion, m_cation)
+    [gammaCO2, gammaCO2gas, gammaB] = gammaCO2_gammaB_fn(Tc, m_anion, m_cation)
 
     gKspC = 1 / gammaT_Ca / gammaT_CO3
     gKspA = 1 / gammaT_Ca / gammaT_CO3
