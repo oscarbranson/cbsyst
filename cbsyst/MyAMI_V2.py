@@ -223,6 +223,17 @@ def Equation_HSO4(T, a):
         a[:, 1] + (T - 328.15) * ((a[:, 2] / 2) + (T - 328.15) * (a[:, 3] / 6))
     )
 
+def Equation_Na2SO4_Moller(T, lnT, a):
+    return (
+        a[:,0] +
+        a[:,1] * T +
+        a[:,2] / T +
+        a[:,3] * lnT +
+        a[:,4] / (T - 263) +
+        a[:,5] / T**2 +
+        a[:,6] / (680. - T)
+    )
+
 def Equation_HSO4_Clegg94(T, a):
     return a[:, 0] + (T - 328.15) * (
         1e-3 * a[:, 1]
@@ -249,6 +260,11 @@ def Eq_b2_CaSO4(T, a):
 def SupplyParams(T):  # assumes T [K] -- not T [degC]
     """
     Return Pitzer params for given T (Kelvin).
+    
+    Parameters
+    ----------
+    T : array-like
+        Temperature in Kelvin
     """
     if isinstance(T, (float, int)):
         T = np.asanyarray(T)
@@ -346,6 +362,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     )
     # note that second value is changed to original ref (e-3 instead e01)
     param_NaCl = expand_dims(param_NaCl, T)
+    
     param_KCl = np.array(
         [
             [
@@ -372,6 +389,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
         ]
     )
     param_KCl = expand_dims(param_KCl, T)
+    
     param_K2SO4 = np.array(
         [
             [
@@ -389,6 +407,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
         ]
     )
     param_K2SO4 = expand_dims(param_K2SO4, T)
+    
     param_CaCl2 = np.array(
         [
             [
@@ -436,6 +455,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
         ]
     )
     param_MgCl2 = expand_dims(param_MgCl2, T)
+    
     param_MgSO4 = np.array(
         [
             [-1.0282, 8.4790e-03, -2.33667e-05, 2.1575e-08, 6.8402e-04, 0.21499],
@@ -456,44 +476,48 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
         ]
     )  # corrected after Pierrot and Millero, 1997
     param_NaHSO4 = expand_dims(param_NaHSO4, T)
-    param_NaHCO3 = np.array(
-        [[0.028, 1.0e-3, -2.6e-5 / 2], [0.044, 1.1e-3, -4.3e-5 / 2], [0.0, 0.0, 0.0]]
-    )  # corrected after Peiper and Pitzer 1982
+    
+    param_NaHCO3 = np.array([
+        [0.028, 1.0e-3, -2.6e-5 / 2],
+        [0.044, 1.1e-3, -4.3e-5 / 2],
+        [0.0, 0.0, 0.0]
+        ])  # corrected after Peiper and Pitzer 1982
+    param_NaHCO3 = expand_dims(param_NaHCO3, T)
+
     # param_Na2SO4 = np.array([[6.536438E-3, -30.197349, -0.20084955],
     #                             [0.8742642, -70.014123, 0.2962095],
     #                             [7.693706E-3, 4.5879201, 0.019471746]])  # corrected according to Hovey et al 1993; note also that alpha = 1.7, not 2
-    param_NaHCO3 = expand_dims(param_NaHCO3, T)
-
-    param_Na2SO4_Moller = np.array(
-        [
+    param_Na2SO4_Moller = np.array([
             [
-                81.6920027
-                + 0.0301104957 * T
-                - 2321.93726 / T
-                - 14.3780207 * lnT
-                - 0.666496111 / (T - 263)
-                - 1.03923656e-05 * T ** 2
+                81.6920027,
+                0.0301104957,
+                -2321.93726,
+                -14.3780207,
+                -0.666496111,
+                -1.03923656e-05,
+                0,
             ],
             [
-                1004.63018
-                + 0.577453682 * T
-                - 21843.4467 / T
-                - 189.110656 * lnT
-                - 0.2035505488 / (T - 263)
-                - 0.000323949532 * T ** 2
-                + 1467.72243 / (680 - T)
+                1004.63018,
+                0.577453682,
+                -21843.4467,
+                -189.110656,
+                -0.2035505488,
+                -0.000323949532,
+                1467.72243,
             ],
             [
-                -80.7816886
-                - 0.0354521126 * T
-                + 2024.3883 / T
-                + 14.619773 * lnT
-                - 0.091697474 / (T - 263)
-                + 1.43946005e-05 * T ** 2
-                - 2.42272049 / (680 - T)
-            ],
+                -80.7816886,
+                -0.0354521126,
+                2024.3883,
+                14.619773,
+                -0.091697474,
+                1.43946005e-05,
+                -2.42272049,
+            ]
         ]
     )
+    param_Na2SO4_Moller = expand_dims(param_Na2SO4_Moller, T)
     # Moller 1988 parameters as used in Excel MIAMI code !!!!!! careful this formula assumes alpha1=2 as opposed to alpha1=1.7 for the Hovey parameters
     # XXXXX - - > need to go to the calculation of beta's (to switch Hovey / Moller) and of B et al (to switch alpha1
 
@@ -642,7 +666,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     [beta_0[1, 4], beta_1[1, 4], C_phi[1, 4]] = Equation_TabA3andTabA4andTabA5(Tabs, param_NaHSO4)  # Na-HSO4
     [beta_0[1, 5], beta_1[1, 5], C_phi[1, 5]] = Equation_TabA3andTabA4andTabA5(Tabs, param_Na2CO3)  # Na-CO3 
     # [beta_0[1, 6], beta_1[1, 6], C_phi[1, 6]] = Equation_Na2SO4_TabA3(T, ln_of_Tdiv29815, param_Na2SO4)  # Na-SO4
-    [beta_0[1, 6], beta_1[1, 6], C_phi[1, 6]] = param_Na2SO4_Moller  # Na-SO4
+    [beta_0[1, 6], beta_1[1, 6], C_phi[1, 6]] = Equation_Na2SO4_Moller(T, lnT, param_Na2SO4_Moller)  # Na-SO4
 
     # K = cation
     [beta_0[2, 0], beta_1[2, 0], C_phi[2, 0]] = Equation_TabA7(T, param_KOH)  # K-OH
