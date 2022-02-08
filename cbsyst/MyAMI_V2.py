@@ -1,3 +1,8 @@
+# Feb 2021 : Oscar Branson : ob266@cam.ac.uk
+# ----------------------------------------------------
+# Continued vectorisation and speed-up efforts to support PalaeoCarb efforts
+# https://github.com/PalaeoCarb
+#
 # March 2020 : Oscar Branson : ob266@cam.ac.uk
 # ----------------------------------------------------
 #
