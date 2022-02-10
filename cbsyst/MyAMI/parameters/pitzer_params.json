@@ -1,0 +1,445 @@
+{
+  "NaCl": [
+    [
+      14.3783204,
+      0.005607674,
+      -422.185236,
+      -2.51226677,
+      0.0,
+      -2.61718135e-06,
+      4.43854508,
+      -1.70502337
+    ],
+    [
+      -0.483060685,
+      0.0014067747,
+      119.311989,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -4.23433299
+    ],
+    [
+      -0.100588714,
+      -1.80529413e-05,
+      8.61185543,
+      0.012488095,
+      0.0,
+      3.41172108e-08,
+      0.0683040995,
+      0.293922611
+    ]
+  ],
+  "KCl": [
+    [
+      26.7375563,
+      0.010072105,
+      -758.485453,
+      -4.70624175,
+      0.0,
+      -3.75994338e-06,
+      0.0,
+      0.0
+    ],
+    [
+      -7.41559626,
+      0.0,
+      322.892989,
+      1.16438557,
+      0.0,
+      0.0,
+      0.0,
+      -5.9457814
+    ],
+    [
+      -3.30531334,
+      -0.00129807848,
+      91.27121,
+      0.5864450181,
+      0.0,
+      4.95713573e-07,
+      0.0,
+      0.0
+    ]
+  ],
+  "K2SO4": [
+    [
+      40.7908797,
+      0.00826906675,
+      -1418.242998,
+      -6.74728848,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      -13.1669651,
+      0.0235793239,
+      2067.12592,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      -0.0188,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "CaCl2": [
+    [
+      -94.1895832,
+      -0.0404750026,
+      2345.50368,
+      17.09123,
+      -0.922885841,
+      1.51488122e-05,
+      -1.39082,
+      0.0
+    ],
+    [
+      3.4787,
+      -0.015417,
+      0.0,
+      0.0,
+      0.0,
+      3.1791e-05,
+      0.0,
+      0.0
+    ],
+    [
+      19.3056024,
+      0.00977090932,
+      -428.383748,
+      -3.57996343,
+      0.0882068538,
+      -4.62270238e-06,
+      9.91113465,
+      0.0
+    ]
+  ],
+  "MgCl2": [
+    [
+      0.576066,
+      -0.000931654,
+      5.93915e-07
+    ],
+    [
+      2.60135,
+      -0.0109438,
+      2.60169e-05
+    ],
+    [
+      0.059532,
+      -0.000249949,
+      2.41831e-07
+    ]
+  ],
+  "MgSO4": [
+    [
+      -1.0282,
+      0.008479,
+      -2.33667e-05,
+      2.1575e-08,
+      0.00068402,
+      0.21499
+    ],
+    [
+      -0.29596,
+      0.00094564,
+      0.0,
+      0.0,
+      0.011028,
+      3.3646
+    ],
+    [
+      0.42164,
+      -0.0035726,
+      1.004e-05,
+      -9.3744e-09,
+      -0.0003516,
+      0.027972
+    ]
+  ],
+  "NaHSO4": [
+    [
+      0.0544,
+      -0.0018478,
+      5.3937e-05
+    ],
+    [
+      0.3826401,
+      -0.018431,
+      0.0
+    ],
+    [
+      0.003905,
+      0.0,
+      0.0
+    ]
+  ],
+  "NaHCO3": [
+    [
+      0.028,
+      0.001,
+      -1.3e-05
+    ],
+    [
+      0.044,
+      0.0011,
+      -2.15e-05
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "Na2SO4_Moller": [
+    [
+      81.6920027,
+      0.0301104957,
+      -2321.93726,
+      -14.3780207,
+      -0.666496111,
+      -1.03923656e-05,
+      0.0
+    ],
+    [
+      1004.63018,
+      0.577453682,
+      -21843.4467,
+      -189.110656,
+      -0.2035505488,
+      -0.000323949532,
+      1467.72243
+    ],
+    [
+      -80.7816886,
+      -0.0354521126,
+      2024.3883,
+      14.619773,
+      -0.091697474,
+      1.43946005e-05,
+      -2.42272049
+    ]
+  ],
+  "Na2CO3": [
+    [
+      0.0362,
+      0.00179,
+      -2.11e-05
+    ],
+    [
+      1.51,
+      0.00205,
+      -8.4e-05
+    ],
+    [
+      0.0052,
+      0.0,
+      0.0
+    ]
+  ],
+  "NaBOH4": [
+    [
+      -0.051,
+      0.005264,
+      0.0
+    ],
+    [
+      0.0961,
+      -0.01068,
+      0.0
+    ],
+    [
+      0.01498,
+      -0.00157,
+      0.0
+    ]
+  ],
+  "KHCO3": [
+    [
+      -0.0107,
+      0.001,
+      0.0
+    ],
+    [
+      0.0478,
+      0.0011,
+      6.776e-21
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "K2CO3": [
+    [
+      0.1288,
+      0.0011,
+      -5.1e-06
+    ],
+    [
+      1.433,
+      0.00436,
+      2.07e-05
+    ],
+    [
+      0.0005,
+      0.0,
+      0.0
+    ]
+  ],
+  "KBOH4": [
+    [
+      0.1469,
+      0.002881,
+      0.0
+    ],
+    [
+      -0.0989,
+      -0.006876,
+      0.0
+    ],
+    [
+      -0.05643,
+      -0.00956,
+      0.0
+    ]
+  ],
+  "MgBOH42": [
+    [
+      -0.623,
+      0.006496,
+      0.0
+    ],
+    [
+      0.2515,
+      -0.01713,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "CaBOH42": [
+    [
+      -0.4462,
+      0.005393,
+      0.0
+    ],
+    [
+      -0.868,
+      -0.0182,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "SrBOH42": [
+    [
+      -0.4462,
+      0.005393,
+      0.0
+    ],
+    [
+      -0.868,
+      -0.0182,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "KOH": [
+    [
+      0.1298,
+      -9.46e-06,
+      0.0009914
+    ],
+    [
+      0.32,
+      -2.59e-05,
+      0.001186
+    ],
+    [
+      0.0041,
+      6.38e-07,
+      -9.44e-05
+    ]
+  ],
+  "SrCl2": [
+    [
+      0.28575,
+      -1.8367e-06,
+      0.00071
+    ],
+    [
+      1.66725,
+      0.0,
+      0.0028425
+    ],
+    [
+      -0.0013,
+      0.0,
+      0.0
+    ]
+  ],
+  "HCl": [
+    [
+      1.2859,
+      -0.0021197,
+      -142.5877
+    ],
+    [
+      -4.4474,
+      0.008425698,
+      665.7882
+    ],
+    [
+      -0.305156,
+      0.000516,
+      45.52154
+    ]
+  ],
+  "sources": {
+    "NaCl": "Table A1 (Millero and Pierrot, 1998; after Moller, 1988 & Greenberg and Moller, 1989) valid 0 to 250degC. Note that second value is changed to original ref (e-3 instead e01)",
+    "KCl": "Table A1 (Millero and Pierrot, 1998; after Moller, 1988 & Greenberg and Moller, 1989) valid 0 to 250degC",
+    "K2SO4": "Table A1 (Millero and Pierrot, 1998; after Moller, 1988 & Greenberg and Moller, 1989) valid 0 to 250degC",
+    "CaCl2": "Table A1 (Millero and Pierrot, 1998; after Moller, 1988 & Greenberg and Moller, 1989) valid 0 to 250degC",
+    "MgCl2": "Table A2 (Millero and Pierrot, 1998; after Pabalan and Pitzer, 1987) valid 25 to 200degC",
+    "MgSO4": "Table A2 (Millero and Pierrot, 1998; after Pabalan and Pitzer, 1987) valid 25 to 200degC",
+    "NaHSO4": "Table A3 (Millero and Pierrot, 1998; after mutiple studies, at least valid 0 to 50degC). Corrected after Pierrot and Millero, 1997",
+    "NaHCO3": "Table A3 (Millero and Pierrot, 1998; after mutiple studies, at least valid 0 to 50degC). Corrected after Peiper and Pitzer 1982",
+    "Na2SO4_Moller": "Moller 1988 parameters as used in Excel MIAMI code !!!!!! careful this formula assumes alpha1=2 as opposed to alpha1=1.7 for the Hovey parameters",
+    "Na2CO3": "Table A3 (Millero and Pierrot, 1998; after mutiple studies, at least valid 0 to 50degC). Also noted as Peiper and Pitzer 1982.",
+    "NaBOH4": "Table A3 (Millero and Pierrot, 1998; after mutiple studies, at least valid 0 to 50degC). Corrected after Simonson et al 1987 5th param should be e-2",
+    "KHCO3": "Table A4 (Millero and Pierrot, 1998; after mutiple studies, at least valid 5 to 45degC)",
+    "K2CO3": "Table A4 (Millero and Pierrot, 1998; after mutiple studies, at least valid 5 to 45degC)",
+    "KBOH4": "Table A4 (Millero and Pierrot, 1998; after mutiple studies, at least valid 5 to 45degC). Corrected after Simonson et al 1988",
+    "MgBOH42": "Table A5 (Millero and Pierrot, 1998; after Simonson et al, 1987b; valid 5 - 55degC. Corrected after Simonson et al 1988 first param is negative",
+    "CaBOH42": "Table A5 (Millero and Pierrot, 1998; after Simonson et al, 1987b; valid 5 - 55degC",
+    "SrBOH42": "Table A5 (Millero and Pierrot, 1998; after Simonson et al, 1987b; valid 5 - 55degC",
+    "KOH": "Table A7 (Millero and Pierrot, 1998; after multiple studies; valid 0 - 50degC",
+    "SrCl2": "Table A7 (Millero and Pierrot, 1998; after multiple studies; valid 0 - 50degC",
+    "HCl": "Table A9 (Millero and Pierrot, 1998; after multiple studies; valid 0 - 50degC. beta1 first param corrected to negative according to original reference (Campbell et al)"
+  }
+}
