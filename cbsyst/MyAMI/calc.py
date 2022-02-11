@@ -3,6 +3,7 @@ User-facing function for calculating K correction factors using MyAMI
 """
 
 import numpy as np
+from .helpers import shape_matcher
 from .pitzer import calculate_gKs
 
 def calc_Fcorr(Sal=35., TempC=25., Na=None, K=None, Mg=None, Ca=None, Sr=None, Cl=None, BOH4=None, HCO3=None, CO3=None, SO4=None):
@@ -28,8 +29,9 @@ def calc_Fcorr(Sal=35., TempC=25., Na=None, K=None, Mg=None, Ca=None, Sr=None, C
         where K_corr = K_cond * F_corr.
     """
 
-    TempC = np.asanyarray(TempC)  # check TempC is an array
-    
+    # ensure all inputs are the same shape
+    TempC, Sal, Na, K, Mg, Ca, Sr, Cl, BOH4, HCO3, CO3, SO4 = shape_matcher(TempC, Sal, Na, K, Mg, Ca, Sr, Cl, BOH4, HCO3, CO3, SO4)
+
     # Calculate gK's for modern (mod) and experimental (x) seawater composition
     (
         gKspC_mod,
