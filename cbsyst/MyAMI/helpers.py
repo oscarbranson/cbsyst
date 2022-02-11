@@ -49,7 +49,7 @@ def calc_Istr(Sal):
     """
     Calculation ionic strength from Salinity
     """
-    Istr = 19.924 * Sal / (1000 - 1.005 * Sal)
+    return 19.924 * Sal / (1000 - 1.005 * Sal)
 
 def standard_seawater(S=35.):
     """
