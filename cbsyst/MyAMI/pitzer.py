@@ -1,11 +1,11 @@
 import numpy as np
 from .params import PitzerParams
-from .helpers import expand_dims, match_dims, standard_seawater
+from .helpers import expand_dims, match_dims, standard_seawater, calc_Istr
 from .Kgen import supplyKHF, supplyKHSO4
 
 # TODO: new file for user-facing functions.
 
-def calc_seawater_ions(Sal, Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=None, BOH4=None, HCO3=None, CO3=None, SO4=None):
+def calc_seawater_ions(Sal=35., Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=None, BOH4=None, HCO3=None, CO3=None, SO4=None):
     """
     Returns modern seawater composition with given ions modified at specified salinity. 
 
@@ -21,18 +21,32 @@ def calc_seawater_ions(Sal, Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=None,
         anions = [OH, Cl, B(OH)4, HCO3, HSO4, CO3, SO4] 
 
     """
-    modified_cations = np.array([None, Na, K, Mg, Ca, Sr])
-    modified_anions = np.array([None, Cl, BOH4, HCO3, None, CO3, SO4])
+    modified_cations = [None, Na, K, Mg, Ca, Sr]
+    modified_anions = [None, Cl, BOH4, HCO3, None, CO3, SO4]
 
-    modern_cations, modern_anions = standard_seawater()
+    m_cations, m_anions = standard_seawater()
 
-    modern_cations[modified_cations != None] = modified_cations[modified_cations != None]
-    modern_anions[modified_anions != None] = modified_anions[modified_anions != None]
+    m_cations = np.full(
+        (m_cations.size, *Sal.shape),
+        expand_dims(m_cations, Sal)
+        )
+
+    m_anions = np.full(
+        (m_anions.size, *Sal.shape),
+        expand_dims(m_anions, Sal)
+        )
+
+    for i, m in enumerate(modified_cations):
+        if m is not None:
+            m_cations[i] = m
+    
+    for i, m in enumerate(modified_anions):
+        if m is not None:
+            m_anions[i] = m
 
     sal_factor = Sal / 35.
 
-    return modified_cations * sal_factor, modified_anions * sal_factor
-
+    return m_cations * sal_factor, m_anions * sal_factor
 
 
 def calculate_gKs(Tc, Sal, Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=None, BOH4=None, HCO3=None, CO3=None, SO4=None):
@@ -41,45 +55,8 @@ def calculate_gKs(Tc, Sal, Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=None, 
     """
 
     m_cation, m_anion = calc_seawater_ions(Sal, Na=Na, K=K, Mg=Mg, Ca=Ca, Sr=Sr, Cl=Cl, BOH4=BOH4, HCO3=HCO3, CO3=CO3, SO4=SO4)
-    
-    # expand dimensions to match Temperature
-    m_cation = np.full(
-        (m_cation.size, *Tc.shape),
-        expand_dims(m_cation, Tc)
-    )
 
-    m_anion = np.full(
-        (m_anion.size, *Tc.shape),
-        expand_dims(m_anion, Tc)
-        )
-
-    # # print('old seawater definition')
-    # m_cation = np.zeros((6, *Tc.shape))
-    # m_cation[0] = 0.00000001 * Sal / 35.0  # H ion; pH of about 8
-    # # Na Millero et al., 2008; Dickson OA-guide
-    # m_cation[1] = 0.4689674 * Sal / 35.0
-    # # K Millero et al., 2008; Dickson OA-guide
-    # m_cation[2] = 0.0102077 * Sal / 35.0
-    # m_cation[3] = Mg * Sal / 35.0  # Mg Millero et al., 2008; Dickson OA-guide
-    # m_cation[4] = Ca * Sal / 35.0  # Ca Millero et al., 2008; Dickson OA-guide
-    # # Sr Millero et al., 2008; Dickson OA-guide
-    # m_cation[5] = 0.0000907 * Sal / 35.0
-
-    # m_anion = np.zeros((7, *Tc.shape))
-    # m_anion[0] = 0.0000010 * Sal / 35.0  # OH ion; pH of about 8
-    # # Cl Millero et al., 2008; Dickson OA-guide
-    # m_anion[1] = 0.5458696 * Sal / 35.0
-    # # BOH4 Millero et al., 2008; Dickson OA-guide; pH of about 8 -- borate,
-    # # not Btotal
-    # m_anion[2] = 0.0001008 * Sal / 35.0
-    # # HCO3 Millero et al., 2008; Dickson OA-guide
-    # m_anion[3] = 0.0017177 * Sal / 35.0
-    # # HSO4 Millero et al., 2008; Dickson OA-guide
-    # m_anion[4] = 0.0282352 * 1e-6 * Sal / 35.0
-    # # CO3 Millero et al., 2008; Dickson OA-guide
-    # m_anion[5] = 0.0002390 * Sal / 35.0
-    # # SO4 Millero et al., 2008; Dickson OA-guide
-    # m_anion[6] = 0.0282352 * Sal / 35.0
+    Istr = calc_Istr(Sal)
 
     [
         gamma_cation,
