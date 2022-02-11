@@ -10,17 +10,35 @@ def expand_dims(orig, target):
     Adds additional dimensions to orig so it can be broadcast on target.
     """
     return np.expand_dims(orig, tuple(range(orig.ndim, target.ndim + orig.ndim)))
-    
-    # on = orig.copy()
-    # while on.ndim < (target.ndim + orig.ndim):
-    #     on = np.expand_dims(on, -1)
-    # return on
 
 def match_dims(orig, target):
     """
     Adds additional dimensions to orig to match the number of dimensions in target.
     """
     return np.expand_dims(orig, tuple(range(orig.ndim, target.ndim)))
+
+def shape_matcher(*args):
+    """
+    Returns all given arrays as the same shape.
+    """
+    biggest = 0
+    shape = None
+    for a in args:
+        if a is not None:
+            a = np.asanyarray(a)
+            if a.size > biggest:
+                biggest = a.size
+                shape = a.shape
+    
+    for a in args:
+        if a is not None:
+            a = np.asanyarray(a)
+            if a.shape != shape:
+                yield np.full(shape, a)
+            else:
+                yield a
+        else:
+            yield a
 
 def load_params(param_file, asarrays=True):
     """
