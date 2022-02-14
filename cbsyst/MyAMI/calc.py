@@ -101,27 +101,15 @@ def generate_Fcorr_LUT(n=21):
     Ca = np.linspace(0, 0.06, n)
 
     # grid inputs
-    gTempC, gSal, gMg, gCa = np.vstack(np.meshgrid(TempC, Sal, Mg, Ca)).T
-
-    # flatten inputs
-    gTempC = gTempC.ravel()
-    gSal = gSal.ravel()
-    gMg = gMg.ravel()
-    gCa = gCa.ravel()
+    gTempC, gSal, gMg, gCa = np.meshgrid(TempC, Sal, Mg, Ca)
 
     # calculate Fcorr
     Fcorr = calc_Fcorr(Sal=gSal, TempC=gTempC, Mg=gMg, Ca=gCa)
 
     # assign axes
-    Fcorr['TempC'] = gTempC
-    Fcorr['Sal'] = gSal
-    Fcorr['Mg'] = gMg
-    Fcorr['Ca'] = gCa
+    Fcorr['TempC'] = TempC
+    Fcorr['Sal'] = Sal
+    Fcorr['Mg'] = Mg
+    Fcorr['Ca'] = Ca
 
-    out = pd.DataFrame.from_dict(Fcorr)
-
-    return out
-
-
-# Needed:
-# calc_Fcorr_LUT - polynomials parameters describing Fcorr sensitivity to T, S, Mg, Ca
+    return Fcorr
