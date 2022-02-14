@@ -3,6 +3,7 @@ User-facing function for calculating K correction factors using MyAMI
 """
 
 import numpy as np
+import pandas as pd
 from .helpers import shape_matcher
 from .pitzer import calculate_gKs
 
@@ -67,6 +68,59 @@ def calc_Fcorr(Sal=35., TempC=25., Na=None, K=None, Mg=None, Ca=None, Sr=None, C
     }
     
     return F_dict
+
+def generate_Fcorr_LUT(n=21):
+    """
+    Generate a Look Up Table (LUT) of Fcorr factors using MyAMI
+    on an even grid of TempC, Sal, Mg and Ca.
+
+    The Fcorr factor is used to correct an empirical K value at
+    a given TempC and Sal for Mg and Ca concentration, and should be
+    applied as:
+
+    Kcorr = Kempirical * Fcorr
+
+    Parameter ranges are:
+        TempC: 0 - 40 Celcius
+        Sal: 30-40 PSU
+        Mg, Ca: 0, 0.06 mol/kg
+
+    Parameters
+    ----------
+    n : int
+        The number of grid points to calculate for each parameter.
+    
+    Returns
+    -------
+    pandas.DataFrame
+    """
+
+    TempC = np.linspace(0, 40, n)
+    Sal = np.linspace(30, 40, n)
+    Mg = np.linspace(0, 0.06, n)
+    Ca = np.linspace(0, 0.06, n)
+
+    # grid inputs
+    gTempC, gSal, gMg, gCa = np.vstack(np.meshgrid(TempC, Sal, Mg, Ca)).T
+
+    # flatten inputs
+    gTempC = gTempC.ravel()
+    gSal = gSal.ravel()
+    gMg = gMg.ravel()
+    gCa = gCa.ravel()
+
+    # calculate Fcorr
+    Fcorr = calc_Fcorr(Sal=gSal, TempC=gTempC, Mg=gMg, Ca=gCa)
+
+    # assign axes
+    Fcorr['TempC'] = gTempC
+    Fcorr['Sal'] = gSal
+    Fcorr['Mg'] = gMg
+    Fcorr['Ca'] = gCa
+
+    out = pd.DataFrame.from_dict(Fcorr)
+
+    return out
 
 
 # Needed:
