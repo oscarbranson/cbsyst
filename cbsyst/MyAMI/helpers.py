@@ -5,6 +5,9 @@ import json
 import numpy as np
 import pkg_resources as pkgrs
 
+def MyAMI_resource_file(fname=''):
+    return pkgrs.resource_filename('cbsyst', f'MyAMI/parameters/{fname}')
+
 def expand_dims(orig, target):
     """
     Adds additional dimensions to orig so it can be broadcast on target.
