@@ -31,6 +31,12 @@ def approximate_Fcorr(TempC=25, Sal=35, Mg=0.0528171, Ca=0.0102821):
     dict
         Containing Fcorr factors for the specified inputs
     """
+
+    print(
+        'WARNING: using approximate MyAMI K correction factors\n' +
+        'instead of calculated ones. These are only accurate to\n' +
+        "within ~0.2%. Please don't use them for anything critical."
+        )
     
     TempC, Sal, Mg, Ca = shape_matcher(TempC, Sal, Mg, Ca)
 
