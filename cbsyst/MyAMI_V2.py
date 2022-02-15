@@ -1736,7 +1736,7 @@ start_params = {
             0.0059415,
         ]
     ),
-    "KSO4": np.array(
+    "KS": np.array(
         [
             141.328,
             -4276.1,
@@ -1800,7 +1800,7 @@ def func_KW(TKS, a, b, c, d, e, f, g):
     )
 
 
-def func_KSO4(TKS, a, b, c, d, e, f, g, h, i, j, k):
+def func_KS(TKS, a, b, c, d, e, f, g, h, i, j, k):
     TempK, Sal = TKS
     Istr = 19.924 * Sal / (1000 - 1.005 * Sal)
     sqrtI = np.sqrt(Istr)
@@ -1843,7 +1843,7 @@ fn_dict = {
     "KW": func_KW,
     "KspC": func_Ksp,
     "KspA": func_Ksp,
-    "KSO4": func_KSO4,
+    "KS": func_KS,
 }
 
 
@@ -1883,9 +1883,9 @@ def fitfunc_KspA(TKS, a, b, c, d, e, f, g, h, i):
     return func_Ksp(TKS, *ps)
 
 
-def fitfunc_KSO4(TKS, a, b, c, d, e, f, g, h, i, j, k):
-    ps = start_params["KSO4"] * (a, b, c, d, e, f, g, h, i, j, k)
-    return func_KSO4(TKS, *ps)
+def fitfunc_KS(TKS, a, b, c, d, e, f, g, h, i, j, k):
+    ps = start_params["KS"] * (a, b, c, d, e, f, g, h, i, j, k)
+    return func_KS(TKS, *ps)
 
 
 fitfn_dict = {
@@ -1896,7 +1896,7 @@ fitfn_dict = {
     "KW": fitfunc_KW,
     "KspC": fitfunc_KspC,
     "KspA": fitfunc_KspA,
-    "KSO4": fitfunc_KSO4,
+    "KS": fitfunc_KS,
 }
 
 
@@ -1936,7 +1936,7 @@ def MyAMI_Fcorr(XmCa=0.0102821, XmMg=0.0528171, TempC=25., Sal=35.):
         gKB_mod,
         gKspA_mod,
         gK0_mod,
-        gKSO4_mod,
+        gKS_mod,
     ) = calculate_gKs(TempC, Sal, MmCa, MmMg)
     
     (
@@ -1947,7 +1947,7 @@ def MyAMI_Fcorr(XmCa=0.0102821, XmMg=0.0528171, TempC=25., Sal=35.):
         gKB_X, 
         gKspA_X, 
         gK0_X, 
-        gKSO4_X) = calculate_gKs(TempC, Sal, XmCa, XmMg)
+        gKS_X) = calculate_gKs(TempC, Sal, XmCa, XmMg)
 
     # Calculate conditional K's predicted for seawater composition X
     F_dict = {
@@ -1958,7 +1958,7 @@ def MyAMI_Fcorr(XmCa=0.0102821, XmMg=0.0528171, TempC=25., Sal=35.):
         "KW": gKW_X / gKW_mod,
         "KspC": gKspC_X / gKspC_mod,
         "KspA": gKspA_X / gKspA_mod,
-        "KSO4": gKSO4_X / gKSO4_mod,
+        "KS": gKS_X / gKS_mod,
     }
     
     return Bunch(F_dict)
@@ -1995,10 +1995,10 @@ def MyAMI_K_calc_direct(TempC=25.0, Sal=35.0, Ca=0.0102821, Mg=0.0528171, P=None
     TempC, Sal = [np.array(p) for p in (TempC, Sal)]
     
     if Ca == 0.0102821 and Mg == 0.0528171:
-        Ks = {k: v for k, v in zip(['KspC', 'K1', 'K2', 'KW', 'KB', 'KspA', 'K0', 'KSO4'], CalculateKcond(Tc=TempC, Sal=Sal))}
+        Ks = {k: v for k, v in zip(['KspC', 'K1', 'K2', 'KW', 'KB', 'KspA', 'K0', 'KS'], CalculateKcond(Tc=TempC, Sal=Sal))}
     else:
         f_corr = MyAMI_Fcorr(XmCa=Ca, XmMg=Mg, TempC=TempC, Sal=Sal)
-        Ks = {k: v * f_corr[k] for k, v in zip(['KspC', 'K1', 'K2', 'KW', 'KB', 'KspA', 'K0', 'KSO4'], CalculateKcond(Tc=TempC, Sal=Sal))}
+        Ks = {k: v * f_corr[k] for k, v in zip(['KspC', 'K1', 'K2', 'KW', 'KB', 'KspA', 'K0', 'KS'], CalculateKcond(Tc=TempC, Sal=Sal))}
 
     # Pressure correction
     if P is not None:
@@ -2016,7 +2016,7 @@ def MyAMI_K_calc_direct(TempC=25.0, Sal=35.0, Ca=0.0102821, Mg=0.0528171, P=None
             "KB": [-29.48, 0.1622, -2.608e-3, -2.84, 0],
             # 'KW': [-25.60, 0.2324, -3.6246e-3, -5.13, 0.0794],
             "KW": [-20.02, 0.1119, -1.409e-3, -5.13, 0.0794],  # Millero '83
-            "KSO4": [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
+            "KS": [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
             "KHF": [-9.78, -0.0090, -0.942e-3, -3.91, 0.054],
             "KH2S": [-14.80, 0.0020, -0.400e-3, 2.89, 0.054],
             "KNH4": [-26.43, 0.0889, -0.905e-3, -5.03, 0.0814],
@@ -2027,7 +2027,7 @@ def MyAMI_K_calc_direct(TempC=25.0, Sal=35.0, Ca=0.0102821, Mg=0.0528171, P=None
             "KspA": [-35, 0.5304, 0, -11.76, 0.3692],
         }
 
-        for k in ["K1", "K2", "KW", "KB", "KspA", "KspC", "KSO4"]:
+        for k in ["K1", "K2", "KW", "KB", "KspA", "KspC", "KS"]:
             Ks[k] *= prescorr(P, TempC, *ppar[k])
 
     return Bunch(Ks)
@@ -2074,7 +2074,7 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
         KB_mod,
         KspA_mod,
         K0_mod,
-        KSO4_mod,
+        KS_mod,
     ) = CalculateKcond(TempC_M, Sal_M)
 
     # Calculate gK's for modern (mod) and experimental (x) seawater composition
@@ -2086,7 +2086,7 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
         gKB_mod,
         gKspA_mod,
         gK0_mod,
-        gKSO4_mod,
+        gKS_mod,
     ) = calculate_gKs(TempC_M, Sal_M, MmCa, MmMg)
     (
         gKspC_X, 
@@ -2096,7 +2096,7 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
         gKB_X, 
         gKspA_X, 
         gK0_X, 
-        gKSO4_X
+        gKS_X
     ) = calculate_gKs(TempC_M, Sal_M, XmCa, XmMg)
     
     # Calculate conditional K's predicted for seawater composition X
@@ -2108,7 +2108,7 @@ def MyAMI_params(XmCa=0.0102821, XmMg=0.0528171):
         "KW": KW_mod * gKW_X / gKW_mod,
         "KspC": KspC_mod * gKspC_X / gKspC_mod,
         "KspA": KspA_mod * gKspA_X / gKspA_mod,
-        "KSO4": KSO4_mod * gKSO4_X / gKSO4_mod,
+        "KS": KS_mod * gKS_X / gKS_mod,
     }
 
     maxfevN = 2000000  # number of optimiztion timesteps allowed to reach convergence
@@ -2197,7 +2197,7 @@ def MyAMI_K_calc(
                         -1.12200000e-04,
                     ]
                 ),
-                "KSO4": np.array(
+                "KS": np.array(
                     [
                         1.41328000e02,
                         -4.27610000e03,
@@ -2291,7 +2291,7 @@ def MyAMI_K_calc(
             "KB": [-29.48, 0.1622, -2.608e-3, -2.84, 0],
             # 'KW': [-25.60, 0.2324, -3.6246e-3, -5.13, 0.0794],
             "KW": [-20.02, 0.1119, -1.409e-3, -5.13, 0.0794],  # Millero '83
-            "KSO4": [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
+            "KS": [-18.03, 0.0466, 0.316e-3, -4.53, 0.0900],
             "KHF": [-9.78, -0.0090, -0.942e-3, -3.91, 0.054],
             "KH2S": [-14.80, 0.0020, -0.400e-3, 2.89, 0.054],
             "KNH4": [-26.43, 0.0889, -0.905e-3, -5.03, 0.0814],
@@ -2302,7 +2302,7 @@ def MyAMI_K_calc(
             "KspA": [-35, 0.5304, 0, -11.76, 0.3692],
         }
 
-        for k in ["K1", "K2", "KW", "KB", "KspA", "KspC", "KSO4"]:
+        for k in ["K1", "K2", "KW", "KB", "KspA", "KspC", "KS"]:
             Ks[k] *= prescorr(P, TempC, *ppar[k])
 
     return Ks
@@ -2358,7 +2358,7 @@ def MyAMI_K_calc_multi(TempC=25.0, Sal=35.0, Ca=0.0102821, Mg=0.0528171, P=None)
 
     # set up empty K Bunch
     Ks = Bunch(
-        {k: np.zeros(L) for k in ["K0", "K1", "K2", "KSO4", "KB", "KspA", "KspC", "KW"]}
+        {k: np.zeros(L) for k in ["K0", "K1", "K2", "KS", "KB", "KspA", "KspC", "KW"]}
     )
 
     # calculate T and S specific Ks for each Ca-Mg pair.

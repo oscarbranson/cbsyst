@@ -42,7 +42,7 @@ def calc_Fcorr(Sal=35., TempC=25., Na=None, K=None, Mg=None, Ca=None, Sr=None, C
         gKB_mod,
         gKspA_mod,
         gK0_mod,
-        gKSO4_mod,
+        gKS_mod,
     ) = calculate_gKs(TempC, Sal)
     
     (
@@ -53,7 +53,7 @@ def calc_Fcorr(Sal=35., TempC=25., Na=None, K=None, Mg=None, Ca=None, Sr=None, C
         gKB_X, 
         gKspA_X, 
         gK0_X, 
-        gKSO4_X) = calculate_gKs(TempC, Sal, Na=Na, K=K, Mg=Mg, Ca=Ca, Sr=Sr, Cl=Cl, BOH4=BOH4, HCO3=HCO3, CO3=CO3, SO4=SO4)
+        gKS_X) = calculate_gKs(TempC, Sal, Na=Na, K=K, Mg=Mg, Ca=Ca, Sr=Sr, Cl=Cl, BOH4=BOH4, HCO3=HCO3, CO3=CO3, SO4=SO4)
 
     # Calculate conditional K's predicted for seawater composition X
     F_dict = {
@@ -64,7 +64,7 @@ def calc_Fcorr(Sal=35., TempC=25., Na=None, K=None, Mg=None, Ca=None, Sr=None, C
         "KW": gKW_X / gKW_mod,
         "KspC": gKspC_X / gKspC_mod,
         "KspA": gKspA_X / gKspA_mod,
-        "KSO4": gKSO4_X / gKSO4_mod,
+        "KS": gKS_X / gKS_mod,
     }
     
     return F_dict
