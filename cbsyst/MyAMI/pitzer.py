@@ -1,7 +1,7 @@
 import numpy as np
 from .params import PitzerParams
 from .helpers import expand_dims, match_dims, standard_seawater, calc_Istr
-from .Kgen import supplyKHF, supplyKHSO4
+from kgen import calc_K
 
 # TODO: new file for user-facing functions.
 
@@ -90,7 +90,7 @@ def calculate_gKs(Tc, Sal, Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=None, 
     return gKspC, gK1, gK2, gKW, gKB, gKspA, gK0, gKHSO4
 
 
-def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
+def CalculateGammaAndAlphas(Tc, Sal, Istr, m_cation, m_anion):
     """Calculate Gammas and Alphas for K calculations.
 
     Parameters
@@ -305,82 +305,85 @@ def CalculateGammaAndAlphas(Tc, S, Istr, m_cation, m_anion):
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
 
     # Original ln_gamma_anion calculation loop:
-    # ln_gamma_anion = Z_anion * Z_anion * (f_gamma + R) + Z_anion * S
-    # for an in range(0, 7):
-    #     for cat in range(0, 6):
-    #         ln_gamma_anion[an] += 2 * m_cation[cat] * (
-    #             BMX[cat, an] + E_cat * CMX[cat, an]
-    #         )
-    #     for an2 in range(0, 7):
-    #         ln_gamma_anion[an] += m_anion[an2] * (
-    #             2 * Theta_negative[an, an2]
-    #         )
-    #     for an2 in range(0, 7):
-    #         for cat in range(0, 6):
-    #             ln_gamma_anion[an] += (
-    #                 m_anion[an2] * m_cation[cat] * Phi_NNP[an, an2, cat]
-    #             )
-    #     for cat in range(0, 6):
-    #         for cat2 in range(cat + 1, 6):
-    #             ln_gamma_anion[an] += (
-    #                 m_cation[cat] * m_cation[cat2] * Phi_PPN[cat, cat2, an]
-    #             )
+    ln_gamma_anion = Z_anion * Z_anion * (f_gamma + R) + Z_anion * S
+    for an in range(0, 7):
+        for cat in range(0, 6):
+            ln_gamma_anion[an] += 2 * m_cation[cat] * (
+                BMX[cat, an] + E_cat * CMX[cat, an]
+            )
+        for an2 in range(0, 7):
+            ln_gamma_anion[an] += m_anion[an2] * (
+                2 * Theta_negative[an, an2]
+            )
+        for an2 in range(0, 7):
+            for cat in range(0, 6):
+                ln_gamma_anion[an] += (
+                    m_anion[an2] * m_cation[cat] * Phi_NNP[an, an2, cat]
+                )
+        for cat in range(0, 6):
+            for cat2 in range(cat + 1, 6):
+                ln_gamma_anion[an] += (
+                    m_cation[cat] * m_cation[cat2] * Phi_PPN[cat, cat2, an]
+                )
     
     # vectorised ln_gamma_anion calculation:
-    cat, cat2 = np.triu_indices(6, 1)
-    ln_gamma_anion = (
-        Z_anion * Z_anion * (f_gamma + R) + Z_anion * S + 
-        (2 * np.expand_dims(m_cation, 1) * (BMX + E_cat * CMX)).sum(0) + 
-        (np.expand_dims(m_anion, 1) * 2 * Theta_negative).sum(0) + 
-        (np.expand_dims(m_anion, (0,2)) * np.expand_dims(m_cation, (0,1)) * Phi_NNP).sum(axis=(1,2)) +
-        (np.expand_dims(m_cation[cat], 1) * np.expand_dims(m_cation[cat2], 1) * Phi_PPN[cat, cat2]).sum(axis=0)
-    )  # TODO - could be simplified further?
+    # cat, cat2 = np.triu_indices(6, 1)
+    # ln_gamma_anion = (
+    #     Z_anion * Z_anion * (f_gamma + R) + Z_anion * S + 
+    #     (2 * np.expand_dims(m_cation, 1) * (BMX + E_cat * CMX)).sum(0) + 
+    #     (np.expand_dims(m_anion, 1) * 2 * Theta_negative).sum(0) + 
+    #     (np.expand_dims(m_anion, (0,2)) * np.expand_dims(m_cation, (0,1)) * Phi_NNP).sum(axis=(1,2)) +
+    #     (np.expand_dims(m_cation[cat], 1) * np.expand_dims(m_cation[cat2], 1) * Phi_PPN[cat, cat2]).sum(axis=0)
+    # )  # TODO - could be simplified further?
     gamma_anion = np.exp(ln_gamma_anion)
 
 
     # ln_gammaCl = Z_anion[1] * Z_anion[1] * f_gamma + R - S
 
     # Original ln_gamma_cation calculation loop:
-    # ln_gamma_cation = Z_cation * Z_cation * (f_gamma + R) + Z_cation * S
-    # for cat in range(0, 6):
-    #     for an in range(0, 7):
-    #         ln_gamma_cation[cat] += 2 * m_anion[an] * (
-    #             BMX[cat, an] + E_cat * CMX[cat, an]
-    #         )
-    #     for cat2 in range(0, 6):
-    #         ln_gamma_cation[cat] += m_cation[cat2] * (2 * Theta_positive[cat, cat2])
-    #     for cat2 in range(0, 6):
-    #         for an in range(0, 7):
-    #             ln_gamma_cation[cat] += (
-    #                 m_cation[cat2] * m_anion[an] * Phi_PPN[cat, cat2, an]
-    #             )
-    #     for an in range(0, 7):
-    #         for an2 in range(an + 1, 7):
-    #             ln_gamma_cation[cat] += (
-    #                 + m_anion[an] * m_anion[an2] * Phi_NNP[an, an2, cat]
-    #             )
+    ln_gamma_cation = Z_cation * Z_cation * (f_gamma + R) + Z_cation * S
+    for cat in range(0, 6):
+        for an in range(0, 7):
+            ln_gamma_cation[cat] += 2 * m_anion[an] * (
+                BMX[cat, an] + E_cat * CMX[cat, an]
+            )
+        for cat2 in range(0, 6):
+            ln_gamma_cation[cat] += m_cation[cat2] * (2 * Theta_positive[cat, cat2])
+        for cat2 in range(0, 6):
+            for an in range(0, 7):
+                ln_gamma_cation[cat] += (
+                    m_cation[cat2] * m_anion[an] * Phi_PPN[cat, cat2, an]
+                )
+        for an in range(0, 7):
+            for an2 in range(an + 1, 7):
+                ln_gamma_cation[cat] += (
+                    + m_anion[an] * m_anion[an2] * Phi_NNP[an, an2, cat]
+                )
 
     # vectorised ln_gamma_cation calculation:
-    an, an2 = np.triu_indices(7, 1)
-    ln_gamma_cation = (
-        Z_cation * Z_cation * (f_gamma + R) + Z_cation * S +
-        (2 * np.expand_dims(m_anion, 0) * (BMX + E_cat * CMX)).sum(axis=1) +
-        (np.expand_dims(m_cation, 1) * (2 * Theta_positive)).sum(axis=0) +
-        (np.expand_dims(m_cation, (0,2)) * np.expand_dims(m_anion, (0,1)) * Phi_PPN).sum(axis=(1,2))+
-        (np.expand_dims(m_anion[an], 1) * np.expand_dims(m_anion[an2], 1) * Phi_NNP[an, an2]).sum(axis=0)
-    )  # TODO - could be simplified further?
+    # an, an2 = np.triu_indices(7, 1)
+    # ln_gamma_cation = (
+    #     Z_cation * Z_cation * (f_gamma + R) + Z_cation * S +
+    #     (2 * np.expand_dims(m_anion, 0) * (BMX + E_cat * CMX)).sum(axis=1) +
+    #     (np.expand_dims(m_cation, 1) * (2 * Theta_positive)).sum(axis=0) +
+    #     (np.expand_dims(m_cation, (0,2)) * np.expand_dims(m_anion, (0,1)) * Phi_PPN).sum(axis=(1,2))+
+    #     (np.expand_dims(m_anion[an], 1) * np.expand_dims(m_anion[an2], 1) * Phi_NNP[an, an2]).sum(axis=0)
+    # )  # TODO - could be simplified further?
     gamma_cation = np.exp(ln_gamma_cation)
 
     # choice of pH-scale = total pH-scale [H]T = [H]F + [HSO4]
     # so far gamma_H is the [H]F activity coefficient (= free-H pH-scale)
     # thus, conversion is required
     # * (gamma_anion[4] / gamma_anion[6] / gamma_cation[0])
-    [K_HSO4_conditional, K_HSO4] = supplyKHSO4(T, Istr)
-    # print (K_HSO4_conditional)
+    
+    K_HSO4_conditional = calc_K(k='KS', TempC=Tc, Sal=Sal)
+    K_HF_conditional = calc_K(k='KF', TempC=Tc, Sal=Sal)
+    
     # print (gamma_anion[4], gamma_anion[6], gamma_cation[0])
     # alpha_H = 1 / (1+ m_anion[6] / K_HSO4_conditional + 0.0000683 / (7.7896E-4 * 1.1 / 0.3 / gamma_cation[0]))
     alpha_Hsws = 1 / (
-        1 + m_anion[6] / K_HSO4_conditional + 0.0000683 / (supplyKHF(T, sqrtI))
+        # 1 + m_anion[6] / K_HSO4_conditional + 0.0000683 / (supplyKHF(T, sqrtI))
+        1 + m_anion[6] / K_HSO4_conditional + 0.0000683 / K_HF_conditional
     )
     alpha_Ht = 1 / (1 + m_anion[6] / K_HSO4_conditional)
     # alpha_H = 1 / (1+ m_anion[6] / K_HSO4_conditional)
