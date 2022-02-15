@@ -9,96 +9,96 @@ from cbsyst.carbon_fns import calc_C_species, calc_pH_scales, calc_revelle_facto
 from cbsyst.boron_fns import calc_B_species, d11_2_A11, A11_2_d11, pH_ABO3, alphaB_calc, cABO3, cABO4
 from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales
 from cbsyst.non_MyAMI_constants import calc_KF, calc_KPs, calc_KSi
-
+from .constants import calc_Ks
 
 # Helper functions
 # ----------------
-def calc_Ks(T, S, P, Mg, Ca, TS, TF, Ks=None):
-    """
-    Helper function to calculate Ks.
+# def calc_Ks(T, S, P, Mg, Ca, TS, TF, Ks=None):
+#     """
+#     Helper function to calculate Ks.
 
-    If Ks is a dict, those Ks are used
-    transparrently (i.e. no pressure modification).
-    """
-    if isinstance(Ks, dict):
-        Ks = Bunch(Ks)
-    else:
-        if Mg is None:
-            Mg = 0.0528171
-        if Ca is None:
-            Ca = 0.0102821
-        Ks = MyAMI_K_calc_direct(TempC=T, Sal=S, Ca=Ca, Mg=Mg, P=P)
+#     If Ks is a dict, those Ks are used
+#     transparrently (i.e. no pressure modification).
+#     """
+#     if isinstance(Ks, dict):
+#         Ks = Bunch(Ks)
+#     else:
+#         if Mg is None:
+#             Mg = 0.0528171
+#         if Ca is None:
+#             Ca = 0.0102821
+#         Ks = MyAMI_K_calc_direct(TempC=T, Sal=S, Ca=Ca, Mg=Mg, P=P)
         
-        # if maxL(Mg, Ca) == 1:
-        #     if Mg is None:
-        #         Mg = 0.0528171
-        #     if Ca is None:
-        #         Ca = 0.0102821
-        #     Ks = MyAMI_K_calc(TempC=T, Sal=S, P=P, Mg=Mg, Ca=Ca)
-        # else:
-        #     # if only Ca or Mg provided, fill in other with modern
-        #     if Mg is None:
-        #         Mg = 0.0528171
-        #     if Ca is None:
-        #         Ca = 0.0102821
-        #     # calculate Ca and Mg specific Ks
-        #     Ks = MyAMI_K_calc_multi(TempC=T, Sal=S, P=P, Ca=Ca, Mg=Mg)
+#         # if maxL(Mg, Ca) == 1:
+#         #     if Mg is None:
+#         #         Mg = 0.0528171
+#         #     if Ca is None:
+#         #         Ca = 0.0102821
+#         #     Ks = MyAMI_K_calc(TempC=T, Sal=S, P=P, Mg=Mg, Ca=Ca)
+#         # else:
+#         #     # if only Ca or Mg provided, fill in other with modern
+#         #     if Mg is None:
+#         #         Mg = 0.0528171
+#         #     if Ca is None:
+#         #         Ca = 0.0102821
+#         #     # calculate Ca and Mg specific Ks
+#         #     Ks = MyAMI_K_calc_multi(TempC=T, Sal=S, P=P, Ca=Ca, Mg=Mg)
 
-        # non-MyAMI Constants
-        Ks.update(calc_KPs(T, S, P))
-        Ks.update(calc_KF(T, S, P))
-        Ks.update(calc_KSi(T, S, P))
+#         # non-MyAMI Constants
+#         Ks.update(calc_KPs(T, S, P))
+#         Ks.update(calc_KF(T, S, P))
+#         Ks.update(calc_KSi(T, S, P))
 
-        # pH conversions to total scale.
-        #   - KP1, KP2, KP3 are all on SWS
-        #   - KSi is on SWS
-        #   - MyAMI KW is on SWS... DOES THIS MATTER?
+#         # pH conversions to total scale.
+#         #   - KP1, KP2, KP3 are all on SWS
+#         #   - KSi is on SWS
+#         #   - MyAMI KW is on SWS... DOES THIS MATTER?
 
-        SWStoTOT = (1 + TS / Ks.KSO4) / (1 + TS / Ks.KSO4 + TF / Ks.KF)
-        # FREEtoTOT = 1 + 'T_' + mode]S / Ks.KSO4
-        conv = ["KP1", "KP2", "KP3", "KSi", "KW"]
-        for c in conv:
-            Ks[c] *= SWStoTOT
+#         SWStoTOT = (1 + TS / Ks.KS) / (1 + TS / Ks.KS + TF / Ks.KF)
+#         # FREEtoTOT = 1 + 'T_' + mode]S / Ks.KS
+#         conv = ["KP1", "KP2", "KP3", "KSi", "KW"]
+#         for c in conv:
+#             Ks[c] *= SWStoTOT
     
-    return Ks
+#     return Ks
 
 
-def calc_Ks_TS(T, S, P, Ks={}):
-    """
-    Helper function to calculate Ks given only T(C), S and P.
+# def calc_Ks_TS(T, S, P, Ks={}):
+#     """
+#     Helper function to calculate Ks given only T(C), S and P.
 
-    If Ks is a dict, the Ks provided in the dict are used
-    transparrently (i.e. no pressure modification).
-    """
-    Mg = 0.0528171
-    Ca = 0.0102821
+#     If Ks is a dict, the Ks provided in the dict are used
+#     transparrently (i.e. no pressure modification).
+#     """
+#     Mg = 0.0528171
+#     Ca = 0.0102821
 
-    if isinstance(Ks, dict):
-        given_Ks = Ks
+#     if isinstance(Ks, dict):
+#         given_Ks = Ks
 
-    Ks = MyAMI_K_calc_direct(TempC=T, Sal=S, P=P, Mg=Mg, Ca=Ca)
+#     Ks = MyAMI_K_calc_direct(TempC=T, Sal=S, P=P, Mg=Mg, Ca=Ca)
 
-    # non-MyAMI Constants
-    Ks.update(calc_KPs(T, S, P))
-    Ks.update(calc_KF(T, S, P))
-    Ks.update(calc_KSi(T, S, P))
+#     # non-MyAMI Constants
+#     Ks.update(calc_KPs(T, S, P))
+#     Ks.update(calc_KF(T, S, P))
+#     Ks.update(calc_KSi(T, S, P))
 
-    # pH conversions to total scale.
-    #   - KP1, KP2, KP3 are all on SWS
-    #   - KSi is on SWS
-    #   - MyAMI KW is on SWS... DOES THIS MATTER?
+#     # pH conversions to total scale.
+#     #   - KP1, KP2, KP3 are all on SWS
+#     #   - KSi is on SWS
+#     #   - MyAMI KW is on SWS... DOES THIS MATTER?
 
-    TS = calc_TS(S)
-    TF = calc_TF(S)
-    SWStoTOT = (1 + TS / Ks.KSO4) / (1 + TS / Ks.KSO4 + TF / Ks.KF)
-    # FREEtoTOT = 1 + 'T_' + mode]S / Ks.KSO4
-    conv = ["KP1", "KP2", "KP3", "KSi", "KW"]
-    for c in conv:
-        Ks[c] *= SWStoTOT
+#     TS = calc_TS(S)
+#     TF = calc_TF(S)
+#     SWStoTOT = (1 + TS / Ks.KS) / (1 + TS / Ks.KS + TF / Ks.KF)
+#     # FREEtoTOT = 1 + 'T_' + mode]S / Ks.KS
+#     conv = ["KP1", "KP2", "KP3", "KSi", "KW"]
+#     for c in conv:
+#         Ks[c] *= SWStoTOT
 
-    Ks.update(given_Ks)
+#     Ks.update(given_Ks)
 
-    return Ks
+#     return Ks
 
 
 def pH_scale_converter(pH, scale, Temp, Sal, Press=None, TS=None, TF=None):
