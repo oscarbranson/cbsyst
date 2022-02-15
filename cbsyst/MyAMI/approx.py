@@ -33,7 +33,9 @@ def approximate_Fcorr(TempC=25, Sal=35, Mg=0.0528171, Ca=0.0102821):
     """
     
     TempC, Sal, Mg, Ca = shape_matcher(TempC, Sal, Mg, Ca)
-    
+
+    check_limits(TempC, Sal, Mg, Ca)
+
     in_shape = TempC.shape
     
     # Build design matrix
@@ -47,6 +49,26 @@ def approximate_Fcorr(TempC=25, Sal=35, Mg=0.0528171, Ca=0.0102821):
     
     # calculate and return Fcorr
     return {k: X_.dot(c).reshape(in_shape) for k, c in FCORR_COEFS.items()}
+
+
+def check_limits(TempC, Sal, Mg, Ca):
+
+    warntext = (
+        "\n\nDO NOT USE THESE APPROXIMATE CORRECTION FACTORS" +
+        "\nPlease run a full MyAMI run instead."
+    )
+
+    if np.any((TempC < 0) | (TempC > 40)):
+        raise ValueError('Temperature outside valid limits (0-40 C)' + warntext)
+
+    if np.any((Sal < 30) | (Sal > 40)):
+        raise ValueError('Salinity outside valid limits (30-40)' + warntext)
+
+    if np.any((Mg < 0) | (Mg > 0.06)):
+        raise ValueError('[Mg] outside valid limits (0-0.06)' + warntext)
+
+    if np.any((Ca < 0) | (Ca > 0.06)):
+        raise ValueError('[Ca] outside valid limits (0-0.06)' + warntext)
 
 
 def generate_approximate_Fcorr_params(n=21, fit_reports=True):
