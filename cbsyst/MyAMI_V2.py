@@ -230,7 +230,7 @@ def Equation_Na2SO4_Moller(T, lnT, a):
         a[:,2] / T +
         a[:,3] * lnT +
         a[:,4] / (T - 263) +
-        a[:,5] / T**2 +
+        a[:,5] * T**2 +
         a[:,6] / (680. - T)
     )
 
