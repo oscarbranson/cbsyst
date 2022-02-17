@@ -111,7 +111,7 @@ def Eq_b2_CaSO4(T, a):
     return a[0] + a[1] * T
 
 
-def PitzerParams(T):  # assumes T [K] -- not T [degC]
+def PitzerParams(T):
     """
     Return Pitzer params for given T (Kelvin).
     
@@ -122,8 +122,8 @@ def PitzerParams(T):  # assumes T [K] -- not T [degC]
         
     Returns
     -------
-    tuple of arrays
-        in order: beta_0, beta_1, beta_2, C_phi, Theta_negative, Theta_positive, Phi_NNP, Phi_PPN, C1_HSO4
+    dict of arrays
+        with keys: beta_0, beta_1, beta_2, C_phi, Theta_negative, Theta_positive, Phi_NNP, Phi_PPN, C1_HSO4
     """
     if isinstance(T, (float, int)):
         T = np.asanyarray(T)
@@ -301,7 +301,7 @@ def PitzerParams(T):  # assumes T [K] -- not T [degC]
     # positive ions H+=0; Na+=1; K+=2; Mg2+=3; Ca2+=4; Sr2+=5
     # negative ions  OH-=0; Cl-=1; B(OH)4-=2; HCO3-=3; HSO4-=4; CO3-=5; SO4-=6;
 
-    # Phi_PPN holds the values for cation - cation - anion
+    # Phi_PPN holds the values for cation - cation - anion - Table A11
     
     # These are only the temperature-sensitive modifications, 
     # which are added to the phi_base table imported at the top of the file
@@ -309,13 +309,13 @@ def PitzerParams(T):  # assumes T [K] -- not T [degC]
     Phi_PPN_mod[[1,2], [2,1], 1] = -5.10212917 / T  # Na-K-Cl
     Phi_PPN_mod[[1,2], [2,1], 6] = -8.21656777 / T  # Na-K-SO4
     Phi_PPN_mod[[1,3], [3,1], 1] = -9.51 / T  # Na-Mg-Cl
-    Phi_PPN_mod[[1,4], [4,1], 1] = -1.2990e-2 * T + 1.1060e-5 * T**2 + 1.8475 * lnT  # Na-Ca-Cl. Spencer et al 1990 # -0.003  
+    Phi_PPN_mod[[1,4], [4,1], 1] = -1.2990e-2 * T + 1.1060e-5 * T**2 + 1.8475 * lnT  # Na-Ca-Cl. Spencer et al 1990 DIFFERENT FROM Table A11 # -0.003  
     Phi_PPN_mod[[2,3], [3,2], 1] = -14.27 / T  # K-Mg-Cl
     Phi_PPN_mod[[2,4], [4,2], 1] = -27.0770507 / T  # K-Ca-Cl
     Phi_PPN_mod[[0,5], [5,0], 1] = -2.1e-4 * TC  # H-Sr-Cl
     Phi_PPN_mod[[0,3], [3,0], 1] = -7.325e-4 * TC  # H-Mg-Cl
     Phi_PPN_mod[[0,4], [4,0], 1] = -7.25e-4 * TC  # H-Ca-Cl
-    Phi_PPN_mod[[3,4], [4,3], 1] = 1.30377312e-2 * T - 9.81658526e2 / T - 7.4061986 * lnT  # Spencer et al 1990 #-0.012  # Mg-Ca-Cl
+    Phi_PPN_mod[[3,4], [4,3], 1] = 1.30377312e-2 * T - 9.81658526e2 / T - 7.4061986 * lnT  # Spencer et al 1990 DIFFERENT FROM Table A11 #-0.012  # Mg-Ca-Cl
 
     Phi_PPN = match_dims(PHI_BASES['Phi_PPN'], Phi_PPN_mod) + Phi_PPN_mod
 
@@ -323,18 +323,24 @@ def PitzerParams(T):  # assumes T [K] -- not T [degC]
     # Array to hold Theta values between ion two ions (for numbering see list above)
     
     Phi_NNP_mod = np.zeros((7, 7, 6, *T.shape))
-    Phi_NNP_mod[[1,6], [6,1], 2] = 37.5619614 / T + 2.8469833 * 1e-3 * T  # Cl-SO4-K
+    Phi_NNP_mod[[1,6], [6,1], 2] = 37.5619614 / T + 2.8469833 * 1e-4 * T  # Cl-SO4-K
 
     Phi_NNP = match_dims(PHI_BASES['Phi_NNP'], Phi_NNP_mod) + Phi_NNP_mod
     
-    return (
-        beta_0,
-        beta_1,
-        beta_2,
-        C_phi,
-        Theta_negative,
-        Theta_positive,
-        Phi_NNP,
-        Phi_PPN,
-        C1_HSO4,
-    )
+    # restore typo in original to see if it matters?
+    # H-K-SO4
+    # Phi_PPN[[0,2], [2,0], 6] = 0.197
+    # Phi_PPN[[0,2], [2,0], 1] = 0.197  # this overwrites the H-K-Cl parameter, and is present in original MyAMI
+    # print('TYPO', Phi_PPN[0,2,1])
+
+    return {
+        'beta_0': beta_0,
+        'beta_1': beta_1,
+        'beta_2': beta_2,
+        'C_phi': C_phi,
+        'Theta_negative': Theta_negative,
+        'Theta_positive': Theta_positive,
+        'Phi_NNP': Phi_NNP,
+        'Phi_PPN': Phi_PPN,
+        'C1_HSO4': C1_HSO4,
+    }
