@@ -202,8 +202,8 @@ def Equation2_TabA2(T, Tpower2, Tpower3, Tpower4, q):
         + q[:, 5]
     )
 
-def Equation_TabA3andTabA4andTabA5(TC, a):
-    return a[:, 0] + a[:, 1] * TC + a[:, 2] * TC ** 2
+def Equation_TabA3andTabA4andTabA5(Tsub, a):
+    return a[:, 0] + a[:, 1] * Tsub + a[:, 2] * Tsub ** 2
 
 def Equation_TabA3andTabA4andTabA5_Simonson(T, a):
     return a[:, 0] + a[:, 1] * (T - 298.15) + a[:, 2] * (T - 303.15) * (T - 303.15)
@@ -275,7 +275,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Tpower2 = T ** 2.
     Tpower3 = T ** 3.
     Tpower4 = T ** 4.
-    TC = T - 298.15  # Temperature in Celcius
+    Tsub = T - 298.15  # Temperature in Celcius - 25
 
     # PART 1 -- calculate thermodynamic pK's for acids, gases and complexes
 
@@ -561,7 +561,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
             [-56.43 / 1000, -9.56e-3, 0.0],
         ])  # corrected after Simonson et al 1988
     param_KBOH4 = expand_dims(param_KBOH4, T)
-    # same function as TabA3 "Equation_TabA3andTabA4andTabA5(TC,a)"
+    # same function as TabA3 "Equation_TabA3andTabA4andTabA5(Tsub,a)"
 
     # Table A5 (Millero and Pierrot, 1998; after Simonson et al, 1987b; valid 5 - 55degC
     param_MgBOH42 = np.array([
@@ -600,9 +600,9 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # Equation_MgHSO42 = np.array([0.4746, 1.729, 0.0])  #  XX no Cphi #from Harvie et al 1984 as referenced in MP98
     Equation_MgHSO42 = np.array(
         [
-            -0.61656 - 0.00075174 * TC,
-            7.716066 - 0.0164302 * TC,
-            0.43026 + 0.00199601 * TC,
+            -0.61656 - 0.00075174 * Tsub,
+            7.716066 - 0.0164302 * Tsub,
+            0.43026 + 0.00199601 * Tsub,
         ]
     )  # from Pierrot and Millero 1997 as used in the Excel file
 
@@ -661,20 +661,20 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # Na = cation
     [beta_0[1, 0], beta_1[1, 0], C_phi[1, 0]] = Equation_NaOH  # Na-OH
     [beta_0[1, 1], beta_1[1, 1], C_phi[1, 1]] = Equation_TabA1(T, Tinv, lnT, param_NaCl)  # Na-Cl
-    [beta_0[1, 2], beta_1[1, 2], C_phi[1, 2]] = Equation_TabA3andTabA4andTabA5(TC, param_NaBOH4)  # Na-B(OH)4
-    [beta_0[1, 3], beta_1[1, 3], C_phi[1, 3]] = Equation_TabA3andTabA4andTabA5(TC, param_NaHCO3)  # Na-HCO3
-    [beta_0[1, 4], beta_1[1, 4], C_phi[1, 4]] = Equation_TabA3andTabA4andTabA5(TC, param_NaHSO4)  # Na-HSO4
-    [beta_0[1, 5], beta_1[1, 5], C_phi[1, 5]] = Equation_TabA3andTabA4andTabA5(TC, param_Na2CO3)  # Na-CO3 
+    [beta_0[1, 2], beta_1[1, 2], C_phi[1, 2]] = Equation_TabA3andTabA4andTabA5(Tsub, param_NaBOH4)  # Na-B(OH)4
+    [beta_0[1, 3], beta_1[1, 3], C_phi[1, 3]] = Equation_TabA3andTabA4andTabA5(Tsub, param_NaHCO3)  # Na-HCO3
+    [beta_0[1, 4], beta_1[1, 4], C_phi[1, 4]] = Equation_TabA3andTabA4andTabA5(Tsub, param_NaHSO4)  # Na-HSO4
+    [beta_0[1, 5], beta_1[1, 5], C_phi[1, 5]] = Equation_TabA3andTabA4andTabA5(Tsub, param_Na2CO3)  # Na-CO3 
     # [beta_0[1, 6], beta_1[1, 6], C_phi[1, 6]] = Equation_Na2SO4_TabA3(T, ln_of_Tdiv29815, param_Na2SO4)  # Na-SO4
     [beta_0[1, 6], beta_1[1, 6], C_phi[1, 6]] = Equation_Na2SO4_Moller(T, lnT, param_Na2SO4_Moller)  # Na-SO4
 
     # K = cation
     [beta_0[2, 0], beta_1[2, 0], C_phi[2, 0]] = Equation_TabA7(T, param_KOH)  # K-OH
     [beta_0[2, 1], beta_1[2, 1], C_phi[2, 1]] = Equation_TabA1(T, Tinv, lnT, param_KCl)  # K-Cl
-    [beta_0[2, 2], beta_1[2, 2], C_phi[2, 2]] = Equation_TabA3andTabA4andTabA5(TC, param_KBOH4)  # K-B(OH)4
-    [beta_0[2, 3], beta_1[2, 3], C_phi[2, 3]] = Equation_TabA3andTabA4andTabA5(TC, param_KHCO3)  # K-HCO3
+    [beta_0[2, 2], beta_1[2, 2], C_phi[2, 2]] = Equation_TabA3andTabA4andTabA5(Tsub, param_KBOH4)  # K-B(OH)4
+    [beta_0[2, 3], beta_1[2, 3], C_phi[2, 3]] = Equation_TabA3andTabA4andTabA5(Tsub, param_KHCO3)  # K-HCO3
     [beta_0[2, 4], beta_1[2, 4], C_phi[2, 4]] = Equation_KHSO4  # K-HSO4
-    [beta_0[2, 5], beta_1[2, 5], C_phi[2, 5]] = Equation_TabA3andTabA4andTabA5(TC, param_K2CO3)  # K-CO3
+    [beta_0[2, 5], beta_1[2, 5], C_phi[2, 5]] = Equation_TabA3andTabA4andTabA5(Tsub, param_K2CO3)  # K-CO3
     [beta_0[2, 6], beta_1[2, 6], C_phi[2, 6]] = Equation_TabA1(T, Tinv, lnT, param_K2SO4)  # K-SO4
 
     # Mg = cation
@@ -736,19 +736,19 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Theta_positive = np.zeros((6, 6, *T.shape))
 
     # H - Sr
-    Theta_positive[[0,5], [5,0]] = 0.0591 + 4.5e-4 * TC
+    Theta_positive[[0,5], [5,0]] = 0.0591 + 4.5e-4 * Tsub
 
     # H - Na
-    Theta_positive[[0,1], [1,0]] = 0.03416 - 2.09e-4 * TC
+    Theta_positive[[0,1], [1,0]] = 0.03416 - 2.09e-4 * Tsub
 
     # H - K
-    Theta_positive[[0,2], [2,0]] = 0.005 - 2.275e-4 * TC
+    Theta_positive[[0,2], [2,0]] = 0.005 - 2.275e-4 * Tsub
 
     # H - Mg
-    Theta_positive[[0,3], [3,0]] = 0.062 + 3.275e-4 * TC
+    Theta_positive[[0,3], [3,0]] = 0.062 + 3.275e-4 * Tsub
 
     # H - Ca
-    Theta_positive[[0,4], [4,0]] = 0.0612 + 3.275e-4 * TC
+    Theta_positive[[0,4], [4,0]] = 0.0612 + 3.275e-4 * Tsub
 
     # Na - K
     Theta_positive[[1,2], [2,1]] = -5.02312111e-2 + 14.0213141 / T
@@ -788,7 +788,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Theta_negative[[1,3], [3,1]] = 0.0359
 
     # Cl - BOH4
-    Theta_negative[[1,2], [2,1]] = -0.0323 - 0.42333 * 1e-4 * TC - 21.926 * 1e-6 * TC ** 2
+    Theta_negative[[1,2], [2,1]] = -0.0323 - 0.42333 * 1e-4 * Tsub - 21.926 * 1e-6 * Tsub ** 2
 
     # CO3 - HCO3
     # Theta_negative[[3,5], [5,3]] = 0.0
@@ -797,7 +797,7 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Theta_negative[[4,6], [6,4]] = 0.0
 
     # OH - Cl
-    Theta_negative[[0,1], [1,0]] = -0.05 + 3.125 * 1e-4 * TC - 8.362 * 1e-6 * TC ** 2
+    Theta_negative[[0,1], [1,0]] = -0.05 + 3.125 * 1e-4 * Tsub - 8.362 * 1e-6 * Tsub ** 2
 
     # SO4 - CO3
     Theta_negative[[5,6], [6,5]] = 0.02
@@ -814,8 +814,11 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # OH - SO4
     Theta_negative[[0,6], [6,0]] = -0.013
 
-    # CO3 - OH #http: / /www.aim.env.uea.ac.uk / aim / accent4 / parameters.html
-    Theta_negative[[3,0], [0,3]] = 0.1
+    # # CO3 - OH #http: / /www.aim.env.uea.ac.uk / aim / accent4 / parameters.html 
+    # Theta_negative[[3,0], [0,3]] = 0.1  # incorrect index. 3 = HCO3, not CO3
+
+    # CO3 - OH #http: / /www.aim.env.uea.ac.uk / aim / accent4 / parameters.html 
+    Theta_negative[[5,0], [0,5]] = 0.1
 
     # Phi
     # positive ions H+=0; Na+=1; K+=2; Mg2+=3; Ca2+=4; Sr2+=5
@@ -849,13 +852,13 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     # Phi_PPN[[2,4], [4,2], 6] = 0.0
 
     # H - Sr - Cl
-    Phi_PPN[[0,5], [5,0], 1] = 0.0054 - 2.1e-4 * TC
+    Phi_PPN[[0,5], [5,0], 1] = 0.0054 - 2.1e-4 * (T - 298.15)
 
     # H - Mg - Cl
-    Phi_PPN[[0,3], [3,0], 1] = 0.001 - 7.325e-4 * TC
+    Phi_PPN[[0,3], [3,0], 1] = 0.001 - 7.325e-4 * (T - 298.15)
 
     # H - Ca - Cl
-    Phi_PPN[[0,4], [4,0], 1] = 0.0008 - 7.25e-4 * TC
+    Phi_PPN[[0,4], [4,0], 1] = 0.0008 - 7.25e-4 * (T - 298.15)
 
     # Sr - Na - Cl
     Phi_PPN[[5,1], [1,5], 1] = -0.015
@@ -899,13 +902,15 @@ def SupplyParams(T):  # assumes T [K] -- not T [degC]
     Phi_NNP[[1,6], [6,1], 1] = -0.009
 
     # Cl - SO4 - K
-    Phi_NNP[[1,6], [6,1], 2] = -0.21248147 + 37.5619614 / T + 2.8469833 * 1e-3 * T
+    Phi_NNP[[1,6], [6,1], 2] = -0.21248147 + 37.5619614 / T + 2.8469833 * 1e-4 * T
 
     # Cl - SO4 - Ca
     Phi_NNP[[1,6], [6,1], 4] = -0.018
 
-    # Cl - CO3 - Ca
-    Phi_NNP[[1,5], [5,1], 4] = 0.016
+    # Cl - CO3 - Ca  # This doesn't exist in Table A10. Should be Cl-CO3-Na?
+    # Phi_NNP[[1,5], [5,1], 4] = 0.016
+    # Cl - CO3 - Na
+    Phi_NNP[[1,5], [5,1], 1] = 0.016
 
     # Cl - HCO3 - Na
     Phi_NNP[[1,3], [3,1], 1] = -0.0143
