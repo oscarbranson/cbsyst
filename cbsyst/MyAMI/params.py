@@ -59,7 +59,7 @@ TABA10.fillna(0, inplace=True)
 
 def calc_Theta_Phi(TK):
     """
-    Builds Theta and Phi matrices from Table A10 and A11 of Millero and Pierrot (1998).
+    Construct Theta and Phi matrices from Table A10 and A11 of Millero and Pierrot (1998).
 
     Parameters
     ----------
@@ -104,8 +104,10 @@ def calc_Theta_Phi(TK):
     for _, row in TABA10.iterrows():
         ions = row.Parameter.split('-')
         index = get_ion_index(row.Parameter)
+        
         a = row[pnames]  # identify parameters
-        val = EqA10(a, TK)  # 
+        val = EqA10(a, TK)
+        
         if ions[0] in Pind:
             if len(ions) == 2:
                 Theta_positive[index] = val
@@ -126,7 +128,7 @@ def calc_Theta_Phi(TK):
         'Na-Ca-Cl': -7.6398 + -1.2990e-2 * TK + 1.1060e-5 * TK**2 + 1.8475 * np.log(TK),  # Spencer et al 1990
         'Mg-Ca-Cl': 4.15790220e1 + 1.30377312e-2 * TK - 9.81658526e2 / TK - 7.4061986 * np.log(TK),  # Spencer et al 1990
         'Cl-CO3': -0.092,  #Spencer et al 1990
-        'Cl-CO3-Na': 0  # not included in original MyAMI - unsure why
+        'CO3-OH': 0.1,  # http://www.aim.env.uea.ac.uk/aim/accent4/parameters.html
     }
 
     for ionstr, v in special.items():
