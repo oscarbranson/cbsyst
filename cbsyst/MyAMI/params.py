@@ -1,5 +1,7 @@
+import os
 import numpy as np
 import pandas as pd
+from glob import glob
 from .helpers import MyAMI_resource_file, expand_dims, match_dims, load_params
 
 # dictionaries of valid ions containing their matrix indices
@@ -40,6 +42,7 @@ def filter_terms(tab, valid_ions):
 def get_ion_index(ions):
     return tuple([Iind[k] for k in ions.split('-')])
 
+# Table-Specific equations
 def EqA10(a, TK):
     """
     Calculate Phi and Theta parameters as a function of TK accoring to 
@@ -47,13 +50,28 @@ def EqA10(a, TK):
     # a1 + a2 / T + a3 * T + a4 * (T - 298.15) + a5 * (T - 298.15)**2
     return a[0] + a[1] / TK + a[2] * 1e-4 * TK + a[3] * 1e-4 * (TK - 298.15) * a[4] * 1e-6 * (TK - 298.15)**2
 
+def EqA1(a, T, Tinv, lnT):
+    # T in Kelvin
+    return (
+        a[:, 0] +
+        a[:, 1] * T +
+        a[:, 2] * Tinv +
+        a[:, 3] * lnT +
+        a[:, 4] / (T - 263) +
+        a[:, 5] * T**2 +
+        a[:, 6] / (680 - T) +
+        a[:, 7] / (T - 227)
+    )
 
-# Load Tables A19 and A11
-TABA11 = pd.read_csv(MyAMI_resource_file('TabA11.csv'), comment='#')
-TABA10 = pd.read_csv(MyAMI_resource_file('TabA10.csv'), comment='#')
+# Load Tables A10 and A11
+TABLES = {}
+fs = glob(MyAMI_resource_file('TabA*.csv'))
+for f in fs:
+    fname = os.path.split(f)[-1].replace('.csv', '')
+    TABLES[fname] = pd.read_csv(f, comment='#')
 
-TABA11 = filter_terms(TABA11, Iind)
-TABA10 = filter_terms(TABA10, Iind)
+TABA11 = filter_terms(TABLES['TabA11'], Iind)
+TABA10 = filter_terms(TABLES['TabA10'], Iind)
 TABA10.fillna(0, inplace=True)
 
 
@@ -299,7 +317,7 @@ def PitzerParams(T):
 
     # Equation_MgHSO42 = np.array([0.4746, 1.729, 0.0])  #  XX no Cphi #from Harvie et al 1984 as referenced in MP98
     Equation_MgHSO42 = np.array(
-        [
+        [   
             -0.61656 - 0.00075174 * TC,
             7.716066 - 0.0164302 * TC,
             0.43026 + 0.00199601 * TC,
