@@ -1,5 +1,154 @@
 import numpy as np
-from .helpers import expand_dims, match_dims, load_params
+import pandas as pd
+from .helpers import MyAMI_resource_file, expand_dims, match_dims, load_params
+
+# dictionaries of valid ions containing their matrix indices
+# positive ions H+=0; Na+=1; K+=2; Mg2+=3; Ca2+=4; Sr2+=5
+Pind = {
+    'H': 0,
+    'Na': 1,
+    'K': 2,
+    'Mg': 3,
+    'Ca': 4,
+    'Sr': 5
+}
+
+# negative ions  OH-=0; Cl-=1; B(OH)4-=2; HCO3-=3; HSO4-=4; CO3-=5; SO4-=6;
+Nind = {
+    'OH': 0,
+    'Cl': 1,
+    'B(OH)4': 2,
+    'HCO3': 3,
+    'HSO4': 4,
+    'CO3': 5,
+    'SO4': 6
+}
+
+# dictionary containing all valid ions
+Iind = Pind.copy()
+Iind.update(Nind)
+
+# helper functions for converting tables into calculationg matrices
+
+def filter_terms(tab, valid_ions):
+    include = []
+    for ions in tab.Parameter.str.split('-'):
+        include.append(~np.any([i not in valid_ions for i in ions]))
+
+    return tab.loc[include]
+
+def get_ion_index(ions):
+    return tuple([Iind[k] for k in ions.split('-')])
+
+def EqA10(a, TK):
+    """
+    Calculate Phi and Theta parameters as a function of TK accoring to 
+    """
+    # a1 + a2 / T + a3 * T + a4 * (T - 298.15) + a5 * (T - 298.15)**2
+    return a[0] + a[1] / TK + a[2] * 1e-4 * TK + a[3] * 1e-4 * (TK - 298.15) * a[4] * 1e-6 * (TK - 298.15)**2
+
+
+# Load Tables A19 and A11
+TABA11 = pd.read_csv(MyAMI_resource_file('TabA11.csv'), comment='#')
+TABA10 = pd.read_csv(MyAMI_resource_file('TabA10.csv'), comment='#')
+
+TABA11 = filter_terms(TABA11, Iind)
+TABA10 = filter_terms(TABA10, Iind)
+TABA10.fillna(0, inplace=True)
+
+
+def calc_Theta_Phi(TK):
+    """
+    Builds Theta and Phi matrices from Table A10 and A11 of Millero and Pierrot (1998).
+
+    Parameters
+    ----------
+    TK : array-like
+        Temperature in Kelvin
+    
+    Returns
+    -------
+    tuple of array-like
+        Containing (Theta_negative, Theta_positive, Phi_NNP, Phi_PPN)
+    """
+
+    # create empty arrays
+    Theta_positive = np.zeros((len(Pind), len(Pind), *TK.shape))
+    Theta_negative = np.zeros((len(Nind), len(Nind), *TK.shape))
+    Phi_PPN = np.zeros((len(Pind), len(Pind), len(Nind), *TK.shape))
+    Phi_NNP = np.zeros((len(Nind), len(Nind), len(Pind), *TK.shape))
+
+    # Assign static values from Tabe A11
+    for _, row in TABA11.iterrows():
+        ions = row.Parameter.split('-')
+        index = get_ion_index(row.Parameter)
+
+        if ions[0] in Pind:
+            if len(ions) == 2:
+                Theta_positive[index] = row.Value
+                Theta_positive[index[::-1]] = row.Value
+            elif len(ions) == 3:
+                Phi_PPN[index] = row.Value
+                Phi_PPN[index[1], index[0], index[2]] = row.Value
+        
+        if ions[0] in Nind:
+            if len(ions) == 2:
+                Theta_negative[index] = row.Value
+                Theta_negative[index[::-1]] = row.Value
+            elif len(ions) == 3:
+                Phi_NNP[index] = row.Value
+                Phi_NNP[index[1], index[0], index[2]] = row.Value
+
+    # Assign T-sensitive values from Table A10
+    pnames = ['a1', 'a2', 'a3_e4', 'a4_e4', 'a5_e6']  # parameter names in TABle
+    for _, row in TABA10.iterrows():
+        ions = row.Parameter.split('-')
+        index = get_ion_index(row.Parameter)
+        a = row[pnames]  # identify parameters
+        val = EqA10(a, TK)  # 
+        if ions[0] in Pind:
+            if len(ions) == 2:
+                Theta_positive[index] = val
+                Theta_positive[index[::-1]] = val
+            elif len(ions) == 3:
+                Phi_PPN[index] = val
+                Phi_PPN[index[1], index[0], index[2]] = val
+        if ions[0] in Nind:
+            if len(ions) == 2:
+                Theta_negative[index] = val
+                Theta_negative[index[::-1]] = val
+            elif len(ions) == 3:
+                Phi_NNP[index] = val
+                Phi_NNP[index[1], index[0], index[2]] = val
+
+    # Special cases that deviate from values in Millero and Pierrot (1998)
+    special = {
+        'Na-Ca-Cl': -7.6398 + -1.2990e-2 * TK + 1.1060e-5 * TK**2 + 1.8475 * np.log(TK),  # Spencer et al 1990
+        'Mg-Ca-Cl': 4.15790220e1 + 1.30377312e-2 * TK - 9.81658526e2 / TK - 7.4061986 * np.log(TK),  # Spencer et al 1990
+        'Cl-CO3': -0.092,  #Spencer et al 1990
+        'Cl-CO3-Na': 0  # not included in original MyAMI - unsure why
+    }
+
+    for ionstr, v in special.items():
+        ions = ionstr.split('-')
+        index = get_ion_index(ionstr)
+        if ions[0] in Pind:
+            if len(ions) == 2:
+                Theta_positive[index] = v
+                Theta_positive[index[::-1]] = v
+            elif len(ions) == 3:
+                Phi_PPN[index] = v
+                Phi_PPN[index[1], index[0], index[2]] = v
+        if ions[0] in Nind:
+            if len(ions) == 2:
+                Theta_negative[index] = v
+                Theta_negative[index[::-1]] = v
+            elif len(ions) == 3:
+                Phi_NNP[index] = v
+                Phi_NNP[index[1], index[0], index[2]] = v
+
+    return Theta_negative, Theta_positive, Phi_NNP, Phi_PPN
+
 
 # Load Pitzer Parameters
 def load_pitzer_params(keep_sources=False):
@@ -274,62 +423,65 @@ def PitzerParams(T):
     # Theta of positive ions H+=0; Na+=1; K+=2; Mg2+=3; Ca2+=4; Sr2+=5
     # Array to hold Theta values between ion two ions (for numbering see list above)
     
-    # These are only the temperature-sensitive modifications, 
-    # which are added to the theta_base table imported at the top of the file
-    Theta_positive_mod = np.zeros((6, 6, *TC.shape))
-    Theta_positive_mod[[0,5], [5,0]] = 4.5e-4 * TC  # H - Sr
-    Theta_positive_mod[[0,1], [1,0]] = -2.09e-4 * TC  # H - Na
-    Theta_positive_mod[[0,2], [2,0]] = -2.275e-4 * TC  # H - K
-    Theta_positive_mod[[0,3], [3,0]] = 3.275e-4 * TC  # H - Mg
-    Theta_positive_mod[[0,4], [4,0]] = 3.275e-4 * TC  # H - Ca
-    Theta_positive_mod[[1,2], [2,1]] = 14.0213141 / T  # Na - K
+    Theta_negative, Theta_positive, Phi_NNP, Phi_PPN = calc_Theta_Phi(T)
 
-    Theta_positive = match_dims(THETA_BASES['Theta_positive'], Theta_positive_mod) + Theta_positive_mod
+    # # These are only the temperature-sensitive modifications, 
+    # # which are added to the theta_base table imported at the top of the file
+    # Theta_positive_mod = np.zeros((6, 6, *TC.shape))
+    # Theta_positive_mod[[0,5], [5,0]] = 4.5e-4 * TC  # H - Sr
+    # Theta_positive_mod[[0,1], [1,0]] = -2.09e-4 * TC  # H - Na
+    # Theta_positive_mod[[0,2], [2,0]] = -2.275e-4 * TC  # H - K
+    # Theta_positive_mod[[0,3], [3,0]] = 3.275e-4 * TC  # H - Mg
+    # Theta_positive_mod[[0,4], [4,0]] = 3.275e-4 * TC  # H - Ca
+    # Theta_positive_mod[[1,2], [2,1]] = 14.0213141 / T  # Na - K
 
-    # Theta of negative ions  OH-=0; Cl-=1; B(OH)4-=2; HCO3-=3; HSO4-=4; CO3-=5; SO4-=6;
-    # Array to hold Theta values between ion two ions (for numbering see list above)
+    # Theta_positive = match_dims(THETA_BASES['Theta_positive'], Theta_positive_mod) + Theta_positive_mod
 
-    # These are only the temperature-sensitive modifications, 
-    # which are added to the theta_base table imported at the top of the file
-    Theta_negative_mod = np.zeros((7, 7, *T.shape))
-    Theta_negative_mod[[1,2], [2,1]] = -0.42333e-4 * TC - 21.926 * 1e-6 * TC**2  # Cl - BOH4
-    Theta_negative_mod[[0,1], [1,0]] = 3.125e-4 * TC - 8.362 * 1e-6 * TC**2  # OH - Cl
+    # # Theta of negative ions  OH-=0; Cl-=1; B(OH)4-=2; HCO3-=3; HSO4-=4; CO3-=5; SO4-=6;
+    # # Array to hold Theta values between ion two ions (for numbering see list above)
 
-    Theta_negative = match_dims(THETA_BASES['Theta_negative'], Theta_negative_mod) + Theta_negative_mod
+    # # These are only the temperature-sensitive modifications, 
+    # # which are added to the theta_base table imported at the top of the file
+    # Theta_negative_mod = np.zeros((7, 7, *T.shape))
+    # Theta_negative_mod[[1,2], [2,1]] = -0.42333e-4 * TC - 21.926 * 1e-6 * TC**2  # Cl - BOH4
+    # Theta_negative_mod[[0,1], [1,0]] = 3.125e-4 * TC - 8.362 * 1e-6 * TC**2  # OH - Cl
 
-    # Phi
-    # positive ions H+=0; Na+=1; K+=2; Mg2+=3; Ca2+=4; Sr2+=5
-    # negative ions  OH-=0; Cl-=1; B(OH)4-=2; HCO3-=3; HSO4-=4; CO3-=5; SO4-=6;
+    # Theta_negative = match_dims(THETA_BASES['Theta_negative'], Theta_negative_mod) + Theta_negative_mod
 
-    # Phi_PPN holds the values for cation - cation - anion - Table A11
+    # # Phi
+    # # positive ions H+=0; Na+=1; K+=2; Mg2+=3; Ca2+=4; Sr2+=5
+    # # negative ions  OH-=0; Cl-=1; B(OH)4-=2; HCO3-=3; HSO4-=4; CO3-=5; SO4-=6;
+
+    # # Phi_PPN holds the values for cation - cation - anion - Table A11
     
-    # These are only the temperature-sensitive modifications, 
-    # which are added to the phi_base table imported at the top of the file
-    Phi_PPN_mod = np.zeros((6, 6, 7, *T.shape))  # Array to hold Theta values between ion two ions (for numbering see list above)
-    Phi_PPN_mod[[1,2], [2,1], 1] = -5.10212917 / T  # Na-K-Cl
-    Phi_PPN_mod[[1,2], [2,1], 6] = -8.21656777 / T  # Na-K-SO4
-    Phi_PPN_mod[[1,3], [3,1], 1] = -9.51 / T  # Na-Mg-Cl
-    Phi_PPN_mod[[1,4], [4,1], 1] = -1.2990e-2 * T + 1.1060e-5 * T**2 + 1.8475 * lnT  # Na-Ca-Cl. Spencer et al 1990 DIFFERENT FROM Table A11 # -0.003  
-    Phi_PPN_mod[[2,3], [3,2], 1] = -14.27 / T  # K-Mg-Cl
-    Phi_PPN_mod[[2,4], [4,2], 1] = -27.0770507 / T  # K-Ca-Cl
-    Phi_PPN_mod[[0,5], [5,0], 1] = -2.1e-4 * TC  # H-Sr-Cl
-    Phi_PPN_mod[[0,3], [3,0], 1] = -7.325e-4 * TC  # H-Mg-Cl
-    Phi_PPN_mod[[0,4], [4,0], 1] = -7.25e-4 * TC  # H-Ca-Cl
-    Phi_PPN_mod[[3,4], [4,3], 1] = 1.30377312e-2 * T - 9.81658526e2 / T - 7.4061986 * lnT  # Spencer et al 1990 DIFFERENT FROM Table A11 #-0.012  # Mg-Ca-Cl
+    # # These are only the temperature-sensitive modifications, 
+    # # which are added to the phi_base table imported at the top of the file
+    # Phi_PPN_mod = np.zeros((6, 6, 7, *T.shape))  # Array to hold Theta values between ion two ions (for numbering see list above)
+    # Phi_PPN_mod[[1,2], [2,1], 1] = -5.10212917 / T  # Na-K-Cl
+    # Phi_PPN_mod[[1,2], [2,1], 6] = -8.21656777 / T  # Na-K-SO4
+    # Phi_PPN_mod[[1,3], [3,1], 1] = -9.51 / T  # Na-Mg-Cl
+    # Phi_PPN_mod[[1,4], [4,1], 1] = -1.2990e-2 * T + 1.1060e-5 * T**2 + 1.8475 * lnT  # Na-Ca-Cl. Spencer et al 1990 DIFFERENT FROM Table A11 # -0.003  
+    # Phi_PPN_mod[[2,3], [3,2], 1] = -14.27 / T  # K-Mg-Cl
+    # Phi_PPN_mod[[2,4], [4,2], 1] = -27.0770507 / T  # K-Ca-Cl
+    # Phi_PPN_mod[[0,5], [5,0], 1] = -2.1e-4 * TC  # H-Sr-Cl
+    # Phi_PPN_mod[[0,3], [3,0], 1] = -7.325e-4 * TC  # H-Mg-Cl
+    # Phi_PPN_mod[[0,4], [4,0], 1] = -7.25e-4 * TC  # H-Ca-Cl
+    # Phi_PPN_mod[[3,4], [4,3], 1] = 1.30377312e-2 * T - 9.81658526e2 / T - 7.4061986 * lnT  # Spencer et al 1990 DIFFERENT FROM Table A11 #-0.012  # Mg-Ca-Cl
 
-    Phi_PPN = match_dims(PHI_BASES['Phi_PPN'], Phi_PPN_mod) + Phi_PPN_mod
+    # Phi_PPN = match_dims(PHI_BASES['Phi_PPN'], Phi_PPN_mod) + Phi_PPN_mod
 
-    # Phi_NNP holds the values for anion - anion - cation
-    # Array to hold Theta values between ion two ions (for numbering see list above)
+    # # Phi_NNP holds the values for anion - anion - cation
+    # # Array to hold Theta values between ion two ions (for numbering see list above)
     
-    Phi_NNP_mod = np.zeros((7, 7, 6, *T.shape))
-    Phi_NNP_mod[[1,6], [6,1], 2] = 37.5619614 / T + 2.8469833 * 1e-4 * T  # Cl-SO4-K
+    # Phi_NNP_mod = np.zeros((7, 7, 6, *T.shape))
+    # Phi_NNP_mod[[1,6], [6,1], 2] = 37.5619614 / T + 2.8469833 * 1e-4 * T  # Cl-SO4-K
 
-    Phi_NNP = match_dims(PHI_BASES['Phi_NNP'], Phi_NNP_mod) + Phi_NNP_mod
+    # Phi_NNP = match_dims(PHI_BASES['Phi_NNP'], Phi_NNP_mod) + Phi_NNP_mod
     
     # restore typo in original to see if it matters?
     # H-K-SO4
     # Phi_PPN[[0,2], [2,0], 6] = 0.197
+
     # Phi_PPN[[0,2], [2,0], 1] = 0.197  # this overwrites the H-K-Cl parameter, and is present in original MyAMI
     # print('TYPO', Phi_PPN[0,2,1])
 
