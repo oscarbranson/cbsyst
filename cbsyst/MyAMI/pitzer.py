@@ -1,5 +1,4 @@
 import numpy as np
-from .params import PitzerParams
 from .helpers import expand_dims, match_dims, standard_seawater, calc_Istr
 from kgen import calc_K
 
@@ -49,7 +48,8 @@ def calc_seawater_ions(Sal=35., Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=N
     return m_cations * sal_factor, m_anions * sal_factor
 
 
-def calculate_gKs(Tc, Sal, Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=None, BOH4=None, HCO3=None, CO3=None, SO4=None):
+def calculate_gKs(Tc, Sal, Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=None, BOH4=None, HCO3=None, CO3=None, SO4=None,
+                  beta_0=None, beta_1=None, beta_2=None, C_phi=None, Theta_negative=None, Theta_positive=None, Phi_NNP=None, Phi_PPN=None, C1_HSO4=None):
     """
     Calculate Ks at given conditions using MyAMI model.
     """
@@ -65,7 +65,7 @@ def calculate_gKs(Tc, Sal, Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=None, 
         alpha_Ht,
         alpha_OH,
         alpha_CO3,
-    ] = CalculateGammaAndAlphas(Tc, Sal, Istr, m_cation, m_anion)
+    ] = CalculateGammaAndAlphas(Tc, Sal, Istr, m_cation, m_anion, beta_0=beta_0, beta_1=beta_1, beta_2=beta_2, C_phi=C_phi, Theta_negative=Theta_negative, Theta_positive=Theta_positive, Phi_NNP=Phi_NNP, Phi_PPN=Phi_PPN, C1_HSO4=C1_HSO4)
 
     gammaT_OH = gamma_anion[0] * alpha_OH
     gammaT_BOH4 = gamma_anion[2]
@@ -90,7 +90,8 @@ def calculate_gKs(Tc, Sal, Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=None, 
     return gKspC, gK1, gK2, gKW, gKB, gKspA, gK0, gKHSO4
 
 
-def CalculateGammaAndAlphas(Tc, Sal, Istr, m_cation, m_anion):
+def CalculateGammaAndAlphas(Tc, Sal, Istr, m_cation, m_anion,
+                  beta_0=None, beta_1=None, beta_2=None, C_phi=None, Theta_negative=None, Theta_positive=None, Phi_NNP=None, Phi_PPN=None, C1_HSO4=None):
     """Calculate Gammas and Alphas for K calculations.
 
     Parameters
@@ -134,17 +135,6 @@ def CalculateGammaAndAlphas(Tc, Sal, Istr, m_cation, m_anion):
         )   
 
     ##########################################################################
-    [
-        beta_0,
-        beta_1,
-        beta_2,
-        C_phi,
-        Theta_negative,
-        Theta_positive,
-        Phi_NNP,
-        Phi_PPN,
-        C1_HSO4,
-    ] = PitzerParams(T)
 
     A_phi = (
         3.36901532e-01
