@@ -29,7 +29,7 @@ class MyAMI_V2_crosscheck(unittest.TestCase):
 
             maxdiff = np.max(np.abs(old - new))
 
-            self.assertAlmostEqual(0, maxdiff, places=3, msg=f'Maximum difference in {k} correction factor too large: {maxdiff}')
+            self.assertAlmostEqual(0, maxdiff, places=12, msg=f'Maximum difference in {k} correction factor too large: {maxdiff}')
 
     def test_approx_Fcorr(self):
         n = 5
@@ -45,7 +45,7 @@ class MyAMI_V2_crosscheck(unittest.TestCase):
         
         for k in Fcorr_calc:
             maxpcdiff = np.max(np.abs(100 * (Fcorr_approx[k] - Fcorr_calc[k]) / Fcorr_calc[k]))
-            self.assertLess(maxpcdiff, 0.605, msg=f'Approximate {k} is greater than 0.2% from calculated {k}.')
+            self.assertLess(maxpcdiff, 0.6, msg=f'Approximate {k} is greater than 0.2% from calculated {k}.')
 
 class MyAMI_V1_crosscheck(unittest.TestCase):
 
