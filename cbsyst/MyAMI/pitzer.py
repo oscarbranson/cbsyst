@@ -65,7 +65,11 @@ def calculate_gKs(Tc, Sal, Na=None, K=None, Ca=None, Mg=None, Sr=None, Cl=None, 
         alpha_Ht,
         alpha_OH,
         alpha_CO3,
-    ] = CalculateGammaAndAlphas(Tc, Sal, Istr, m_cation, m_anion, beta_0=beta_0, beta_1=beta_1, beta_2=beta_2, C_phi=C_phi, Theta_negative=Theta_negative, Theta_positive=Theta_positive, Phi_NNP=Phi_NNP, Phi_PPN=Phi_PPN, C1_HSO4=C1_HSO4)
+    ] = CalculateGammaAndAlphas(
+        Tc, Sal, Istr, m_cation, m_anion, 
+        beta_0=beta_0, beta_1=beta_1, beta_2=beta_2, C_phi=C_phi,
+        Theta_negative=Theta_negative, Theta_positive=Theta_positive,
+        Phi_NNP=Phi_NNP, Phi_PPN=Phi_PPN, C1_HSO4=C1_HSO4)
 
     gammaT_OH = gamma_anion[0] * alpha_OH
     gammaT_BOH4 = gamma_anion[2]
