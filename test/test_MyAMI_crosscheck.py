@@ -62,9 +62,9 @@ class MyAMI_V1_crosscheck(unittest.TestCase):
             v1 = check[k]
             new = new_Fcorr[k]
 
-            maxdiff = np.max(np.abs(v1 - new))
+            maxpercentdiff = 100 * np.max(np.abs((v1 - new) / v1))
 
-            self.assertAlmostEqual(0, maxdiff, places=2, msg=f'Maximum difference in {k} correction factor too large: {maxdiff}')
+            self.assertLess(maxpercentdiff, 0.4, msg=f'Maximum difference in {k} correction factor too large: {maxpercentdiff}%')
 
 # class MyAMIConsistency(unittest.TestCase):
 #     """Compare MyAMI_V2 with MyAMI_V1"""
