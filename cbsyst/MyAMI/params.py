@@ -48,7 +48,8 @@ def EqA10(a, TK):
     Calculate Phi and Theta parameters as a function of TK accoring to 
     """
     # a1 + a2 / T + a3 * T + a4 * (T - 298.15) + a5 * (T - 298.15)**2
-    return a[0] + a[1] / TK + a[2] * 1e-4 * TK + a[3] * 1e-4 * (TK - 298.15) * a[4] * 1e-6 * (TK - 298.15)**2
+    TKsub = TK - 298.15
+    return a[0] + a[1] / TK + a[2] * 1e-4 * TK + a[3] * 1e-4 * TKsub + a[4] * 1e-6 * TKsub**2
 
 def EqA1(a, T, Tinv, lnT):
     # T in Kelvin
