@@ -3,8 +3,10 @@ Functions for calculating the carbon and boron chemistry of seawater.
 """
 
 import numpy as np
+import kgen
+import myami
 from cbsyst.helpers import Bunch, maxL
-from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi, MyAMI_K_calc_direct
+# from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi, MyAMI_K_calc_direct
 from cbsyst.carbon_fns import calc_C_species, calc_pH_scales, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
 from cbsyst.boron_fns import calc_B_species, d11_2_A11, A11_2_d11, pH_ABO3, alphaB_calc, cABO3, cABO4
 from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales
@@ -13,7 +15,7 @@ from cbsyst.non_MyAMI_constants import calc_KF, calc_KPs, calc_KSi
 
 # Helper functions
 # ----------------
-def calc_Ks(T, S, P, Mg, Ca, TS, TF, Ks=None):
+def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, myami_mode='calc'):
     """
     Helper function to calculate Ks.
 
@@ -23,81 +25,29 @@ def calc_Ks(T, S, P, Mg, Ca, TS, TF, Ks=None):
     if isinstance(Ks, dict):
         Ks = Bunch(Ks)
     else:
-        if Mg is None:
-            Mg = 0.0528171
-        if Ca is None:
-            Ca = 0.0102821
-        Ks = MyAMI_K_calc_direct(TempC=T, Sal=S, Ca=Ca, Mg=Mg, P=P)
+        Ks = Bunch(kgen.calc_Ks(TempC=T, Sal=S, Pres=P))  # calc empirical Ks
         
-        # if maxL(Mg, Ca) == 1:
-        #     if Mg is None:
-        #         Mg = 0.0528171
-        #     if Ca is None:
-        #         Ca = 0.0102821
-        #     Ks = MyAMI_K_calc(TempC=T, Sal=S, P=P, Mg=Mg, Ca=Ca)
-        # else:
-        #     # if only Ca or Mg provided, fill in other with modern
-        #     if Mg is None:
-        #         Mg = 0.0528171
-        #     if Ca is None:
-        #         Ca = 0.0102821
-        #     # calculate Ca and Mg specific Ks
-        #     Ks = MyAMI_K_calc_multi(TempC=T, Sal=S, P=P, Ca=Ca, Mg=Mg)
+        if NnotNone(Mg, Ca) > 0:
+            if myami_mode == 'calc':
+                fcorr = myami.calc_Fcorr(Sal=S, TempC=T, Mg=Mg, Ca=Ca)
+            else:
+                fcorr = myami.approximate_Fcorr(Sal=S, TempC=T, Mg=Mg, Ca=Ca)
 
-        # non-MyAMI Constants
-        Ks.update(calc_KPs(T, S, P))
-        Ks.update(calc_KF(T, S, P))
-        Ks.update(calc_KSi(T, S, P))
-
+            for k in Ks:
+                Ks[k] *= fcorr[k]
+        
+        
         # pH conversions to total scale.
         #   - KP1, KP2, KP3 are all on SWS
         #   - KSi is on SWS
         #   - MyAMI KW is on SWS... DOES THIS MATTER?
 
-        SWStoTOT = (1 + TS / Ks.KSO4) / (1 + TS / Ks.KSO4 + TF / Ks.KF)
-        # FREEtoTOT = 1 + 'T_' + mode]S / Ks.KSO4
-        conv = ["KP1", "KP2", "KP3", "KSi", "KW"]
-        for c in conv:
-            Ks[c] *= SWStoTOT
+        # SWStoTOT = (1 + TS / Ks.KS) / (1 + TS / Ks.KS + TF / Ks.KF)
+        # # FREEtoTOT = 1 + 'T_' + mode]S / Ks.KS
+        # conv = ["KP1", "KP2", "KP3", "KSi", "KW"]
+        # for c in conv:
+        #     Ks[c] *= SWStoTOT
     
-    return Ks
-
-
-def calc_Ks_TS(T, S, P, Ks={}):
-    """
-    Helper function to calculate Ks given only T(C), S and P.
-
-    If Ks is a dict, the Ks provided in the dict are used
-    transparrently (i.e. no pressure modification).
-    """
-    Mg = 0.0528171
-    Ca = 0.0102821
-
-    if isinstance(Ks, dict):
-        given_Ks = Ks
-
-    Ks = MyAMI_K_calc_direct(TempC=T, Sal=S, P=P, Mg=Mg, Ca=Ca)
-
-    # non-MyAMI Constants
-    Ks.update(calc_KPs(T, S, P))
-    Ks.update(calc_KF(T, S, P))
-    Ks.update(calc_KSi(T, S, P))
-
-    # pH conversions to total scale.
-    #   - KP1, KP2, KP3 are all on SWS
-    #   - KSi is on SWS
-    #   - MyAMI KW is on SWS... DOES THIS MATTER?
-
-    TS = calc_TS(S)
-    TF = calc_TF(S)
-    SWStoTOT = (1 + TS / Ks.KSO4) / (1 + TS / Ks.KSO4 + TF / Ks.KF)
-    # FREEtoTOT = 1 + 'T_' + mode]S / Ks.KSO4
-    conv = ["KP1", "KP2", "KP3", "KSi", "KW"]
-    for c in conv:
-        Ks[c] *= SWStoTOT
-
-    Ks.update(given_Ks)
-
     return Ks
 
 
@@ -114,7 +64,7 @@ def pH_scale_converter(pH, scale, Temp, Sal, Press=None, TS=None, TF=None):
         TF = calc_TF(Sal)
     TempK = Temp + 273.15
 
-    Ks = calc_Ks_TS(Temp, Sal, Press)
+    Ks = kgen.calc_Ks(TempC=Temp, Sal=Sal, Pres=Press)
 
     inp = [None, None, None, None]
     inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH

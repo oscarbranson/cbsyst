@@ -55,7 +55,7 @@ def data_out(cbdat, path=None, include_constants=False):
         "Mg",
     ]
 
-    consts = ["K0", "K1", "K2", "KB", "KW", "KSO4", "KspA", "KspC"]
+    consts = ["K0", "K1", "K2", "KB", "KW", "KS", "KspA", "KspC"]
 
     size = cbdat.pH.size
     out = pd.DataFrame(index=range(size))
@@ -317,8 +317,8 @@ def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, TS, TF, TempK, Sal, Ks):
 
     if npH == 1:
         # pH scale conversions
-        FREEtoTOT = -np.log10((1 + TS / Ks.KSO4))
-        SWStoTOT = -np.log10((1 + TS / Ks.KSO4) / (1 + TS / Ks.KSO4 + TF / Ks.KF))
+        FREEtoTOT = -np.log10((1 + TS / Ks.KS))
+        SWStoTOT = -np.log10((1 + TS / Ks.KS) / (1 + TS / Ks.KS + TF / Ks.KF))
         fH = calc_fH(TempK, Sal)
 
         if pHtot is not None:

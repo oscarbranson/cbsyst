@@ -28,7 +28,7 @@ class BoronFnTestCase(unittest.TestCase):
                     "K1": 1.42182814e-06,
                     "K2": 1.08155475e-09,
                     "KB": 2.52657299e-09,
-                    "KSO4": 0.10030207,
+                    "KS": 0.10030207,
                     "KW": 6.06386369e-14,
                     "KspA": 6.48175907e-07,
                     "KspC": 4.27235093e-07,
@@ -141,7 +141,7 @@ class CarbonFnTestCase(unittest.TestCase):
                     "KP1": 0.024265183950721327,
                     "KP2": 1.0841036169428488e-06,
                     "KP3": 1.612502080867568e-09,
-                    "KSO4": 0.10030207107256615,
+                    "KS": 0.10030207107256615,
                     "KSi": 4.1025099579058308e-10,
                     "KW": 6.019824161802715e-14,
                     "KspA": 6.4817590680119676e-07,
@@ -638,7 +638,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         pH_median = np.median(pH_resid)
         pH_pc95 = np.percentile(pH_resid, [2.5, 97.5])
 
-        self.assertLessEqual(abs(pH_median), 0.005, msg="pH Offset <= 0.01")
+        self.assertLessEqual(abs(pH_median), 0.005, msg="pH Offset <= 0.005")
         self.assertTrue(all(abs(pH_pc95) <= 0.05), msg="pH 95% Conf <= 0.05")
 
         # calculate TA from pH and DIC
@@ -656,8 +656,8 @@ class ReferenceDataTestCase(unittest.TestCase):
         TA_median = np.median(TA_resid)
         TA_pc95 = np.percentile(TA_resid, [2.5, 97.5])
 
-        self.assertLessEqual(abs(TA_median), 0.5, msg="TA Offset <= 2.5")
-        self.assertTrue(all(abs(TA_pc95) < 13), msg="TA 95% Conf <= 15")
+        self.assertLessEqual(abs(TA_median), 1, msg="TA Offset <= 1")
+        self.assertTrue(all(abs(TA_pc95) < 15), msg="TA 95% Conf <= 15")
 
         # calculate DIC from TA and pH
         cDIC = CBsys(
@@ -674,8 +674,8 @@ class ReferenceDataTestCase(unittest.TestCase):
         DIC_median = np.median(DIC_resid)
         DIC_pc95 = np.percentile(DIC_resid, [2.5, 97.5])
 
-        self.assertLessEqual(abs(DIC_median), 0.5, msg="DIC Offset <= 2")
-        self.assertTrue(all(abs(DIC_pc95) < 13), msg="DIC 95% Conf <= 15")
+        self.assertLessEqual(abs(DIC_median), 1, msg="DIC Offset <= 1")
+        self.assertTrue(all(abs(DIC_pc95) < 15), msg="DIC 95% Conf <= 15")
 
         return
 

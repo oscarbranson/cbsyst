@@ -19,14 +19,14 @@ Equilibrium speciation constants for carbon and boron in seawater.
 %  14 = Millero et al, 2010									T:    0-50  S:  1-50. Seaw. scale. Real seawater.
 % 
 %  (****) Each element must be an integer that 
-%         indicates the KSO4 dissociation constants that are to be used,
+%         indicates the KS dissociation constants that are to be used,
 %         in combination with the formulation of the borate-to-salinity ratio to be used.
 %         Having both these choices in a single argument is somewhat awkward, 
 %         but it maintains syntax compatibility with the previous version.
-%  1 = KSO4 of Dickson & TB of Uppstrom 1979  (PREFERRED) 
-%  2 = KSO4 of Khoo    & TB of Uppstrom 1979
-%  3 = KSO4 of Dickson & TB of Lee 2010
-%  4 = KSO4 of Khoo    & TB of Lee 2010
+%  1 = KS of Dickson & TB of Uppstrom 1979  (PREFERRED) 
+%  2 = KS of Khoo    & TB of Uppstrom 1979
+%  3 = KS of Dickson & TB of Lee 2010
+%  4 = KS of Khoo    & TB of Lee 2010
 """
 import numpy as np
 
@@ -51,7 +51,7 @@ def K1K2(T, Sal, P, mode="Luecker2000"):
     return
 
 
-def KSO4(T, Sal, P, mode="Dickson1990"):
+def KS(T, Sal, P, mode="Dickson1990"):
     opts = ["Dickson1990", "Khoo1977"]
     if mode == "Dickson1990":
         par = np.array(

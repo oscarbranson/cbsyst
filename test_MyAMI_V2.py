@@ -96,7 +96,7 @@ class MyAMIConsistency(unittest.TestCase):
                     0.0059414999999999997,
                 ]
             ),
-            "KSO4": np.array(
+            "KS": np.array(
                 [
                     141.328,
                     -4276.1000000000004,
@@ -195,7 +195,7 @@ class MyAMIConsistency(unittest.TestCase):
                     0.0058373362605226046,
                 ]
             ),
-            "KSO4": np.array(
+            "KS": np.array(
                 [
                     144.01723254985009,
                     -4387.5774837397103,
@@ -294,7 +294,7 @@ class MyAMIConsistency(unittest.TestCase):
                     0.0059773450025442203,
                 ]
             ),
-            "KSO4": np.array(
+            "KS": np.array(
                 [
                     138.11090558191418,
                     -4143.2416843287729,
@@ -393,7 +393,7 @@ class MyAMIConsistency(unittest.TestCase):
                     5.92165270e-03,
                 ]
             ),
-            "KSO4": np.array(
+            "KS": np.array(
                 [
                     1.41162345e02,
                     -4.27119136e03,
@@ -492,7 +492,7 @@ class MyAMIConsistency(unittest.TestCase):
                     6.00390771e-03,
                 ]
             ),
-            "KSO4": np.array(
+            "KS": np.array(
                 [
                     1.44315482e02,
                     -4.38452060e03,
@@ -591,7 +591,7 @@ class MyAMIConsistency(unittest.TestCase):
                     5.79693999e-03,
                 ]
             ),
-            "KSO4": np.array(
+            "KS": np.array(
                 [
                     1.43444246e02,
                     -4.36227512e03,
@@ -690,7 +690,7 @@ class MyAMIConsistency(unittest.TestCase):
                     6.01026695e-03,
                 ]
             ),
-            "KSO4": np.array(
+            "KS": np.array(
                 [
                     1.41126393e02,
                     -4.25101378e03,
@@ -767,7 +767,7 @@ class MyAMIConsistency(unittest.TestCase):
             "K2": 10 ** (-8.9660),
             "KB": np.exp(-19.7964),
             # 'KW': np.exp(-30.434),
-            "KSO4": np.exp(-2.30),
+            "KS": np.exp(-2.30),
             "KspC": 10 ** -6.3693,
             "KspA": 10 ** -6.1883,
         }

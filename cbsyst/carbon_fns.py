@@ -113,8 +113,8 @@ def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
         PAlk = TP * PhosTop / PhosBot
         SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
         # positive
-        Hfree = H / (1 + TS / Ks.KSO4)
-        HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+        Hfree = H / (1 + TS / Ks.KS)
+        HSO4 = TS / (1 + Ks.KS / Hfree)
         HF = TF / (1 + Ks.KF / Hfree)
 
         Residual = TA - CAlk - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
@@ -189,8 +189,8 @@ def pH_TA(pH, TA, BT, TP, TSi, TS, TF, Ks):
     PAlk = TP * PhosTop / PhosBot
     SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
     # positive alk
-    Hfree = H / (1 + TS / Ks.KSO4)
-    HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+    Hfree = H / (1 + TS / Ks.KS)
+    HSO4 = TS / (1 + Ks.KS / Hfree)
     HF = TF / (1 + Ks.KF / Hfree)
     CAlk = TA - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
 
@@ -342,8 +342,8 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
         PAlk = TP * PhosTop / PhosBot
         SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
         # positive
-        Hfree = H / (1 + TS / Ks.KSO4)
-        HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+        Hfree = H / (1 + TS / Ks.KS)
+        HSO4 = TS / (1 + Ks.KS / Hfree)
         HF = TF / (1 + Ks.KF / Hfree)
 
         Residual = TA - CAlk - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
@@ -434,8 +434,8 @@ def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode="multi"):
     PAlk = TP * PhosTop / PhosBot
     SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
     # positive
-    Hfree = H / (1 + TS / Ks.KSO4)
-    HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+    Hfree = H / (1 + TS / Ks.KS)
+    HSO4 = TS / (1 + Ks.KS / Hfree)
     HF = TF / (1 + Ks.KF / Hfree)
 
     TA = CAlk + BAlk + OH + PAlk + SiAlk - Hfree - HSO4 - HF
