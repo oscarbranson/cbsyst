@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+0.4.0 (2022)
+------------
+Delegate all K calculation to external packages - [kgen](https://github.com/PalaeoCarb/Kgen) and [myami](https://github.com/PalaeoCarb/MyAMI).
+
+* Strip out all old MyAMI code
+* re-organise carbon, boron, and boron isotope functions
+
 0.3.7 (2021-04-23)
 ------------------
 (including changes from 0.3.6... shoddy record keeping)
