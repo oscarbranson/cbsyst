@@ -2,8 +2,9 @@ import unittest
 import os
 import pandas as pd
 import numpy as np
-import cbsyst.carbon_fns as cf
-import cbsyst.boron_fns as bf
+import cbsyst.carbon as cf
+import cbsyst.boron as bf
+import cbsyst.boron_isotopes as bif
 from cbsyst.cbsyst import Csys, CBsys
 from cbsyst.helpers import Bunch
 from cbsyst.test_data.GLODAP_data.get_GLODAP_data import get_GLODAP
@@ -12,7 +13,7 @@ from cbsyst.test_data.GLODAP_data.get_GLODAP_data import get_GLODAP
 class BoronFnTestCase(unittest.TestCase):
     """Test all B functions"""
 
-    def test_Boron_Fns(self):
+    def test_Boron(self):
         ref = Bunch(
             {
                 "ABO3": 0.80882931,
@@ -75,49 +76,81 @@ class BoronFnTestCase(unittest.TestCase):
             bf.chiB_calc(ref.H, Ks), 1 / (1 + Ks.KB / ref.H), msg="chiB_calc"
         )
 
+        return
+
+    def test_Boron_Isotopes(self):
+        ref = Bunch(
+            {
+                "ABO3": 0.80882931,
+                "ABO4": 0.80463763,
+                "ABT": 0.80781778,
+                "BO3": 328.50895695,
+                "BO4": 104.49104305,
+                "BT": 433.0,
+                "Ca": 0.0102821,
+                "H": 7.94328235e-09,
+                "Ks": {
+                    "K0": 0.02839188,
+                    "K1": 1.42182814e-06,
+                    "K2": 1.08155475e-09,
+                    "KB": 2.52657299e-09,
+                    "KS": 0.10030207,
+                    "KW": 6.06386369e-14,
+                    "KspA": 6.48175907e-07,
+                    "KspC": 4.27235093e-07,
+                },
+                "Mg": 0.0528171,
+                "S": 35.0,
+                "T": 25.0,
+                "alphaB": 1.02725,
+                "dBO3": 46.30877684,
+                "dBO4": 18.55320208,
+                "dBT": 39.5,
+                "pHtot": 8.1,
+            }
+        )
+        
+        Ks = Bunch(ref.Ks)
+
         # Isotopes
         self.assertEqual(
-            bf.alphaB_calc(ref.T), 1.0293 - 0.000082 * ref.T, msg="alphaB_calc"
+            bif.alphaB_calc(ref.T), 1.0293 - 0.000082 * ref.T, msg="alphaB_calc"
         )
 
         self.assertAlmostEqual(
-            bf.pH_ABO3(ref.pHtot, ref.ABO3, Ks, ref.alphaB),
+            bif.pH_ABO3(ref.pHtot, ref.ABO3, Ks, ref.alphaB),
             ref.ABT,
             msg="pH_ABO3",
             places=6,
         )
 
         self.assertAlmostEqual(
-            bf.pH_ABO4(ref.pHtot, ref.ABO4, Ks, ref.alphaB),
+            bif.pH_ABO4(ref.pHtot, ref.ABO4, Ks, ref.alphaB),
             ref.ABT,
             msg="pH_ABO4",
             places=6,
         )
 
         self.assertAlmostEqual(
-            bf.cABO3(ref.H, ref.ABT, Ks, ref.alphaB), ref.ABO3, msg="cABO3", places=6
+            bif.cABO3(ref.H, ref.ABT, Ks, ref.alphaB), ref.ABO3, msg="cABO3", places=6
         )
 
         self.assertAlmostEqual(
-            bf.cABO4(ref.H, ref.ABT, Ks, ref.alphaB), ref.ABO4, msg="cABO4", places=6
+            bif.cABO4(ref.H, ref.ABT, Ks, ref.alphaB), ref.ABO4, msg="cABO4", places=6
         )
 
         # Isotope unit conversions
         self.assertAlmostEqual(
-            bf.A11_2_d11(0.807817779214075), 39.5, msg="A11_2_d11", places=6
+            bif.A11_2_d11(0.807817779214075), 39.5, msg="A11_2_d11", places=6
         )
 
         self.assertAlmostEqual(
-            bf.d11_2_A11(39.5), 0.807817779214075, msg="d11_2_A11", places=6
+            bif.d11_2_A11(39.5), 0.807817779214075, msg="d11_2_A11", places=6
         )
-
-        return
-
-
 class CarbonFnTestCase(unittest.TestCase):
     """Test all C functions"""
 
-    def test_Carbon_Fns(self):
+    def test_Carbon(self):
         ref = Bunch(
             {
                 "BAlk": 104.39451552567037,
