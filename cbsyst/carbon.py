@@ -1,9 +1,6 @@
 import scipy.optimize as opt
 import numpy as np
-from cbsyst.helpers import ch, noms, cast_array, maxL, calc_pH_scales, Bunch, cp
-
-# from cbsyst.boron_fns import cBO4
-
+from cbsyst.helpers import ch, noms, cast_array, maxL, Bunch, cp
 
 def _zero_wrapper(ps, fn, bounds=(10 ** -14, 10 ** -1)):
     """
