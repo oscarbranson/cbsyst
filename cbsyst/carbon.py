@@ -128,6 +128,8 @@ def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
 
         pHx += deltapH
 
+    if len(shape) > 1:
+        return pHx.reshape(shape)
     return pHx
 
 
@@ -369,8 +371,9 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
 
         pHx += deltapH
 
-    return pHx.reshape(shape)
-
+    if len(shape) > 1:
+        return pHx.reshape(shape)
+    return pHx
 
 # def TA_DIC(TA, DIC, BT, Ks):
 #     """
