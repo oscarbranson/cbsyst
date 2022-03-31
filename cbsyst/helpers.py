@@ -149,7 +149,30 @@ def maxL(*it):
         return max(m)
     else:
         return 1
+    
+def maxD(*it):
+    """
+    Calculate maximum number of dimensions in provided items.
+    
+    Parameters
+    ----------
+    *it : objects
+        Items of various shapes with an .ndim attribute.
+    """
+    return np.max([x.ndim for x in it])
 
+def maxShape(*it):
+    """
+    Returns the shape of the largest array.
+    """
+    size = 0
+    shape = None
+    for i in it:
+        i = np.asanyarray(i)
+        if i.size > size:
+            size = i.size
+            shape = i.shape
+    return shape
 
 def cast_array(*it):
     """

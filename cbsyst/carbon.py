@@ -1,6 +1,6 @@
 import scipy.optimize as opt
 import numpy as np
-from cbsyst.helpers import ch, noms, cast_array, maxL, Bunch, cp
+from cbsyst.helpers import ch, noms, cast_array, maxL, Bunch, cp, maxShape
 
 def _zero_wrapper(ps, fn, bounds=(10 ** -14, 10 ** -1)):
     """
@@ -88,6 +88,10 @@ def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
 
     Taken from matlab CO2SYS
     """
+    shape = maxShape(CO2, TA, BT, TP, TSi, TS, TF)
+    if len(shape) > 1:
+        CO2, TA, BT, TP, TSi, TS, TF = [np.ravel(i) for i in [CO2, TA, BT, TP, TSi, TS, TF]]
+
     fCO2 = CO2 / Ks.K0
     L = maxL(TA, CO2, BT, TP, TSi, TS, TF, Ks.K1)
     pHguess = 8.0
@@ -318,6 +322,12 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
 
     Taken directly from MATLAB CO2SYS.
     """
+    # determine shape of input
+    shape = maxShape(TA, DIC, BT, TP, TSi, TS, TF)
+    if len(shape) > 1:
+        # flatten inputs
+        TA, DIC, BT, TP, TSi, TS, TF = [np.ravel(i) for i in [TA, DIC, BT, TP, TSi, TS, TF]]
+    # determine largest input
     L = maxL(TA, DIC, BT, TP, TSi, TS, TF, Ks.K1)
     pHguess = 7.0
     pHtol = 0.00000001
@@ -359,7 +369,7 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
 
         pHx += deltapH
 
-    return pHx
+    return pHx.reshape(shape)
 
 
 # def TA_DIC(TA, DIC, BT, Ks):
