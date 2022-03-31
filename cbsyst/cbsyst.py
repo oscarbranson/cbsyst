@@ -4,7 +4,6 @@ Functions for calculating the carbon and boron chemistry of seawater.
 
 import numpy as np
 import kgen
-import myami
 from cbsyst.helpers import Bunch, maxL
 # from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi, MyAMI_K_calc_direct
 from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
@@ -15,7 +14,7 @@ from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_
 
 # Helper functions
 # ----------------
-def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, myami_mode='calc'):
+def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, MyAMI_Mode='calculate'):
     """
     Helper function to calculate Ks.
 
@@ -25,17 +24,7 @@ def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, myami_mod
     if isinstance(Ks, dict):
         Ks = Bunch(Ks)
     else:
-        Ks = Bunch(kgen.calc_Ks(TempC=T, Sal=S, Pres=P))  # calc empirical Ks
-        
-        if NnotNone(Mg, Ca) > 0:
-            if myami_mode == 'calc':
-                fcorr = myami.calc_Fcorr(Sal=S, TempC=T, Mg=Mg, Ca=Ca)
-            else:
-                fcorr = myami.approximate_Fcorr(Sal=S, TempC=T, Mg=Mg, Ca=Ca)
-
-            for k in Ks:
-                Ks[k] *= fcorr[k]
-        
+        Ks = Bunch(kgen.calc_Ks(TempC=T, Sal=S, Pres=P, Mg=Mg, Ca=Ca, MyAMI_mode=MyAMI_Mode))  # calc empirical Ks
         
         # pH conversions to total scale.
         #   - KP1, KP2, KP3 are all on SWS
