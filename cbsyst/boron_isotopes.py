@@ -7,8 +7,8 @@ from .boron import chiB_calc
 
 
 def alphaB_calc(**kwargs):
-    """Klochko alpha for B
-
+    """
+    Klochko alpha for B
     """
     return 1.0272
 
