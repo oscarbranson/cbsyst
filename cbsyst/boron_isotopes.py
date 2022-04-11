@@ -6,11 +6,18 @@ from .boron import chiB_calc
 
 
 
+def alphaB_calc(**kwargs):
+    """Klochko alpha for B
+
+    """
+    return 1.0272
+
+
 def alphaB_calc(TempC):
     """
     Temperature-sensitive alpha from Honisch et al, 2008
-    """
-    return 1.0293 - 0.000082 * TempC
+    """    
+    # return 1.0293 - 0.000082 * TempC
 
 
 # pH_ABO3 - ABT
