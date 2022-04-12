@@ -8,7 +8,7 @@ from cbsyst.helpers import Bunch, maxL
 # from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi, MyAMI_K_calc_direct
 from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
 from cbsyst.boron import calc_B_species
-from cbsyst.boron_isotopes import d11_2_A11, A11_2_d11, pH_using_ABO3, pH_using_ABO4, get_alphaB, calculate_ABO3, calculate_ABO4
+from cbsyst.boron_isotopes import d11_2_A11, A11_2_d11, calculate_pH, get_alphaB, calculate_ABO3, calculate_ABO4
 from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales
 
 
@@ -635,9 +635,9 @@ def ABsys(
     if ps.pHtot is not None and ps.ABT is not None:
         ps.H = ch(ps.pHtot)
     elif ps.pHtot is not None and ps.ABO3 is not None:
-        ps.ABT = pH_using_ABO3(ps.pHtot, ps.ABO3, ps.Ks, ps.alphaB)
+        ps.ABT = calculate_pH(ps.pHtot, ps.Ks, ps.alphaB,ABO3=ps.ABO3)
     elif ps.pHtot is not None and ps.ABO4 is not None:
-        ps.ABT = pH_using_ABO4(ps.pHtot, ps.ABO4, ps.Ks, ps.alphaB)
+        ps.ABT = calculate_pH(ps.pHtot, ps.Ks, ps.alphaB, ps.ABO4)
     else:
         raise ValueError("pH must be determined to calculate isotopes.")
 
