@@ -4,18 +4,33 @@ import numpy as np
 from cbsyst.helpers import ch,Bunch
 from .boron import chiB_calc
 
-
-
-def alphaB_calc(**kwargs):
+def get_alphaB():
     """
     Klochko alpha for B fractionation
     """
     return 1.0272
-
-# pH_ABO3 - ABT
-def pH_ABO3(pH, ABO3, Ks, alphaB):
+def get_epsilonB():
     """
-    Calculates ABT from pHtot and ABO3.
+    Klochko epsilon for B fractionation
+    """
+    return alpha_2_epsilon(get_alphaB())
+
+def alpha_2_epsilon(alphaB):
+    """
+    Convert alpha to epsilon (which is alpha in delta space)
+    """
+    return (alphaB-1)*1000
+def epsilon_2_alpha(epsilonB):
+    """
+    Convert epsilon to alpha
+    """
+    return (epsilonB/1000)+1
+
+
+# Calculate total boron isotope fractional abundance using boric acid (B(OH)3)
+def ABT_using_ABO3(pH, Ks, alphaB, ABO3):
+    """
+    Calculates ABT from pH (total scale) and ABO3.
 
     Parameters
     ----------
@@ -38,14 +53,12 @@ def pH_ABO3(pH, ABO3, Ks, alphaB):
     return (
         ABO3
         * (-ABO3 * alphaB * chiB + ABO3 * chiB + alphaB * chiB - chiB + 1)
-        / (-ABO3 * alphaB + ABO3 + alphaB)
-    )
+        / (-ABO3 * alphaB + ABO3 + alphaB))
 
-
-# pH_ABO4 - ABT
-def pH_ABO4(pH, ABO4, Ks, alphaB):
+# Calculate total boron isotope fractional abundance using borate ion (B(OH)4)
+def ABT_using_ABO4(pH, ABO4, Ks, alphaB):
     """
-    Calculates ABT from pHtot and ABO4.
+    Calculates ABT from pH (total scale) and ABO4.
 
     Parameters
     ----------
@@ -76,11 +89,15 @@ def pH_ABO4(pH, ABO4, Ks, alphaB):
             - chiB
             + 1
         )
-        / (ABO4 * alphaB - ABO4 + 1)
-    )
+        / (ABO4 * alphaB - ABO4 + 1))
 
-# ABO4_ABT - pH
-def ABO4_ABT(ABO4, ABT, Ks, alphaB):
+
+# Calculate pH using isotope fractional abundance of boric acid (B(OH)3)
+def pH_using_ABO3(ABO3, ABT, Ks, alphaB):
+    pass
+
+# Calculate pH using isotope fractional abundance of borate ion (B(OH)4)
+def pH_using_ABO4(ABO4, ABT, Ks, alphaB):
     """
     Calculates pHtot from ABO4 and ABT. 
 
@@ -102,7 +119,9 @@ def ABO4_ABT(ABO4, ABT, Ks, alphaB):
     """
     return -np.log10(Ks.KB / ((alphaB / (1 - ABO4 + alphaB * ABO4) - 1) / (ABT / ABO4 - 1) - 1))
 
-def cABO3(H, ABT, Ks, alphaB):
+
+# Calculate isotope fractional abundance of boric acid (B(OH)3)
+def calculate_ABO3(H, ABT, Ks, alphaB):
     """
     Calculate ABO3 from H and ABT
 
@@ -146,8 +165,8 @@ def cABO3(H, ABT, Ks, alphaB):
         + 1
     ) / (2 * chiB * (alphaB - 1))
 
-
-def cABO4(H, ABT, Ks, alphaB):
+# Calculate isotope fractional abundance of borate ion (B(OH)4)
+def calculate_ABO4(H, ABT, Ks, alphaB):
     """
     Calculate ABO4 from H and ABT
 
@@ -190,22 +209,40 @@ def cABO4(H, ABT, Ks, alphaB):
         )
         - 1
     ) / (2 * alphaB * chiB - 2 * alphaB - 2 * chiB + 2)
-def calpha(ABO4,ABT,H,Ks):
+
+# Calculate alpha using isotope fractional abundance of boric acid (B(OH)3)
+def alpha_using_ABO3(ABO3,ABT,H,Ks):
+    pass
+
+# Calculate alpha using isotope fractional abundance of borate ion (B(OH)4)
+def alpha_using_ABO4(ABO4,ABT,H,Ks):
     return ( (H*ABT*(ABO4+1) + (Ks.KB*(ABO4-ABT))) / ((ABO4**2 * (H+Ks.KB)) + (ABO4*(H-(ABT*Ks.KB)))))
 
 
-def calculate_pH(d11B4,d11BT,KB,epsilon=27.2):
+# Calculate alpha using isotope fractional abundance of borate ion (B(OH)3)
+def KB_using_ABO3(ABO3,ABT,H,alphaB):
+    pass
+
+# Calculate alpha using isotope fractional abundance of borate ion (B(OH)4)
+def KB_using_ABO4(ABO4,ABT,H,alphaB):
+    return (H
+            / ((ABO4 - ABT)
+            / ( ABT 
+            - 1 / ( (1/alphaB) * (1/ABO4 -1) + 1) )))
+
+
+def calculate_pH(Ks,d11BT,d11B4=None,d11B3=None,epsilon=get_epsilonB()):
     """
     Returns pH on the total scale
 
     Parameters
     ----------
-    d11B4 : float or array-like
-        isotope ratio 11B/10B in BO4 - delta units
+    Ks : Bunch (dictionary with . access)
+        bunch containing the boron speciation constant KB
     d11BT : float or array-like
         isotope ratio 11B/10B in total boron - delta units
-    KB : Bunch (dictionary with . access)
-        bunch containing the boron speciation constant KB
+    d11B4 : float or array-like
+        isotope ratio 11B/10B in BO4 - delta units
     epsilon : float or array-like
         fractionation factor between BO3 and BO4
     """
@@ -213,9 +250,9 @@ def calculate_pH(d11B4,d11BT,KB,epsilon=27.2):
     ABT = d11_2_A11(d11BT)
     alpha = epsilon_2_alpha(epsilon)
 
-    return ABO4_ABT(ABO4,ABT,KB,alpha)
+    return pH_using_ABO4(ABO4,ABT,Ks,alpha)
 
-def calculate_d11BT(d11B4,pH,KB,epsilon=27.2):
+def calculate_d11BT(d11B4,pH,KB,epsilon=get_epsilonB()):
     """
     Returns isotope ratio of total boron in delta units
 
@@ -233,9 +270,9 @@ def calculate_d11BT(d11B4,pH,KB,epsilon=27.2):
     ABO4 = d11_2_A11(d11B4)
     alpha = epsilon_2_alpha(epsilon)
 
-    return A11_2_d11(pH_ABO4(pH,ABO4,KB,alpha))
+    return A11_2_d11(ABT_using_ABO4(pH,ABO4,KB,alpha))
 
-def calculate_d11B4(d11BT,pH,KB,epsilon=27.2):
+def calculate_d11B4(d11BT,pH,KB,epsilon=get_epsilonB()):
     """
     Returns isotope ratio of borate ion in delta units
 
@@ -253,7 +290,16 @@ def calculate_d11B4(d11BT,pH,KB,epsilon=27.2):
     ABOT = d11_2_A11(d11BT)
     alpha = epsilon_2_alpha(epsilon)
 
-    return A11_2_d11(cABO4(ch(pH),ABOT,KB,alpha))
+    return A11_2_d11(calculate_ABO4(ch(pH),ABOT,KB,alpha))
+
+def calculate_KB(d11B4,d11BT,pH,epsilon=get_epsilonB()):
+    ABO4 = d11_2_A11(d11B4)
+    ABT = d11_2_A11(d11BT)
+    H = ch(pH)
+
+    alpha = epsilon_2_alpha(epsilon)
+
+    return KB_using_ABO4(ABO4,ABT,H,alpha)
 
 def calculate_epsilon(d11B4,d11BT,pH,KB):
     """
@@ -271,13 +317,12 @@ def calculate_epsilon(d11B4,d11BT,pH,KB):
         fractionation factor between BO3 and BO4
     """
     ABO4 = d11_2_A11(d11B4)
-    ABOT = d11_2_A11(d11BT)
+    ABT = d11_2_A11(d11BT)
     H = ch(pH)
 
-    alpha = calpha(ABO4,ABOT,H,KB)
+    alpha = alpha_using_ABO4(ABO4,ABT,H,KB)
 
     return alpha_2_epsilon(alpha)
-
     
 
 # Isotope Unit Converters
@@ -390,9 +435,3 @@ def R11_2_A11(R11):
     """
     return R11 / (1 + R11)
 
-def alpha_2_epsilon(alpha=None):
-    if alpha is None:
-        alpha = alphaB_calc()
-    return (alpha-1)*1000
-def epsilon_2_alpha(epsilon):
-    return (epsilon/1000)+1
