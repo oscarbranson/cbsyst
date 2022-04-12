@@ -198,54 +198,114 @@ def cABO4(H, ABT, Ks, alphaB):
         )
         - 1
     ) / (2 * alphaB * chiB - 2 * alphaB - 2 * chiB + 2)
-
+    
 
 # Isotope Unit Converters
 def A11_2_d11(A11, SRM_ratio=4.04367):
     """
-    Convert Abundance to Delta notation.
+    Convert fractional abundance (A11) to delta notation (d11).
 
-    Default SRM_ratio is NIST951 11B/10B
+    Parameters
+    ----------
+    A11 : array-like
+        The fractional abundance of 11B: 11B / (11B + 10B).
+    SRM_ratio : float, optional
+        The 11B/10B of the SRM, by default NIST951 which is 4.04367
+
+    Returns
+    -------
+    array-like
+        A11 expressed in delta notation (d11).
     """
     return ((A11 / (1 - A11)) / SRM_ratio - 1) * 1000
 
 
 def A11_2_R11(A11):
     """
-    Convert Abundance to Ratio notation.
+    Convert fractional abundance (A11) to isotope ratio (R11).
+
+    Parameters
+    ----------
+    A11 : array-like
+        The fractional abundance of 11B: 11B / (11B + 10B).
+
+    Returns
+    -------
+    array-like
+        A11 expressed as an isotope ratio (R11).
     """
     return A11 / (1 - A11)
 
 
 def d11_2_A11(d11, SRM_ratio=4.04367):
     """
-    Convert Delta to Abundance notation.
+    Convert delta notation (d11) to fractional abundance (A11).
 
-    Default SRM_ratio is NIST951 11B/10B
+    Parameters
+    ----------
+    d11 : array-like
+        The isotope ratio expressed in delta notation.
+    SRM_ratio : float, optional
+        The 11B/10B of the SRM, by default NIST951 which is 4.04367
+
+    Returns
+    -------
+    array-like
+       Delta notation (d11) expressed as fractional abundance (A11).
     """
     return SRM_ratio * (d11 / 1000 + 1) / (SRM_ratio * (d11 / 1000 + 1) + 1)
 
 
 def d11_2_R11(d11, SRM_ratio=4.04367):
     """
-    Convert Delta to Ratio notation.
+    Convert delta notation (d11) to isotope ratio (R11).
 
-    Default SRM_ratio is NIST951 11B/10B
+    Parameters
+    ----------
+    d11 : array-like
+        The isotope ratio expressed in delta notation.
+    SRM_ratio : float, optional
+        The 11B/10B of the SRM, by default NIST951 which is 4.04367
+
+    Returns
+    -------
+    array-like
+       Delta notation (d11) expressed as isotope ratio (R11).
     """
     return (d11 / 1000 + 1) * SRM_ratio
 
 
 def R11_2_d11(R11, SRM_ratio=4.04367):
     """
-    Convert Ratio to Delta notation.
+    Convert isotope ratio (R11) to delta notation (d11).
 
-    Default SRM_ratio is NIST951 11B/10B
+    Parameters
+    ----------
+    R11 : array-like
+        The isotope ratio (11B/10B).
+    SRM_ratio : float, optional
+        The 11B/10B of the SRM, by default NIST951 which is 4.04367
+
+    Returns
+    -------
+    array-like
+        R11 expressed in delta notation (d11).
     """
     return (R11 / SRM_ratio - 1) * 1000
 
 
 def R11_2_A11(R11):
     """
-    Convert Ratio to Abundance notation.
+    Convert isotope ratio (R11) to fractional abundance (A11).
+
+    Parameters
+    ----------
+    R11 : array-like
+        The isotope ratio (11B/10B).
+
+    Returns
+    -------
+    array-like
+        R11 expressed as fractional abundance (A11).
     """
     return R11 / (1 + R11)
