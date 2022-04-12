@@ -98,8 +98,6 @@ def Csys(
     Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
     Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468) Appendix B
 
-    pH is Total scale.
-
     Inputs must either be single values, arrays of equal length or a mixture of both.
     If you use arrays of unequal length, it won't work.
 
@@ -191,8 +189,6 @@ def Csys(
         ps.TF = calc_TF(ps.S_in)
     if ps.BT is None:
         ps.BT = calc_TB(ps.S_in)
-    # elif isinstance(BT, (int, float)):
-    #     ps.BT = ps.BT * ps.S_in / 35.
 
     # Calculate Ks at input conditions
     ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
@@ -243,7 +239,7 @@ def Csys(
         Ks=ps.Ks,
     )
 
-    # calculate pHs on all scales, if not done before.
+    # calculate pHs on all scales, if not done before (i.e. if pH not specified in input).
     if ps.pHNBS is None:
         # Calculate pH on all scales
         ps.update(
@@ -346,6 +342,7 @@ def Csys(
             "pHsws",
             "pHtot",
             "pHNBS",
+            "revelle_factor",
         ]
 
         ps.update({k + "_out": out_cond[k] for k in outputs})
@@ -394,8 +391,6 @@ def Bsys(
 
     Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
     Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468).
-
-    pH is Total scale.
 
     Inputs must either be single values, arrays of equal length or a mixture of both.
     If you use arrays of unequal length, it won't work.
@@ -547,8 +542,6 @@ def ABsys(
     Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
     Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468).
 
-    pH is Total scale.
-
     Inputs must either be single values, arrays of equal length or a mixture of both.
     If you use arrays of unequal length, it won't work.
 
@@ -635,7 +628,7 @@ def ABsys(
 
     # calculate alpha
     if alphaB is None:
-        ps.alphaB = alphaB_calc(ps.T_in)
+        ps.alphaB = alphaB_calc(TempC=ps.T_in)
     else:
         ps.alphaB = alphaB
 
@@ -733,8 +726,6 @@ def CBsys(
 
     Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
     Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468) Appendix B
-
-    pH is Total scale.
 
     Inputs must either be single values, arrays of equal length or a mixture of both.
     If you use arrays of unequal length, it won't work.
@@ -983,7 +974,7 @@ def CBsys(
 
     # calculate alpha
     if alphaB is None:
-        ps.alphaB = alphaB_calc(ps.T_in)
+        ps.alphaB = alphaB_calc(TempC=ps.T_in)
     else:
         ps.alphaB = alphaB
 
