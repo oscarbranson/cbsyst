@@ -8,22 +8,38 @@ from .boron import chiB_calc
 
 def alphaB_calc(**kwargs):
     """
-    Klochko alpha for B
+    Klochko alpha for B fractionation
     """
     return 1.0272
 
 
-def alphaB_calc(TempC):
-    """
-    Temperature-sensitive alpha from Honisch et al, 2008
-    """    
+# def alphaB_calc(TempC):
+#     """
+#     Temperature-sensitive alpha from Honisch et al, 2008
+#     """    
     # return 1.0293 - 0.000082 * TempC
 
 
 # pH_ABO3 - ABT
 def pH_ABO3(pH, ABO3, Ks, alphaB):
     """
-    Returns ABT
+    Calculates ABT from pHtot and ABO3.
+
+    Parameters
+    ----------
+    pH : array-like
+        pH on the Total scale
+    ABO3 : arra-like
+        The fractional abundance of 11B in B(OH)3.
+    Ks : dict
+        A dictionary of stoichiometric equilibrium constants.
+    alphaB : array-like
+        The fractionation factor between BO3 and BO4.
+
+    Returns
+    -------
+    array-like
+        The fractional abundance of 11B in total B (ABT).
     """
     H = ch(pH)
     chiB = chiB_calc(H, Ks)
@@ -37,7 +53,23 @@ def pH_ABO3(pH, ABO3, Ks, alphaB):
 # pH_ABO4 - ABT
 def pH_ABO4(pH, ABO4, Ks, alphaB):
     """
-    Returns ABT
+    Calculates ABT from pHtot and ABO4.
+
+    Parameters
+    ----------
+    pH : array-like
+        pH on the Total scale
+    ABO4 : array-like
+        The fractional abundance of 11B in B(OH)3.
+    Ks : dict
+        A dictionary of stoichiometric equilibrium constants.
+    alphaB : array-like
+        The fractionation factor between B(OH)3 and B(OH)4-
+
+    Returns
+    -------
+    array-like
+        The fractional abundance of 11B in total B (ABT).
     """
     H = ch(pH)
     chiB = chiB_calc(H, Ks)
@@ -58,22 +90,46 @@ def pH_ABO4(pH, ABO4, Ks, alphaB):
 # ABO4_ABT - pH
 def ABO4_ABT(ABO4, ABT, Ks, alphaB):
     """
-    Returns pHtot
+    Calculates pHtot from ABO4 and ABT. 
 
     Parameters
     ----------
     ABO4 : float or array-like
-        fractional abundance of 11B in BO4
+        fractional abundance of 11B in B(OH)4-
     ABT : float or array-like
         fractional abundance of 11B in total B
     Ks : dict
         dictionary of speciation constants
     alphaB : float or array-like
-        fractionation factor between BO3 and BO4
+        fractionation factor between B(OH)3 and B(OH)4-
+        
+    Returns
+    -------
+    array-like
+        pH on the Total scale.
     """
     return -np.log10(Ks.KB / ((alphaB / (1 - ABO4 + alphaB * ABO4) - 1) / (ABT / ABO4 - 1) - 1))
 
 def cABO3(H, ABT, Ks, alphaB):
+    """
+    Calculate ABO3 from H and ABT
+
+    Parameters
+    ----------
+    H : array-like
+        The activity of Hydrogen ions in mol kg-1
+    ABT : array-like
+        The fractional abundance of 11B in total B.
+    Ks : dict
+        A dictionary of stoichiometric equilibrium constants.
+    alphaB : array-like
+        The fractionation factor between B(OH)3 and B(OH)4-
+
+    Returns
+    -------
+    array-like
+        The fractional abundance of 11B in B(OH)3.
+    """
     chiB = chiB_calc(H, Ks)
     return (
         ABT * alphaB
@@ -100,6 +156,25 @@ def cABO3(H, ABT, Ks, alphaB):
 
 
 def cABO4(H, ABT, Ks, alphaB):
+    """
+    Calculate ABO4 from H and ABT
+
+    Parameters
+    ----------
+    H : array-like
+        The activity of Hydrogen ions in mol kg-1
+    ABT : array-like
+        The fractional abundance of 11B in total B.
+    Ks : dict
+        Dictionary of stoichiometric equilibrium constants.
+    alphaB : array-like
+        The fractionation factor between B(OH)3 and B(OH)4-
+
+    Returns
+    -------
+    array-like
+        The fractional abundance of 11B in B(OH)4-
+    """
     chiB = chiB_calc(H, Ks)
     return -(
         ABT * alphaB
