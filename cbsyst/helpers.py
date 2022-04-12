@@ -278,7 +278,7 @@ def swdens(TempC, Sal):
 
 def calc_TS(Sal):
     """
-    Calculate total Sulphur - lifted directly from CO2SYS.m
+    Calculate total Sulphur in mol/kg-SW- lifted directly from CO2SYS.m
 
     From Dickson et al., 2007, Table 2
     Note: Sal / 1.80655 = Chlorinity
@@ -288,7 +288,7 @@ def calc_TS(Sal):
 
 def calc_TF(Sal):
     """
-    Calculate total Fluorine
+    Calculate total Fluorine in mol/kg-SW
 
     From Dickson et al., 2007, Table 2
     Note: Sal / 1.80655 = Chlorinity
@@ -309,7 +309,7 @@ def calc_TF(Sal):
 
 def calc_TB(Sal):
     """
-    Calculate total Boron - lifted directly from CO2SYS.m
+    Calculate total Boron in mol/kg-SW - lifted directly from CO2SYS.m
 
     Directly from CO2SYS:
     Uppstrom, L., Deep-Sea Research 21:161-162, 1974:
@@ -317,7 +317,7 @@ def calc_TB(Sal):
     TB(FF) = (0.000232 / 10.811) * (Sal / 1.80655) in mol/kg-SW
     """
     a, b = (0.0004157, 35.0)
-    return a * Sal / b
+    return a * Sal / b  # mol/kg-SW
 
 
 def calc_fH(TempK, Sal):
