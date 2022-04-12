@@ -114,7 +114,8 @@ class BoronFnTestCase(unittest.TestCase):
 
         # Isotopes
         self.assertEqual(
-            bif.alphaB_calc(ref.T), 1.0293 - 0.000082 * ref.T, msg="alphaB_calc"
+            # bif.alphaB_calc(TempC=ref.T), 1.0293 - 0.000082 * ref.T, msg="alphaB_calc"
+            bif.alphaB_calc(TempC=ref.T), 1.0272, msg="alphaB_calc"
         )
 
         self.assertAlmostEqual(
