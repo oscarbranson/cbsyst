@@ -114,39 +114,38 @@ class BoronFnTestCase(unittest.TestCase):
 
         # Isotopes
         self.assertEqual(
-            # bif.alphaB_calc(TempC=ref.T), 1.0293 - 0.000082 * ref.T, msg="alphaB_calc"
-            bif.alphaB_calc(TempC=ref.T), 1.0272, msg="alphaB_calc"
+            bif.get_alphaB(), 1.0272, msg="alphaB_calc"
         )
 
         self.assertAlmostEqual(
-            bif.pH_ABO3(ref.pHtot, ref.ABO3, Ks, ref.alphaB),
+            bif.calculate_ABT(H=ref.H, ABO3=ref.ABO3, Ks=Ks, alphaB=ref.alphaB),
             ref.ABT,
-            msg="pH_ABO3",
+            msg="calculate_ABT (BO3)",
             places=6,
         )
 
         self.assertAlmostEqual(
-            bif.pH_ABO4(ref.pHtot, ref.ABO4, Ks, ref.alphaB),
+            bif.calculate_ABT(H=ref.H, ABO4=ref.ABO4, Ks=Ks, alphaB=ref.alphaB),
             ref.ABT,
-            msg="pH_ABO4",
+            msg="calculate_ABT (pH, BO4",
             places=6,
         )
 
         self.assertAlmostEqual(
-            bif.cABO3(ref.H, ref.ABT, Ks, ref.alphaB), ref.ABO3, msg="cABO3", places=6
+            bif.calculate_ABO3(H=ref.H, ABT=ref.ABT, Ks=Ks, alphaB=ref.alphaB), ref.ABO3, msg="calculate_ABO3", places=6
         )
 
         self.assertAlmostEqual(
-            bif.cABO4(ref.H, ref.ABT, Ks, ref.alphaB), ref.ABO4, msg="cABO4", places=6
+            bif.calculate_ABO4(H=ref.H, ABT=ref.ABT, Ks=Ks, alphaB=ref.alphaB), ref.ABO4, msg="calculate_ABO4", places=6
         )
 
         # Isotope unit conversions
         self.assertAlmostEqual(
-            bif.A11_2_d11(0.807817779214075), 39.5, msg="A11_2_d11", places=6
+            bif.A11_to_d11(0.807817779214075), 39.5, msg="A11_to_d11", places=6
         )
 
         self.assertAlmostEqual(
-            bif.d11_2_A11(39.5), 0.807817779214075, msg="d11_2_A11", places=6
+            bif.d11_to_A11(39.5), 0.807817779214075, msg="d11_to_A11", places=6
         )
 class CarbonFnTestCase(unittest.TestCase):
     """Test all C functions"""
