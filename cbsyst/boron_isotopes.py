@@ -13,9 +13,9 @@ def get_epsilonB():
     """
     Klochko epsilon for B fractionation
     """
-    return alpha_2_epsilon(get_alphaB())
+    return alpha_to_epsilon(get_alphaB())
 
-def alpha_2_epsilon(alphaB):
+def alpha_to_epsilon(alphaB):
     """
     Convert alpha to epsilon (which is alpha in delta space)
 
@@ -30,7 +30,7 @@ def alpha_2_epsilon(alphaB):
         alphaB expressed in delta notation (AKA epsilonB).
     """
     return (alphaB-1)*1000
-def epsilon_2_alpha(epsilonB):
+def epsilon_to_alpha(epsilonB):
     """
     Convert epsilon to alpha
 
@@ -47,7 +47,7 @@ def epsilon_2_alpha(epsilonB):
     return (epsilonB/1000)+1
 
 # Isotope Unit Converters
-def A11_2_d11(A11, SRM_ratio=4.04367):
+def A11_to_d11(A11, SRM_ratio=4.04367):
     """
     Convert fractional abundance (A11) to delta notation (d11).
 
@@ -64,7 +64,7 @@ def A11_2_d11(A11, SRM_ratio=4.04367):
         A11 expressed in delta notation (d11).
     """
     return ((A11 / (1 - A11)) / SRM_ratio - 1) * 1000
-def A11_2_R11(A11):
+def A11_to_R11(A11):
     """
     Convert fractional abundance (A11) to isotope ratio (R11).
 
@@ -79,7 +79,7 @@ def A11_2_R11(A11):
         A11 expressed as an isotope ratio (R11).
     """
     return A11 / (1 - A11)
-def d11_2_A11(d11, SRM_ratio=4.04367):
+def d11_to_A11(d11, SRM_ratio=4.04367):
     """
     Convert delta notation (d11) to fractional abundance (A11).
 
@@ -96,7 +96,7 @@ def d11_2_A11(d11, SRM_ratio=4.04367):
        Delta notation (d11) expressed as fractional abundance (A11).
     """
     return SRM_ratio * (d11 / 1000 + 1) / (SRM_ratio * (d11 / 1000 + 1) + 1)
-def d11_2_R11(d11, SRM_ratio=4.04367):
+def d11_to_R11(d11, SRM_ratio=4.04367):
     """
     Convert delta notation (d11) to isotope ratio (R11).
 
@@ -113,7 +113,7 @@ def d11_2_R11(d11, SRM_ratio=4.04367):
        Delta notation (d11) expressed as isotope ratio (R11).
     """
     return (d11 / 1000 + 1) * SRM_ratio
-def R11_2_d11(R11, SRM_ratio=4.04367):
+def R11_to_d11(R11, SRM_ratio=4.04367):
     """
     Convert isotope ratio (R11) to delta notation (d11).
 
@@ -130,7 +130,7 @@ def R11_2_d11(R11, SRM_ratio=4.04367):
         R11 expressed in delta notation (d11).
     """
     return (R11 / SRM_ratio - 1) * 1000
-def R11_2_A11(R11):
+def R11_to_A11(R11):
     """
     Convert isotope ratio (R11) to fractional abundance (A11).
 
@@ -442,9 +442,9 @@ def calculate_pH(Ks, d11BT, d11B4=None, d11B3=None, epsilon=get_epsilonB()):
     array-like
         pH on the total scale
     """
-    AB4 = d11_2_A11(d11B4)
-    ABT = d11_2_A11(d11BT)
-    alpha = epsilon_2_alpha(epsilon)
+    AB4 = d11_to_A11(d11B4)
+    ABT = d11_to_A11(d11BT)
+    alpha = epsilon_to_alpha(epsilon)
 
     return cp(calculate_H(Ks,alpha,ABT,AB4))
 def calculate_pKB(pH, d11BT, d11B4, epsilonB=get_epsilonB()):
@@ -467,11 +467,11 @@ def calculate_pKB(pH, d11BT, d11B4, epsilonB=get_epsilonB()):
     array-like
         The stoichiometric equilibrium constant for boron (KB)
     """
-    AB4 = d11_2_A11(d11B4)
-    ABT = d11_2_A11(d11BT)
+    AB4 = d11_to_A11(d11B4)
+    ABT = d11_to_A11(d11BT)
     H = ch(pH)
 
-    alphaB = epsilon_2_alpha(epsilonB)
+    alphaB = epsilon_to_alpha(epsilonB)
 
     return cp(calculate_KB(H,alphaB,ABT,AB4))
 def calculate_d11BT(pH, KB, d11B4, epsilonB=get_epsilonB()):
@@ -494,10 +494,10 @@ def calculate_d11BT(pH, KB, d11B4, epsilonB=get_epsilonB()):
     array-like
         The isotope ratio 11B/10B in BT - delta units (d11BT)
     """
-    AB4 = d11_2_A11(d11B4)
-    alpha = epsilon_2_alpha(epsilonB)
+    AB4 = d11_to_A11(d11B4)
+    alpha = epsilon_to_alpha(epsilonB)
     H = ch(pH)
-    return A11_2_d11(calculate_ABT(H,KB,alpha,AB4))
+    return A11_to_d11(calculate_ABT(H,KB,alpha,AB4))
 def calculate_d11B4(pH, KB, d11BT, epsilonB=get_epsilonB()):
     """
     Calculates the isotope ratio of borate ion in delta units
@@ -518,10 +518,10 @@ def calculate_d11B4(pH, KB, d11BT, epsilonB=get_epsilonB()):
     array-like
         The isotope ratio 11B/10B in BO4 - delta units
     """
-    ABOT = d11_2_A11(d11BT)
-    alpha = epsilon_2_alpha(epsilonB)
+    ABOT = d11_to_A11(d11BT)
+    alpha = epsilon_to_alpha(epsilonB)
 
-    return A11_2_d11(calculate_AB4(ch(pH),KB,ABOT,alpha))
+    return A11_to_d11(calculate_AB4(ch(pH),KB,ABOT,alpha))
 def calculate_epsilon(pH, KB, d11BT, d11B4):
     """
     Returns isotope ratio of borate ion in delta units
@@ -542,10 +542,10 @@ def calculate_epsilon(pH, KB, d11BT, d11B4):
     array-like
         fractionation factor between BO3 and BO4 in delta units (epsilon)
     """
-    AB4 = d11_2_A11(d11B4)
-    ABT = d11_2_A11(d11BT)
+    AB4 = d11_to_A11(d11B4)
+    ABT = d11_to_A11(d11BT)
     H = ch(pH)
 
     alpha = calculate_alpha_AB4(H,KB,ABT,AB4)
 
-    return alpha_2_epsilon(alpha)
+    return alpha_to_epsilon(alpha)
