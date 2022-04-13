@@ -33,4 +33,4 @@ jobs:
         python3 -m pip install -r requirements.txt
         python3 -m pip install -e . --no-deps --force-reinstall
         pushd cbsyst/test_data/GLODAP_data && python3 get_GLODAP_data.py && popd
-        python3 setup.py test
+        python3 -m unittest
