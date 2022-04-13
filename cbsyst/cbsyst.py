@@ -628,7 +628,7 @@ def ABsys(
 
     # calculate alpha
     if alphaB is None:
-        ps.alphaB = get_alphaB(TempC=ps.T_in)
+        ps.alphaB = get_alphaB()
     else:
         ps.alphaB = alphaB
 
@@ -642,9 +642,9 @@ def ABsys(
         raise ValueError("pH must be determined to calculate isotopes.")
 
     if ps.ABO3 is None:
-        ps.ABO3 = calculate_ABO3(ps.H, ps.ABT, ps.Ks, ps.alphaB)
+        ps.ABO3 = calculate_ABO3(H=ps.H, ABT=ps.ABT, Ks=ps.Ks, alphaB=ps.alphaB)
     if ps.ABO4 is None:
-        ps.ABO4 = calculate_ABO4(ps.H, ps.ABT, ps.Ks, ps.alphaB)
+        ps.ABO4 = calculate_ABO4(H=ps.H, ABT=ps.ABT, Ks=ps.Ks, alphaB=ps.alphaB)
 
     if ps.dBT is None:
         ps.dBT = A11_to_d11(ps.ABT)
