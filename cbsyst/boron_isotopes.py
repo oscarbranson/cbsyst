@@ -393,7 +393,7 @@ def calculate_alpha_ABO4(H, Ks, ABT, ABO4):
             / (1 / (ABT - ((ABO4-ABT)/(H/Ks.KB))) -1) )
 
 # Calculate alpha using isotope fractional abundance of borate ion (B(OH)4)
-def calculate_AKB(H, alphaB, ABT, ABO4=None, ABO3=None):
+def calculate_KB(H, alphaB, ABT, ABO4=None, ABO3=None):
     """
     Calculate stoichiometric equilibrium constant for boron
 
@@ -447,7 +447,7 @@ def calculate_pH(Ks, d11BT, d11B4=None, d11B3=None, epsilon=get_epsilonB()):
     alpha = epsilon_2_alpha(epsilon)
 
     return cp(calculate_H(Ks,alpha,ABT,ABO4))
-def calculate_KB(pH, d11BT, d11B4, epsilonB=get_epsilonB()):
+def calculate_pKB(pH, d11BT, d11B4, epsilonB=get_epsilonB()):
     """
     Calculate stoichiometric equilibrium constant for boron with delta inputs
 
@@ -473,7 +473,7 @@ def calculate_KB(pH, d11BT, d11B4, epsilonB=get_epsilonB()):
 
     alphaB = epsilon_2_alpha(epsilonB)
 
-    return calculate_AKB(H,alphaB,ABT,ABO4)
+    return cp(calculate_KB(H,alphaB,ABT,ABO4))
 def calculate_d11BT(pH, KB, d11B4, epsilonB=get_epsilonB()):
     """
     Calcluates the isotope ratio of total boron in delta units
