@@ -8,7 +8,7 @@ from cbsyst.helpers import Bunch, maxL
 # from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi, MyAMI_K_calc_direct
 from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
 from cbsyst.boron import calc_B_species
-from cbsyst.boron_isotopes import d11_2_A11, A11_2_d11, pH_ABO3, alphaB_calc, cABO3, cABO4
+from cbsyst.boron_isotopes import d11_2_A11, A11_2_d11, pH_ABO3, alphaB_calc, cABO3, cABO4, ABO4_ABT
 from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales
 
 
@@ -844,20 +844,33 @@ def CBsys(
     # Calculate Ks
     ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
 
+    # # calculate alpha
+    # if alphaB is None:
+    #     ps.alphaB = alphaB_calc(TempC=ps.T_in)
+    # else:
+    #     ps.alphaB = alphaB
+    
+    npH = NnotNone(pHtot, pHsws, pHfree, pHNBS)
+    
+    # # Special Case: pH is not given, but dBO4 and dBT are
+    # if npH == 0 and dBO4 is not None and dBT is not None:
+    #     pHtot = ABO4_ABT(ABO4=d11_2_A11(dBO4), ABT=d11_2_A11(dBT), Ks=ps.Ks, alphaB=alphaB)
+    
     # Calculate pH scales (does nothing if none pH given)
-    ps.update(
-        calc_pH_scales(
-            ps.pHtot,
-            ps.pHfree,
-            ps.pHsws,
-            ps.pHNBS,
-            ps.TS,
-            ps.TF,
-            ps.T_in + 273.15,
-            ps.S_in,
-            ps.Ks,
+    if npH == 1:
+        ps.update(
+            calc_pH_scales(
+                ps.pHtot,
+                ps.pHfree,
+                ps.pHsws,
+                ps.pHNBS,
+                ps.TS,
+                ps.TF,
+                ps.T_in + 273.15,
+                ps.S_in,
+                ps.Ks,
+            )
         )
-    )
 
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
@@ -865,7 +878,7 @@ def CBsys(
             ps.CO2 = fCO2_to_CO2(ps.fCO2, ps.Ks)
         elif ps.pCO2 is not None:
             ps.CO2 = fCO2_to_CO2(pCO2_to_fCO2(ps.pCO2, ps.T_in), ps.Ks)
-
+    
     # if no B info provided, assume modern conc.
     nBspec = NnotNone(ps.BT, ps.BO3, ps.BO4)
     if nBspec == 0:
@@ -971,12 +984,6 @@ def CBsys(
     #     ps.ABO3 = d11_2_A11(ps.dBO3)
     # if ps.dBO4 is not None:
     #     ps.ABO4 = d11_2_A11(ps.dBO4)
-
-    # calculate alpha
-    if alphaB is None:
-        ps.alphaB = alphaB_calc(TempC=ps.T_in)
-    else:
-        ps.alphaB = alphaB
 
     # if ps.pHtot is not None and ps.ABT is not None:
     #     ps.H = ch(ps.pHtot)
