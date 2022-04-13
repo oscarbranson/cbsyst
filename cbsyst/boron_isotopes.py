@@ -1,7 +1,7 @@
 # B isotope fns
 
 import numpy as np
-from cbsyst.helpers import ch,Bunch
+from cbsyst.helpers import ch,cp,Bunch
 from .boron import chiB_calc
 
 def get_alphaB():
@@ -18,11 +18,31 @@ def get_epsilonB():
 def alpha_2_epsilon(alphaB):
     """
     Convert alpha to epsilon (which is alpha in delta space)
+
+    Parameters
+    ----------
+    alphaB : array-like
+        The isotope fractionation factor for (11/10 BO3)/(11/10 BO4).
+
+    Returns
+    -------
+    array-like
+        alphaB expressed in delta notation (AKA epsilonB).
     """
     return (alphaB-1)*1000
 def epsilon_2_alpha(epsilonB):
     """
     Convert epsilon to alpha
+
+    Parameters
+    ----------
+    epsilonB : array-like
+        The isotope fractionation factor (11/10 BO3)/(11/10 BO4) expressed in delta notation.
+
+    Returns
+    -------
+    array-like
+        The isotope fractionation factor (11/10 BO3)/(11/10 BO4).
     """
     return (epsilonB/1000)+1
 
@@ -130,11 +150,37 @@ def R11_2_A11(R11):
 def ABO3_to_ABO4(ABO3,alphaB):
     """
     Converts isotope fractional abundance of boric acid to isotope fraction abundance of borate ion
+
+    Parameters
+    ----------
+    ABO3 : array-like
+        The fractional abundance of boric acid (B(OH)3)
+    alphaB : array-like
+        The isotope fractionation factor for (11/10 BO3)/(11/10 BO4).
+
+    Returns
+    -------
+    array-like
+        ABO4 - the fractional abundance of borate ion (B(OH)4)
     """
     return (1 / ((alphaB / ABO3) - alphaB + 1) )
 def ABO3_or_ABO4(ABO3,ABO4,alphaB):
     """
-    Helper function to determine ABO4 where necessary
+    Helper function to determine ABO4 if ABO3 is None
+
+    Parameters
+    ----------
+    ABO3 : array-like
+        The fractional abundance of boric acid (B(OH)3)
+    ABO4 : array-like
+        The fractional abundance of borate ion (B(OH)4)
+    alphaB : array-like
+        The isotope fractionation factor for (11/10 BO3)/(11/10 BO4).
+
+    Returns
+    -------
+    array-like
+        ABO4 - the fractional abundance of borate ion (B(OH)4)
     """
     if (ABO4 is None and ABO3 is None) or (ABO4 is not None and ABO3 is not None):
         raise(ValueError("Either ABO4 or ABO3 must be specified"))
@@ -144,20 +190,22 @@ def ABO3_or_ABO4(ABO3,ABO4,alphaB):
 
 # Base Functions
 # Calculate total boron isotope fractional abundance using borate ion (B(OH)4)
-def calculate_ABT(Ks, pH, alphaB, ABO4=None, ABO3=None):
+def calculate_ABT(H, Ks, alphaB, ABO4=None, ABO3=None):
     """
     Calculates ABT from pH (total scale) and ABO4.
 
     Parameters
-    ----------
-    pH : array-like
-        pH on the Total scale
-    ABO4 : array-like
-        The fractional abundance of 11B in B(OH)3.
+    ----------    
     Ks : dict
         A dictionary of stoichiometric equilibrium constants.
+    pH : array-like
+        pH on the Total scale
     alphaB : array-like
         The fractionation factor between B(OH)3 and B(OH)4-
+    ABO4 : array-like
+        The fractional abundance of 11B in B(OH)4.
+    ABO3 : array-like
+        The fractional abundance of 11B in B(OH)3.
 
     Returns
     -------
@@ -166,7 +214,6 @@ def calculate_ABT(Ks, pH, alphaB, ABO4=None, ABO3=None):
     """
     ABO4 = ABO3_or_ABO4(ABO3,ABO4,alphaB)
 
-    H = ch(pH)
     chiB = chiB_calc(H, Ks)
     return (
         ABO4
@@ -182,43 +229,43 @@ def calculate_ABT(Ks, pH, alphaB, ABO4=None, ABO3=None):
         / (ABO4 * alphaB - ABO4 + 1))
 
 # Calculate pH using isotope fractional abundance of borate ion (B(OH)4)
-def calculate_ApH(Ks, alphaB, ABT, ABO4=None, ABO3=None):
+def calculate_H(Ks, alphaB, ABT, ABO4=None, ABO3=None):
     """
     Calculates pHtot from ABO4 and ABT. 
 
     Parameters
     ----------
-    ABO4 : float or array-like
-        fractional abundance of 11B in B(OH)4-
-    ABT : float or array-like
-        fractional abundance of 11B in total B
     Ks : dict
         dictionary of speciation constants
     alphaB : float or array-like
         fractionation factor between B(OH)3 and B(OH)4-
+    ABT : float or array-like
+        fractional abundance of 11B in total B
+    ABO4 : float or array-like
+        fractional abundance of 11B in B(OH)4-
         
     Returns
     -------
     array-like
-        pH on the Total scale.
+        pH on the total scale.
     """
     ABO4 = ABO3_or_ABO4(ABO3,ABO4,alphaB)
 
-    return -np.log10(Ks.KB / ((alphaB / (1 - ABO4 + alphaB * ABO4) - 1) / (ABT / ABO4 - 1) - 1))
+    return (Ks.KB / ((alphaB / (1 - ABO4 + alphaB * ABO4) - 1) / (ABT / ABO4 - 1) - 1))
 
 # Calculate isotope fractional abundance of boric acid (B(OH)3)
-def calculate_ABO3(H, ABT, Ks, alphaB):
+def calculate_ABO3(H, Ks, ABT, alphaB):
     """
     Calculate ABO3 from H and ABT
 
     Parameters
     ----------
+    Ks : dict
+        A dictionary of stoichiometric equilibrium constants.
     H : array-like
         The activity of Hydrogen ions in mol kg-1
     ABT : array-like
         The fractional abundance of 11B in total B.
-    Ks : dict
-        A dictionary of stoichiometric equilibrium constants.
     alphaB : array-like
         The fractionation factor between B(OH)3 and B(OH)4-
 
@@ -252,18 +299,18 @@ def calculate_ABO3(H, ABT, Ks, alphaB):
     ) / (2 * chiB * (alphaB - 1))
 
 # Calculate isotope fractional abundance of borate ion (B(OH)4)
-def calculate_ABO4(H, ABT, Ks, alphaB):
+def calculate_ABO4(H, Ks, ABT, alphaB):
     """
     Calculate ABO4 from H and ABT
 
     Parameters
     ----------
+    Ks : dict
+        Dictionary of stoichiometric equilibrium constants.
     H : array-like
         The activity of Hydrogen ions in mol kg-1
     ABT : array-like
         The fractional abundance of 11B in total B.
-    Ks : dict
-        Dictionary of stoichiometric equilibrium constants.
     alphaB : array-like
         The fractionation factor between B(OH)3 and B(OH)4-
 
@@ -297,18 +344,77 @@ def calculate_ABO4(H, ABT, Ks, alphaB):
     ) / (2 * alphaB * chiB - 2 * alphaB - 2 * chiB + 2)
 
 # Calculate alpha using isotope fractional abundance of boric acid (B(OH)3)
-def calculate_alpha_ABO3(Ks,H,ABT,ABO3):
+def calculate_alpha_ABO3(H, Ks, ABT, ABO3):
+    """
+    Calculate fractionation factor (alpha) from the fractional abundance of 11B in B(OH)3 (ABO3)
+
+    Parameters
+    ----------
+    Ks : dict
+        Dictionary of stoichiometric equilibrium constants.
+    H : array-like
+        The activity of Hydrogen ions in mol kg-1
+    ABT : array-like
+        The fractional abundance of 11B in total B.
+    ABO3 : array-like
+        The fractional abundance of 11B in boric acid (B(OH)3).
+
+    Returns
+    -------
+    array-like
+        The fractionation factor between B(OH)3 and B(OH)4- (alpha)
+    """
     return ( (1
             / ((H/Ks.KB) * (ABT - ABO3) + ABT)) 
             / (ABO3 -1))
 
 # Calculate alpha using isotope fractional abundance of borate ion (B(OH)4)
-def calculate_alpha_ABO4(Ks,H,ABT,ABO4):
-    return ( (1 - ABO4)
-            / (ABO4 / (ABT - ((ABO4-ABT)/(H/Ks.KB))) -ABO4) )
+def calculate_alpha_ABO4(H, Ks, ABT, ABO4):
+    """
+    Calculate fractionation factor (alpha) from the fractional abundance of 11B in B(OH)3 (ABO3)
+
+    Parameters
+    ----------
+    Ks : dict
+        Dictionary of stoichiometric equilibrium constants.
+    H : array-like
+        The activity of Hydrogen ions in mol kg-1
+    ABT : array-like
+        The fractional abundance of 11B in total B.
+    ABO4 : array-like
+        The fractional abundance of 11B in borate ion (B(OH)4).
+
+    Returns
+    -------
+    array-like
+        The fractionation factor between B(OH)3 and B(OH)4- (alpha)
+    """
+    return ( (1/ABO4 - 1)
+            / (1 / (ABT - ((ABO4-ABT)/(H/Ks.KB))) -1) )
 
 # Calculate alpha using isotope fractional abundance of borate ion (B(OH)4)
-def calculate_AKB(H,alphaB,ABT,ABO4=None,ABO3=None):
+def calculate_AKB(H, alphaB, ABT, ABO4=None, ABO3=None):
+    """
+    Calculate stoichiometric equilibrium constant for boron
+
+    Parameters
+    ----------
+    H : array-like
+        The activity of Hydrogen ions in mol kg-1
+    alphaB : array-like
+        The fractionation factor between B(OH)3 and B(OH)4-
+    ABT : array-like
+        The fractional abundance of 11B in total B.
+    ABO4 : array-like
+        The fractional abundance of 11B in borate ion (B(OH)4).
+    ABO3 : array-like
+        The fractional abundance of 11B in boric acid (B(OH)3).
+
+    Returns
+    -------
+    array-like
+        The stoichiometric equilibrium constant for boron (KB)
+    """
     ABO4 = ABO3_or_ABO4(ABO3,ABO4,alphaB)
     return (H
             / ((ABO4 - ABT)
@@ -316,9 +422,9 @@ def calculate_AKB(H,alphaB,ABT,ABO4=None,ABO3=None):
             - 1 / ( (1/alphaB) * (1/ABO4 -1) + 1) )))
 
 # Wrapper functions using delta values
-def calculate_pH(Ks,d11BT,d11B4=None,d11B3=None,epsilon=get_epsilonB()):
+def calculate_pH(Ks, d11BT, d11B4=None, d11B3=None, epsilon=get_epsilonB()):
     """
-    Returns pH on the total scale
+    Calculates pH on the total scale
 
     Parameters
     ----------
@@ -330,76 +436,116 @@ def calculate_pH(Ks,d11BT,d11B4=None,d11B3=None,epsilon=get_epsilonB()):
         isotope ratio 11B/10B in BO4 - delta units
     epsilon : float or array-like
         fractionation factor between BO3 and BO4
+
+    Returns
+    ----------
+    array-like
+        pH on the total scale
     """
     ABO4 = d11_2_A11(d11B4)
     ABT = d11_2_A11(d11BT)
     alpha = epsilon_2_alpha(epsilon)
 
-    return calculate_ApH(Ks,alpha,ABT,ABO4)
-def calculate_KB(d11B4,d11BT,pH,epsilon=get_epsilonB()):
+    return cp(calculate_H(Ks,alpha,ABT,ABO4))
+def calculate_KB(pH, d11BT, d11B4, epsilonB=get_epsilonB()):
+    """
+    Calculate stoichiometric equilibrium constant for boron with delta inputs
+
+    Parameters
+    ----------
+    pH : array-like
+        pH on the total scale
+    d11BT : array-like
+        The isotope ratio of 11B in total B in delta units
+    d11B4 : array-like
+        The isotope ratio of 11B in borate ion (B(OH)4) in delta units
+    epsilonB : array-like
+        The fractionation factor between B(OH)3 and B(OH)4- as delta units
+
+    Returns
+    -------
+    array-like
+        The stoichiometric equilibrium constant for boron (KB)
+    """
     ABO4 = d11_2_A11(d11B4)
     ABT = d11_2_A11(d11BT)
     H = ch(pH)
 
-    alphaB = epsilon_2_alpha(epsilon)
+    alphaB = epsilon_2_alpha(epsilonB)
 
     return calculate_AKB(H,alphaB,ABT,ABO4)
-def calculate_d11BT(d11B4,pH,KB,epsilon=get_epsilonB()):
+def calculate_d11BT(pH, KB, d11B4, epsilonB=get_epsilonB()):
     """
-    Returns isotope ratio of total boron in delta units
+    Calcluates the isotope ratio of total boron in delta units
 
     Parameters
     ----------
+    pH : float or array-like
+        pH on the total scale
+    KB : Bunch (dictionary with . access)
+        bunch containing the boron speciation constant KB
     d11B4 : float or array-like
         isotope ratio 11B/10B in BO4 - delta units
-    pH : float or array-like
-        pH on the total scale
-    KB : Bunch (dictionary with . access)
-        bunch containing the boron speciation constant KB
-    epsilon : float or array-like
+    epsilonB : float or array-like
         fractionation factor between BO3 and BO4
+
+    Returns
+    -------
+    array-like
+        The isotope ratio 11B/10B in BT - delta units (d11BT)
     """
     ABO4 = d11_2_A11(d11B4)
-    alpha = epsilon_2_alpha(epsilon)
-    return A11_2_d11(calculate_ABT(KB,pH,alpha,ABO4))
-def calculate_d11B4(d11BT,pH,KB,epsilon=get_epsilonB()):
+    alpha = epsilon_2_alpha(epsilonB)
+    H = ch(pH)
+    return A11_2_d11(calculate_ABT(H,KB,alpha,ABO4))
+def calculate_d11B4(pH, KB, d11BT, epsilonB=get_epsilonB()):
     """
-    Returns isotope ratio of borate ion in delta units
+    Calculates the isotope ratio of borate ion in delta units
 
     Parameters
     ----------
-    d11BT : float or array-like
-        isotope ratio 11B/10B in total boron - delta units
     pH : float or array-like
         pH on the total scale
     KB : Bunch (dictionary with . access)
         bunch containing the boron speciation constant KB
-    epsilon : float or array-like
+    d11BT : float or array-like
+        isotope ratio 11B/10B in total boron - delta units
+    epsilonB : float or array-like
         fractionation factor between BO3 and BO4
+    
+    Returns
+    -------
+    array-like
+        The isotope ratio 11B/10B in BO4 - delta units
     """
     ABOT = d11_2_A11(d11BT)
-    alpha = epsilon_2_alpha(epsilon)
+    alpha = epsilon_2_alpha(epsilonB)
 
-    return A11_2_d11(calculate_ABO4(ch(pH),ABOT,KB,alpha))
-def calculate_epsilon(d11B4,d11BT,pH,KB):
+    return A11_2_d11(calculate_ABO4(ch(pH),KB,ABOT,alpha))
+def calculate_epsilon(pH, KB, d11BT, d11B4):
     """
     Returns isotope ratio of borate ion in delta units
 
     Parameters
     ----------
-    d11BT : float or array-like
-        isotope ratio 11B/10B in total boron - delta units
     pH : float or array-like
         pH on the total scale
     KB : Bunch (dictionary with . access)
         bunch containing the boron speciation constant KB
-    epsilon : float or array-like
-        fractionation factor between BO3 and BO4
+    d11BT : float or array-like
+        isotope ratio 11B/10B in total boron - delta units
+    d11B4 : float or array-like
+        isotope ratio 11B/10B in borate ion (B(OH)4) - delta units
+        
+    Returns
+    -------
+    array-like
+        fractionation factor between BO3 and BO4 in delta units (epsilon)
     """
     ABO4 = d11_2_A11(d11B4)
     ABT = d11_2_A11(d11BT)
     H = ch(pH)
 
-    alpha = calculate_alpha_ABO4(KB,H,ABT,ABO4)
+    alpha = calculate_alpha_ABO4(H,KB,ABT,ABO4)
 
     return alpha_2_epsilon(alpha)
