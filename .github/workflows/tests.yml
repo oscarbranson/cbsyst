@@ -1,4 +1,4 @@
-name: Tests
+name: Test CBsyst
 
 on:
   pull_request:
@@ -16,18 +16,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Setup python
+    - name: Set up python
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Debug Python
-      shell: bash -l {0}
-      run: |
-        which python3
-        python3 --version
-
-    - name: ${{ matrix.os }} python ${{ matrix.python-version }}
+    - name: Testing ${{ matrix.os }}, python ${{ matrix.python-version }}
       shell: bash -l {0}
       run: |
         python3 -m pip install -r requirements.txt
