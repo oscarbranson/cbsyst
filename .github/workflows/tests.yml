@@ -3,14 +3,14 @@ name: Tests
 on:
   pull_request:
   push:
-    branches: [master]
+    branches: [master, dev]
 
 jobs:
   run:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.5", "3.6", "3.7", "3.8", "3.9"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
@@ -33,4 +33,4 @@ jobs:
         python3 -m pip install -r requirements.txt
         python3 -m pip install -e . --no-deps --force-reinstall
         pushd cbsyst/test_data/GLODAP_data && python3 get_GLODAP_data.py && popd
-        python3 setup.py test
+        python3 -m unittest

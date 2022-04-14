@@ -8,7 +8,7 @@ from cbsyst.helpers import Bunch, maxL
 # from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi, MyAMI_K_calc_direct
 from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
 from cbsyst.boron import calc_B_species
-from cbsyst.boron_isotopes import d11_2_A11, A11_2_d11, pH_ABO3, alphaB_calc, cABO3, cABO4
+from cbsyst.boron_isotopes import d11_to_A11, A11_to_d11, calculate_pH, get_alphaB, calculate_ABO3, calculate_ABO4
 from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales
 
 
@@ -97,8 +97,6 @@ def Csys(
 
     Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
     Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468) Appendix B
-
-    pH is Total scale.
 
     Inputs must either be single values, arrays of equal length or a mixture of both.
     If you use arrays of unequal length, it won't work.
@@ -191,8 +189,6 @@ def Csys(
         ps.TF = calc_TF(ps.S_in)
     if ps.BT is None:
         ps.BT = calc_TB(ps.S_in)
-    # elif isinstance(BT, (int, float)):
-    #     ps.BT = ps.BT * ps.S_in / 35.
 
     # Calculate Ks at input conditions
     ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
@@ -243,7 +239,7 @@ def Csys(
         Ks=ps.Ks,
     )
 
-    # calculate pHs on all scales, if not done before.
+    # calculate pHs on all scales, if not done before (i.e. if pH not specified in input).
     if ps.pHNBS is None:
         # Calculate pH on all scales
         ps.update(
@@ -346,6 +342,7 @@ def Csys(
             "pHsws",
             "pHtot",
             "pHNBS",
+            "revelle_factor",
         ]
 
         ps.update({k + "_out": out_cond[k] for k in outputs})
@@ -394,8 +391,6 @@ def Bsys(
 
     Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
     Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468).
-
-    pH is Total scale.
 
     Inputs must either be single values, arrays of equal length or a mixture of both.
     If you use arrays of unequal length, it won't work.
@@ -547,8 +542,6 @@ def ABsys(
     Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
     Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468).
 
-    pH is Total scale.
-
     Inputs must either be single values, arrays of equal length or a mixture of both.
     If you use arrays of unequal length, it won't work.
 
@@ -627,38 +620,38 @@ def ABsys(
 
     # if deltas provided, calculate corresponding As
     if ps.dBT is not None:
-        ps.ABT = d11_2_A11(ps.dBT)
+        ps.ABT = d11_to_A11(ps.dBT)
     if ps.dBO3 is not None:
-        ps.ABO3 = d11_2_A11(ps.dBO3)
+        ps.ABO3 = d11_to_A11(ps.dBO3)
     if ps.dBO4 is not None:
-        ps.ABO4 = d11_2_A11(ps.dBO4)
+        ps.ABO4 = d11_to_A11(ps.dBO4)
 
     # calculate alpha
     if alphaB is None:
-        ps.alphaB = alphaB_calc(ps.T_in)
+        ps.alphaB = get_alphaB()
     else:
         ps.alphaB = alphaB
 
     if ps.pHtot is not None and ps.ABT is not None:
         ps.H = ch(ps.pHtot)
     elif ps.pHtot is not None and ps.ABO3 is not None:
-        ps.ABT = pH_ABO3(ps.pHtot, ps.ABO3, ps.Ks, ps.alphaB)
+        ps.ABT = calculate_pH(ps.pHtot, ps.Ks, ps.alphaB,ABO3=ps.ABO3)
     elif ps.pHtot is not None and ps.ABO4 is not None:
-        ps.ABT = pH_ABO3(ps.pHtot, ps.ABO4, ps.Ks, ps.alphaB)
+        ps.ABT = calculate_pH(ps.pHtot, ps.Ks, ps.alphaB, ps.ABO4)
     else:
         raise ValueError("pH must be determined to calculate isotopes.")
 
     if ps.ABO3 is None:
-        ps.ABO3 = cABO3(ps.H, ps.ABT, ps.Ks, ps.alphaB)
+        ps.ABO3 = calculate_ABO3(H=ps.H, ABT=ps.ABT, Ks=ps.Ks, alphaB=ps.alphaB)
     if ps.ABO4 is None:
-        ps.ABO4 = cABO4(ps.H, ps.ABT, ps.Ks, ps.alphaB)
+        ps.ABO4 = calculate_ABO4(H=ps.H, ABT=ps.ABT, Ks=ps.Ks, alphaB=ps.alphaB)
 
     if ps.dBT is None:
-        ps.dBT = A11_2_d11(ps.ABT)
+        ps.dBT = A11_to_d11(ps.ABT)
     if ps.dBO3 is None:
-        ps.dBO3 = A11_2_d11(ps.ABO3)
+        ps.dBO3 = A11_to_d11(ps.ABO3)
     if ps.dBO4 is None:
-        ps.dBO4 = A11_2_d11(ps.ABO4)
+        ps.dBO4 = A11_to_d11(ps.ABO4)
 
     for k in [
         "ABO3",
@@ -733,8 +726,6 @@ def CBsys(
 
     Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
     Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468) Appendix B
-
-    pH is Total scale.
 
     Inputs must either be single values, arrays of equal length or a mixture of both.
     If you use arrays of unequal length, it won't work.
@@ -853,20 +844,33 @@ def CBsys(
     # Calculate Ks
     ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
 
+    # calculate alpha
+    if alphaB is None:
+        ps.alphaB = get_alphaB()
+    else:
+        ps.alphaB = alphaB
+    
+    npH = NnotNone(pHtot, pHsws, pHfree, pHNBS)
+    
+    # # Special Case: pH is not given, but dBO4 and dBT are
+    # if npH == 0 and dBO4 is not None and dBT is not None:
+    #     pHtot = ABO4_ABT(ABO4=d11_2_A11(dBO4), ABT=d11_2_A11(dBT), Ks=ps.Ks, alphaB=alphaB)
+    
     # Calculate pH scales (does nothing if none pH given)
-    ps.update(
-        calc_pH_scales(
-            ps.pHtot,
-            ps.pHfree,
-            ps.pHsws,
-            ps.pHNBS,
-            ps.TS,
-            ps.TF,
-            ps.T_in + 273.15,
-            ps.S_in,
-            ps.Ks,
+    if npH == 1:
+        ps.update(
+            calc_pH_scales(
+                ps.pHtot,
+                ps.pHfree,
+                ps.pHsws,
+                ps.pHNBS,
+                ps.TS,
+                ps.TF,
+                ps.T_in + 273.15,
+                ps.S_in,
+                ps.Ks,
+            )
         )
-    )
 
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
@@ -874,7 +878,7 @@ def CBsys(
             ps.CO2 = fCO2_to_CO2(ps.fCO2, ps.Ks)
         elif ps.pCO2 is not None:
             ps.CO2 = fCO2_to_CO2(pCO2_to_fCO2(ps.pCO2, ps.T_in), ps.Ks)
-
+    
     # if no B info provided, assume modern conc.
     nBspec = NnotNone(ps.BT, ps.BO3, ps.BO4)
     if nBspec == 0:
@@ -975,38 +979,32 @@ def CBsys(
     #     ps.dBT = 0
     # # if deltas provided, calculate corresponding As
     # if ps.dBT is not None:
-    #     ps.ABT = d11_2_A11(ps.dBT)
+    #     ps.ABT = d11_to_A11(ps.dBT)
     # if ps.dBO3 is not None:
-    #     ps.ABO3 = d11_2_A11(ps.dBO3)
+    #     ps.ABO3 = d11_to_A11(ps.dBO3)
     # if ps.dBO4 is not None:
-    #     ps.ABO4 = d11_2_A11(ps.dBO4)
-
-    # calculate alpha
-    if alphaB is None:
-        ps.alphaB = alphaB_calc(ps.T_in)
-    else:
-        ps.alphaB = alphaB
+    #     ps.ABO4 = d11_to_A11(ps.dBO4)
 
     # if ps.pHtot is not None and ps.ABT is not None:
     #     ps.H = ch(ps.pHtot)
     # elif ps.pHtot is not None and ps.ABO3 is not None:
-    #     ps.ABT = pH_ABO3(ps.pHtot, ps.ABO3, ps.Ks, ps.alphaB)
+    #     ps.ABT = pH_using_ABO3(ps.pHtot, ps.ABO3, ps.Ks, ps.alphaB)
     # elif ps.pHtot is not None and ps.ABO4 is not None:
-    #     ps.ABT = pH_ABO3(ps.pHtot, ps.ABO4, ps.Ks, ps.alphaB)
+    #     ps.ABT = pH_using_ABO3(ps.pHtot, ps.ABO4, ps.Ks, ps.alphaB)
     # else:
     #     raise ValueError("pH must be determined to calculate isotopes.")
 
     # if ps.ABO3 is None:
-    #     ps.ABO3 = cABO3(ps.H, ps.ABT, ps.Ks, ps.alphaB)
+    #     ps.ABO3 = calculate_ABO3(ps.H, ps.ABT, ps.Ks, ps.alphaB)
     # if ps.ABO4 is None:
-    #     ps.ABO4 = cABO4(ps.H, ps.ABT, ps.Ks, ps.alphaB)
+    #     ps.ABO4 = calculate_ABO4(ps.H, ps.ABT, ps.Ks, ps.alphaB)
 
     # if ps.dBT is None:
-    #     ps.dBT = A11_2_d11(ps.ABT)
+    #     ps.dBT = A11_to_d11(ps.ABT)
     # if ps.dBO3 is None:
-    #     ps.dBO3 = A11_2_d11(ps.ABO3)
+    #     ps.dBO3 = A11_to_d11(ps.ABO3)
     # if ps.dBO4 is None:
-    #     ps.dBO4 = A11_2_d11(ps.ABO4)
+    #     ps.dBO4 = A11_to_d11(ps.ABO4)
 
     # clean up output
     outputs = [
