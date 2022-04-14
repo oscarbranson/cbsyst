@@ -7,7 +7,7 @@ import cbsyst.boron as bf
 import cbsyst.boron_isotopes as bif
 from cbsyst.cbsyst import Csys, CBsys
 from cbsyst.helpers import Bunch
-from cbsyst.test_data.GLODAP_data.get_GLODAP_data import get_GLODAP
+from tests.test_data.GLODAP_data.get_GLODAP_data import get_GLODAP
 
 
 class ReferenceDataTestCase(unittest.TestCase):
@@ -90,7 +90,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         Need to incorporate nutrients!
         """
         ld = pd.read_csv(
-            "cbsyst/test_data/Lueker2000/Lueker2000_Table3.csv", comment="#"
+            "tests/test_data/Lueker2000/Lueker2000_Table3.csv", comment="#"
         )
 
         # Calculate using cbsys
@@ -140,7 +140,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         Need to incorporate nutrients!
         """
         ld = pd.read_csv(
-            "cbsyst/test_data/Lueker2000/Lueker2000_Table3.csv", comment="#"
+            "tests/test_data/Lueker2000/Lueker2000_Table3.csv", comment="#"
         )
 
         # Calculate using cbsys
@@ -193,7 +193,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         Check 95% confidence of residuals are within acceptable limits.
         """
         # load GLODAP data
-        gd = pd.read_csv("cbsyst/test_data/GLODAP_data/GLODAPv2_pH_DIC_ALK_subset.csv")
+        gd = pd.read_csv("tests/test_data/GLODAP_data/GLODAPv2_pH_DIC_ALK_subset.csv")
         gd.dropna(
             subset=[
                 "phtsinsitutp",
@@ -276,12 +276,12 @@ class ReferenceDataTestCase(unittest.TestCase):
         Check 95% confidence of residuals are within acceptable limits.
         """
         if not os.path.exists(
-            "cbsyst/test_data/GLODAP_data/GLODAPv2_pH_DIC_ALK_subset.csv"
+            "tests/test_data/GLODAP_data/GLODAPv2_pH_DIC_ALK_subset.csv"
         ):
-            get_GLODAP(path="cbsyst/test_data/GLODAP_data/", leave_zip=True)
+            get_GLODAP(path="tests/test_data/GLODAP_data/", leave_zip=True)
 
         # load GLODAP data
-        gd = pd.read_csv("cbsyst/test_data/GLODAP_data/GLODAPv2_pH_DIC_ALK_subset.csv")
+        gd = pd.read_csv("tests/test_data/GLODAP_data/GLODAPv2_pH_DIC_ALK_subset.csv")
         gd.dropna(
             subset=[
                 "phtsinsitutp",
