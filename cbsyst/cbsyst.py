@@ -345,7 +345,8 @@ def Csys(
             "revelle_factor",
         ]
 
-        ps.update({k + "_out": out_cond[k] for k in outputs})
+        ps.update({k + "_in": ps[k] for k in outputs})
+        ps.update({k: out_cond[k] for k in outputs})
 
     # remove some superfluous outputs
     rem = ["pdict"]
@@ -1086,7 +1087,8 @@ def CBsys(
             )
         )
         # rename parameters in output conditions
-        ps.update({k + "_out": out_cond[k] for k in outputs})
+        ps.update({k + "_in": ps[k] for k in outputs})
+        ps.update({k: out_cond[k] for k in outputs})
 
         # remove some superfluous outputs
     rem = ["pdict", "unit"]
