@@ -25,18 +25,7 @@ def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, MyAMI_Mod
         Ks = Bunch(Ks)
     else:
         Ks = Bunch(kgen.calc_Ks(TempC=T, Sal=S, Pres=P, Mg=Mg, Ca=Ca, MyAMI_mode=MyAMI_Mode))  # calc empirical Ks
-        
-        # pH conversions to total scale.
-        #   - KP1, KP2, KP3 are all on SWS
-        #   - KSi is on SWS
-        #   - MyAMI KW is on SWS... DOES THIS MATTER?
 
-        # SWStoTOT = (1 + TS / Ks.KS) / (1 + TS / Ks.KS + TF / Ks.KF)
-        # # FREEtoTOT = 1 + 'TS / Ks.KS
-        # conv = ["KP1", "KP2", "KP3", "KSi", "KW"]
-        # for c in conv:
-        #     Ks[c] *= SWStoTOT
-    
     return Ks
 
 
