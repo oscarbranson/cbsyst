@@ -32,7 +32,7 @@ def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, MyAMI_Mod
         #   - MyAMI KW is on SWS... DOES THIS MATTER?
 
         # SWStoTOT = (1 + TS / Ks.KS) / (1 + TS / Ks.KS + TF / Ks.KF)
-        # # FREEtoTOT = 1 + 'T_' + mode]S / Ks.KS
+        # # FREEtoTOT = 1 + 'TS / Ks.KS
         # conv = ["KP1", "KP2", "KP3", "KSi", "KW"]
         # for c in conv:
         #     Ks[c] *= SWStoTOT
@@ -196,15 +196,15 @@ def Csys(
     # Calculate pH scales at input conditions (does nothing if no pH given)
     ps.update(
         calc_pH_scales(
-            ps.pHtot,
-            ps.pHfree,
-            ps.pHsws,
-            ps.pHNBS,
-            ps.TS,
-            ps.TF,
-            ps.T_in + 273.15,
-            ps.S_in,
-            ps.Ks,
+            pHtot=ps.pHtot,
+            pHfree=ps.pHfree,
+            pHsws=ps.pHsws,
+            pHNBS=ps.pHNBS,
+            TS=ps.TS,
+            TF=ps.TF,
+            TempK=ps.T_in + 273.15,
+            Sal=ps.S_in,
+            Ks=ps.Ks
         )
     )
 
@@ -244,15 +244,15 @@ def Csys(
         # Calculate pH on all scales
         ps.update(
             calc_pH_scales(
-                ps.pHtot,
-                ps.pHfree,
-                ps.pHsws,
-                ps.pHNBS,
-                ps.TS,
-                ps.TF,
-                ps.T_in + 273.15,
-                ps.S_in,
-                ps.Ks,
+                pHtot=ps.pHtot,
+                pHfree=ps.pHfree,
+                pHsws=ps.pHsws,
+                pHNBS=ps.pHNBS,
+                TS=ps.TS,
+                TF=ps.TF,
+                TempK=ps.T_in + 273.15,
+                Sal=ps.S_in,
+                Ks=ps.Ks
             )
         )
 
@@ -302,15 +302,15 @@ def Csys(
         # Calculate pH scales at output conditions (does nothing if no pH given)
         out_cond.update(
             calc_pH_scales(
-                out_cond.pHtot,
-                out_cond.pHfree,
-                out_cond.pHsws,
-                out_cond.pHNBS,
-                out_cond.TS,
-                out_cond.TF,
-                out_cond.T_in + 273.15,
-                out_cond.S_in,
-                out_cond.Ks,
+                pHtot=out_cond.pHtot,
+                pHfree=out_cond.pHfree,
+                pHsws=out_cond.pHsws,
+                pHNBS=out_cond.pHNBS,
+                TS=out_cond.TS,
+                TF=out_cond.TF,
+                TempK=out_cond.T_in + 273.15,
+                Sal=out_cond.S_in,
+                Ks=out_cond.Ks,
             )
         )
 
@@ -460,15 +460,15 @@ def Bsys(
     # Calculate pH scales (does nothing if none pH given)
     ps.update(
         calc_pH_scales(
-            ps.pHtot,
-            ps.pHfree,
-            ps.pHsws,
-            ps.pHNBS,
-            ps.TS,
-            ps.TF,
-            ps.T_in + 273.15,
-            ps.S_in,
-            ps.Ks,
+            pHtot=ps.pHtot,
+            pHfree=ps.pHfree,
+            pHsws=ps.pHsws,
+            pHNBS=ps.pHNBS,
+            TS=ps.TS,
+            TF=ps.TF,
+            TempK=ps.T_in + 273.15,
+            Sal=ps.S_in,
+            Ks=ps.Ks,
         )
     )
 
@@ -482,15 +482,15 @@ def Bsys(
         # Calculate other pH scales
         ps.update(
             calc_pH_scales(
-                ps.pHtot,
-                ps.pHfree,
-                ps.pHsws,
-                ps.pHNBS,
-                ps.TS,
-                ps.TF,
-                ps.T_in + 273.15,
-                ps.S_in,
-                ps.Ks,
+                pHtot=ps.pHtot,
+                pHfree=ps.pHfree,
+                pHsws=ps.pHsws,
+                pHNBS=ps.pHNBS,
+                TS=ps.TS,
+                TF=ps.TF,
+                TempK=ps.T_in + 273.15,
+                Sal=ps.S_in,
+                Ks=ps.Ks,
             )
         )
 
@@ -607,15 +607,15 @@ def ABsys(
     # Calculate pH scales (does nothing if none pH given)
     ps.update(
         calc_pH_scales(
-            ps.pHtot,
-            ps.pHfree,
-            ps.pHsws,
-            ps.pHNBS,
-            ps.TS,
-            ps.TF,
-            ps.T_in + 273.15,
-            ps.S_in,
-            ps.Ks,
+            pHtot=ps.pHtot,
+            pHfree=ps.pHfree,
+            pHsws=ps.pHsws,
+            pHNBS=ps.pHNBS,
+            TS=ps.TS,
+            TF=ps.TF,
+            TempK=ps.T_in + 273.15,
+            Sal=ps.S_in,
+            Ks=ps.Ks,
         )
     )
 
@@ -861,15 +861,15 @@ def CBsys(
     if npH == 1:
         ps.update(
             calc_pH_scales(
-                ps.pHtot,
-                ps.pHfree,
-                ps.pHsws,
-                ps.pHNBS,
-                ps.TS,
-                ps.TF,
-                ps.T_in + 273.15,
-                ps.S_in,
-                ps.Ks,
+                pHtot=ps.pHtot,
+                pHfree=ps.pHfree,
+                pHsws=ps.pHsws,
+                pHNBS=ps.pHNBS,
+                TS=ps.TS,
+                TF=ps.TF,
+                TempK=ps.T_in + 273.15,
+                Sal=ps.S_in,
+                Ks=ps.Ks,
             )
         )
 
@@ -1075,15 +1075,15 @@ def CBsys(
         # Calculate pH scales (does nothing if no pH given)
         out_cond.update(
             calc_pH_scales(
-                out_cond.pHtot,
-                out_cond.pHfree,
-                out_cond.pHsws,
-                out_cond.pHNBS,
-                out_cond.TS,
-                out_cond.TF,
-                out_cond.T_in + 273.15,
-                out_cond.S_in,
-                out_cond.Ks,
+                pHtot=out_cond.pHtot,
+                pHfree=out_cond.pHfree,
+                pHsws=out_cond.pHsws,
+                pHNBS=out_cond.pHNBS,
+                TS=out_cond.TS,
+                TF=out_cond.TF,
+                TempK=out_cond.T_in + 273.15,
+                Sal=out_cond.S_in,
+                Ks=out_cond.Ks,
             )
         )
         # rename parameters in output conditions
