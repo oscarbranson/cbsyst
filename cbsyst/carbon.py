@@ -1,9 +1,6 @@
 import scipy.optimize as opt
 import numpy as np
-from cbsyst.helpers import ch, noms, cast_array, maxL, calc_pH_scales, Bunch, cp
-
-# from cbsyst.boron_fns import cBO4
-
+from cbsyst.helpers import ch, noms, cast_array, maxL, Bunch, cp, maxShape
 
 def _zero_wrapper(ps, fn, bounds=(10 ** -14, 10 ** -1)):
     """
@@ -91,6 +88,10 @@ def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
 
     Taken from matlab CO2SYS
     """
+    shape = maxShape(CO2, TA, BT, TP, TSi, TS, TF)
+    if len(shape) > 1:
+        CO2, TA, BT, TP, TSi, TS, TF = [np.ravel(i) for i in [CO2, TA, BT, TP, TSi, TS, TF]]
+
     fCO2 = CO2 / Ks.K0
     L = maxL(TA, CO2, BT, TP, TSi, TS, TF, Ks.K1)
     pHguess = 8.0
@@ -113,8 +114,8 @@ def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
         PAlk = TP * PhosTop / PhosBot
         SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
         # positive
-        Hfree = H / (1 + TS / Ks.KSO4)
-        HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+        Hfree = H / (1 + TS / Ks.KS)
+        HSO4 = TS / (1 + Ks.KS / Hfree)
         HF = TF / (1 + Ks.KF / Hfree)
 
         Residual = TA - CAlk - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
@@ -127,6 +128,8 @@ def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
 
         pHx += deltapH
 
+    if len(shape) > 1:
+        return pHx.reshape(shape)
     return pHx
 
 
@@ -189,8 +192,8 @@ def pH_TA(pH, TA, BT, TP, TSi, TS, TF, Ks):
     PAlk = TP * PhosTop / PhosBot
     SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
     # positive alk
-    Hfree = H / (1 + TS / Ks.KSO4)
-    HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+    Hfree = H / (1 + TS / Ks.KS)
+    HSO4 = TS / (1 + Ks.KS / Hfree)
     HF = TF / (1 + Ks.KF / Hfree)
     CAlk = TA - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
 
@@ -321,6 +324,12 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
 
     Taken directly from MATLAB CO2SYS.
     """
+    # determine shape of input
+    shape = maxShape(TA, DIC, BT, TP, TSi, TS, TF)
+    if len(shape) > 1:
+        # flatten inputs
+        TA, DIC, BT, TP, TSi, TS, TF = [np.ravel(i) for i in [TA, DIC, BT, TP, TSi, TS, TF]]
+    # determine largest input
     L = maxL(TA, DIC, BT, TP, TSi, TS, TF, Ks.K1)
     pHguess = 7.0
     pHtol = 0.00000001
@@ -342,8 +351,8 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
         PAlk = TP * PhosTop / PhosBot
         SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
         # positive
-        Hfree = H / (1 + TS / Ks.KSO4)
-        HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+        Hfree = H / (1 + TS / Ks.KS)
+        HSO4 = TS / (1 + Ks.KS / Hfree)
         HF = TF / (1 + Ks.KF / Hfree)
 
         Residual = TA - CAlk - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
@@ -362,8 +371,9 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
 
         pHx += deltapH
 
+    if len(shape) > 1:
+        return pHx.reshape(shape)
     return pHx
-
 
 # def TA_DIC(TA, DIC, BT, Ks):
 #     """
@@ -434,8 +444,8 @@ def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode="multi"):
     PAlk = TP * PhosTop / PhosBot
     SiAlk = TSi * Ks.KSi / (Ks.KSi + H)
     # positive
-    Hfree = H / (1 + TS / Ks.KSO4)
-    HSO4 = TS / (1 + Ks.KSO4 / Hfree)
+    Hfree = H / (1 + TS / Ks.KS)
+    HSO4 = TS / (1 + Ks.KS / Hfree)
     HF = TF / (1 + Ks.KF / Hfree)
 
     TA = CAlk + BAlk + OH + PAlk + SiAlk - Hfree - HSO4 - HF
