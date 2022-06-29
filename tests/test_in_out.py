@@ -38,5 +38,5 @@ class TestInputOutput(unittest.TestCase):
         with self.subTest(msg='Pressure Effect'):      
             c1 = cb.CBsys(pHtot=8.1, TA=2300, P_in=0, P_out=400, BT=385., dBT=39.4)
             c2 = cb.CBsys(pHtot=c1.pHtot, TA=2300, P_in=400, P_out=0, BT=385., dBT=39.4)
-            self.assertAlmostEqual(c1.pHtot_in, c2.pHtot.item(), places=6)
+            self.assertAlmostEqual(c1.pHtot_in.item(), c2.pHtot.item(), places=6)
             
