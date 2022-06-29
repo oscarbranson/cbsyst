@@ -3,52 +3,10 @@ Functions for calculating the carbon and boron chemistry of seawater.
 """
 
 import numpy as np
-import kgen
-from cbsyst.helpers import Bunch, maxL
-# from cbsyst.MyAMI_V2 import MyAMI_K_calc, MyAMI_K_calc_multi, MyAMI_K_calc_direct
 from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
 from cbsyst.boron import calc_B_species
 from cbsyst.boron_isotopes import d11_to_A11, A11_to_d11, calculate_pH, get_alphaB, calculate_ABO3, calculate_ABO4
-from cbsyst.helpers import ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales
-
-
-# Helper functions
-# ----------------
-def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, MyAMI_Mode='calculate'):
-    """
-    Helper function to calculate Ks.
-
-    If Ks is a dict, those Ks are used
-    transparrently (i.e. no pressure modification).
-    """
-    if isinstance(Ks, dict):
-        Ks = Bunch(Ks)
-    else:
-        Ks = Bunch(kgen.calc_Ks(TempC=T, Sal=S, Pres=P, Mg=Mg, Ca=Ca, MyAMI_mode=MyAMI_Mode))  # calc empirical Ks
-
-    return Ks
-
-
-def pH_scale_converter(pH, scale, Temp, Sal, Press=None, TS=None, TF=None):
-    """
-    Returns pH on all scales.
-    """
-    pH_scales = ["Total", "FREE", "SWS", "NBS"]
-    if scale not in pH_scales:
-        raise ValueError("scale must be one of Total, NBS, SWS or FREE.")
-    if TS is None:
-        TS = calc_TS(Sal)
-    if TF is None:
-        TF = calc_TF(Sal)
-    TempK = Temp + 273.15
-
-    Ks = kgen.calc_Ks(TempC=Temp, Sal=Sal, Pres=Press)
-
-    inp = [None, None, None, None]
-    inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH
-
-    return calc_pH_scales(*inp, TS, TF, TempK, Sal, Ks)
-
+from cbsyst.helpers import Bunch, ch, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales, calc_Ks
 
 # C Speciation
 # ------------
@@ -192,7 +150,8 @@ def Csys(
             TA=ps.TA,
             fCO2=ps.fCO2,
             pCO2=ps.pCO2,
-            T_in=ps.T_in,
+            T=ps.T_in,
+            S=ps.S_in,
             BT=ps.BT,
             TP=ps.TP,
             TSi=ps.TSi,
@@ -214,19 +173,19 @@ def Csys(
 
     # calculate pHs on all scales, if not done before (i.e. if pH not specified in input).
     # (note this only runs if some of the pHX inputs are missing)
-    ps.update(
-        calc_pH_scales(
-            pHtot=ps.pHtot,
-            pHfree=ps.pHfree,
-            pHsws=ps.pHsws,
-            pHNBS=ps.pHNBS,
-            TS=ps.TS,
-            TF=ps.TF,
-            TempK=ps.T_in + 273.15,
-            Sal=ps.S_in,
-            Ks=ps.Ks
-        )
-    )
+    # ps.update(
+    #     calc_pH_scales(
+    #         pHtot=ps.pHtot,
+    #         pHfree=ps.pHfree,
+    #         pHsws=ps.pHsws,
+    #         pHNBS=ps.pHNBS,
+    #         TS=ps.TS,
+    #         TF=ps.TF,
+    #         TempK=ps.T_in + 273.15,
+    #         Sal=ps.S_in,
+    #         Ks=ps.Ks
+    #     )
+    # )
 
     # clean up output
     outputs = [
@@ -829,7 +788,8 @@ def CBsys(
                 TA=ps.TA,
                 fCO2=ps.fCO2,
                 pCO2=ps.pCO2,
-                T_in=ps.T_in,
+                T=ps.T_in,
+                S=ps.S_in,
                 BT=ps.BT,
                 TP=ps.TP,
                 TSi=ps.TSi,
@@ -855,7 +815,8 @@ def CBsys(
                 TA=ps.TA,
                 fCO2=ps.fCO2,
                 pCO2=ps.pCO2,
-                T_in=ps.T_in,
+                T=ps.T_in,
+                S=ps.S_in,
                 BT=ps.BT,
                 TP=ps.TP,
                 TSi=ps.TSi,

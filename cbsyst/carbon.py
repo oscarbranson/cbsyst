@@ -1,6 +1,6 @@
 import scipy.optimize as opt
 import numpy as np
-from cbsyst.helpers import ch, noms, cast_array, maxL, Bunch, cp, maxShape
+from cbsyst.helpers import ch, noms, cast_array, maxL, Bunch, cp, maxShape, calc_fH
 
 def _zero_wrapper(ps, fn, bounds=(10 ** -14, 10 ** -1)):
     """
@@ -542,7 +542,8 @@ def calc_C_species(
     TA=None,
     fCO2=None,
     pCO2=None,
-    T_in=None,
+    T=None,
+    S=None,
     BT=None,
     TP=0,
     TSi=0,
@@ -559,7 +560,7 @@ def calc_C_species(
         if fCO2 is not None:
             CO2 = fCO2_to_CO2(fCO2, Ks)
         elif pCO2 is not None:
-            CO2 = fCO2_to_CO2(pCO2_to_fCO2(pCO2, T_in), Ks)
+            CO2 = fCO2_to_CO2(pCO2_to_fCO2(pCO2, T), Ks)
 
     # Carbon System Calculations (from Zeebe & Wolf-Gladrow, Appendix B)
     # 1. CO2 and pH
@@ -636,7 +637,7 @@ def calc_C_species(
     if fCO2 is None:
         fCO2 = CO2_to_fCO2(CO2, Ks)
     if pCO2 is None:
-        pCO2 = fCO2_to_pCO2(fCO2, T_in)
+        pCO2 = fCO2_to_pCO2(fCO2, T)
     if HCO3 is None:
         HCO3 = cHCO3(H, DIC, Ks)
     if CO3 is None:
@@ -649,10 +650,17 @@ def calc_C_species(
     # if pH not calced yet, calculate on all scales.
     if pHtot is None:
         pHtot = np.array(cp(H), ndmin=1)
-
+    
+    FREEtoTOT = -np.log10((1 + TS / Ks.KS))
+    SWStoTOT = -np.log10((1 + TS / Ks.KS) / (1 + TS / Ks.KS + TF / Ks.KF))
+    fH = calc_fH(T + 273.15, S)
+    
     return Bunch(
         {
             "pHtot": pHtot,
+            "pHfree": pHtot - FREEtoTOT,
+            "pHsws": pHtot - SWStoTOT,
+            "pHNBS": pHtot - SWStoTOT - np.log10(fH),
             "TA": TA,
             "DIC": DIC,
             "CO2": CO2,

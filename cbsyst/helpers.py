@@ -1,4 +1,5 @@
 import uncertainties.unumpy as unp
+import kgen
 import numpy as np
 import pandas as pd
 
@@ -370,3 +371,37 @@ def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, TS, TF, TempK, Sal, Ks):
             }
     else:
         return {}
+
+def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, MyAMI_Mode='calculate'):
+    """
+    Helper function to calculate Ks.
+
+    If Ks is a dict, those Ks are used
+    transparrently (i.e. no pressure modification).
+    """
+    if isinstance(Ks, dict):
+        Ks = Bunch(Ks)
+    else:
+        Ks = Bunch(kgen.calc_Ks(TempC=T, Sal=S, Pres=P, Mg=Mg, Ca=Ca, MyAMI_mode=MyAMI_Mode))  # calc empirical Ks
+
+    return Ks
+
+def pH_scale_converter(pH, scale, Temp, Sal, Press=None, TS=None, TF=None):
+    """
+    Returns pH on all scales.
+    """
+    pH_scales = ["Total", "FREE", "SWS", "NBS"]
+    if scale not in pH_scales:
+        raise ValueError("scale must be one of Total, NBS, SWS or FREE.")
+    if TS is None:
+        TS = calc_TS(Sal)
+    if TF is None:
+        TF = calc_TF(Sal)
+    TempK = Temp + 273.15
+
+    Ks = kgen.calc_Ks(TempC=Temp, Sal=Sal, Pres=Press)
+
+    inp = [None, None, None, None]
+    inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH
+
+    return calc_pH_scales(*inp, TS, TF, TempK, Sal, Ks)
