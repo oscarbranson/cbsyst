@@ -42,7 +42,7 @@ def cBO4(BT, H, Ks):
 def cBO3(BT, H, Ks):
     return BT / (1 + Ks.KB / H)
 
-def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None):
+def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None, **kwargs):
     # B system calculations
     if pHtot is not None and BT is not None:
         H = ch(pHtot)

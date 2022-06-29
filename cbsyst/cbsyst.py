@@ -5,7 +5,7 @@ Functions for calculating the carbon and boron chemistry of seawater.
 import numpy as np
 from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
 from cbsyst.boron import calc_B_species
-from cbsyst.boron_isotopes import d11_to_A11, A11_to_d11, calculate_H, get_alphaB, calculate_ABO3, calculate_ABO4, calculate_ABT
+from cbsyst.boron_isotopes import d11_to_A11, A11_to_d11, get_alphaB, calc_B_isotopes
 from cbsyst.helpers import Bunch, ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales, calc_Ks
 
 # C Speciation
@@ -140,26 +140,8 @@ def Csys(
     )
 
     # calculate C system at input conditions
-    ps.update(
-        calc_C_species(
-            pHtot=ps.pHtot,
-            DIC=ps.DIC,
-            CO2=ps.CO2,
-            HCO3=ps.HCO3,
-            CO3=ps.CO3,
-            TA=ps.TA,
-            fCO2=ps.fCO2,
-            pCO2=ps.pCO2,
-            T=ps.T_in,
-            S=ps.S_in,
-            BT=ps.BT,
-            TP=ps.TP,
-            TSi=ps.TSi,
-            TS=ps.TS,
-            TF=ps.TF,
-            Ks=ps.Ks,
-        )
-    )
+    ps.update(calc_C_species(**ps))
+    
     ps["revelle_factor"] = calc_revelle_factor(
         TA=ps.TA,
         DIC=ps.DIC,
@@ -335,9 +317,7 @@ def Bsys(
         )
     )
 
-    ps.update(
-        calc_B_species(pHtot=ps.pHtot, BT=ps.BT, BO3=ps.BO3, BO4=ps.BO4, Ks=ps.Ks)
-    )
+    ps.update(calc_B_species(**ps))
 
     # If pH not calced yet, calculate on all scales (does nothing if all pH scales already calculated)
     ps.update(
@@ -493,23 +473,7 @@ def ABsys(
     else:
         ps.alphaB = alphaB
 
-    # case 1: pH is provided
-    if ps.pHtot is not None:
-        ps.H = ch(ps.pHtot)
-        if ps.ABT is None:
-            ps.ABT = calculate_ABT(H=ps.H, Ks=ps.Ks, alphaB=ps.alphaB, ABO3=ps.ABO3, ABO4=ps.ABO4)
-    else:  # case 2: pH is noty provided
-        if ps.ABT is not None:
-            ps.H = calculate_H(Ks=ps.Ks, alphaB=ps.alphaB, ABT=ps.ABT, ABO3=ps.ABO3, ABO4=ps.ABO4)
-            ps.pHtot = cp(ps.H)
-        else:
-            raise ValueError('Either ABT and dBT must be specified if pH is missing.')
-        
-
-    if ps.ABO3 is None:
-        ps.ABO3 = calculate_ABO3(H=ps.H, ABT=ps.ABT, Ks=ps.Ks, alphaB=ps.alphaB)
-    if ps.ABO4 is None:
-        ps.ABO4 = calculate_ABO4(H=ps.H, ABT=ps.ABT, Ks=ps.Ks, alphaB=ps.alphaB)
+    ps.update(calc_B_isotopes(**ps))
 
     if ps.dBT is None:
         ps.dBT = A11_to_d11(ps.ABT)
@@ -710,29 +674,34 @@ def CBsys(
         ps.alphaB = get_alphaB()
     else:
         ps.alphaB = alphaB
+        
+    # convert any B isotopes to A notation
+    if ps.dBT is None and ps.ABT is None:
+        ps.dBT = 39.61
+    if ps.dBT is not None:
+        ps.ABT = d11_to_A11(ps.dBT)
+    if ps.dBO3 is not None:
+        ps.ABO3 = d11_to_A11(ps.dBO3)
+    if ps.dBO4 is not None:
+        ps.ABO4 = d11_to_A11(ps.dBO4)
+        
+    nBiso = NnotNone(ps.ABT) + NnotNone(ps.ABO4, ps.ABO3)
     
-    npH = NnotNone(pHtot, pHsws, pHfree, pHNBS)
-    
-    # # Special Case: pH is not given, but dBO4 and dBT are
-    # if npH == 0 and dBO4 is not None and dBT is not None:
-    #     pHtot = ABO4_ABT(ABO4=d11_2_A11(dBO4), ABT=d11_2_A11(dBT), Ks=ps.Ks, alphaB=alphaB)
-    
-    # Calculate pH scales (does nothing if none pH given)
-    if npH == 1:
-        ps.update(
-            calc_pH_scales(
-                pHtot=ps.pHtot,
-                pHfree=ps.pHfree,
-                pHsws=ps.pHsws,
-                pHNBS=ps.pHNBS,
-                TS=ps.TS,
-                TF=ps.TF,
-                TempK=ps.T_in + 273.15,
-                Sal=ps.S_in,
-                Ks=ps.Ks,
-            )
+    # Calculate all pH scales (does nothing if no pH given)
+    ps.update(
+        calc_pH_scales(
+            pHtot=ps.pHtot,
+            pHfree=ps.pHfree,
+            pHsws=ps.pHsws,
+            pHNBS=ps.pHNBS,
+            TS=ps.TS,
+            TF=ps.TF,
+            TempK=ps.T_in + 273.15,
+            Sal=ps.S_in,
+            Ks=ps.Ks,
         )
-
+    )
+    
     # if fCO2 is given but CO2 is not, calculate CO2
     if ps.CO2 is None:
         if ps.fCO2 is not None:
@@ -744,75 +713,46 @@ def CBsys(
     nBspec = NnotNone(ps.BT, ps.BO3, ps.BO4)
     if nBspec == 0:
         ps.BT = calc_TB(ps.S_in)
+
     # count number of not None C parameters
     nCspec = NnotNone(ps.DIC, ps.CO2, ps.HCO3, ps.CO3)  # used below
-
-    # if pH is given, it's easy
+        
+    # if pH or two B species are given:
     if ps.pHtot is not None or nBspec == 2:
-        ps.update(
-            calc_B_species(pHtot=ps.pHtot, BT=ps.BT, BO3=ps.BO3, BO4=ps.BO4, Ks=ps.Ks)
-        )
-        ps.update(
-            calc_C_species(
-                pHtot=ps.pHtot,
-                DIC=ps.DIC,
-                CO2=ps.CO2,
-                HCO3=ps.HCO3,
-                CO3=ps.CO3,
-                TA=ps.TA,
-                fCO2=ps.fCO2,
-                pCO2=ps.pCO2,
-                T=ps.T_in,
-                S=ps.S_in,
-                BT=ps.BT,
-                TP=ps.TP,
-                TSi=ps.TSi,
-                TS=ps.TS,
-                TF=ps.TF,
-                Ks=ps.Ks,
-            )
-        )
-    # if not, this section works out the order that things should be calculated in.
-    # Special case: if pH is missing, must have:
-    #   a) two C or one C and both TA and BT
-    #   b) two B (above)
-    #   c) one pH-dependent B, one pH-dependent C... But that's cray...
-    #      (c not implemented!)
-    elif (nCspec == 2) | ((nCspec == 1) & (NnotNone(ps.TA, ps.BT) == 2)):  # case A
-        ps.update(
-            calc_C_species(
-                pHtot=ps.pHtot,
-                DIC=ps.DIC,
-                CO2=ps.CO2,
-                HCO3=ps.HCO3,
-                CO3=ps.CO3,
-                TA=ps.TA,
-                fCO2=ps.fCO2,
-                pCO2=ps.pCO2,
-                T=ps.T_in,
-                S=ps.S_in,
-                BT=ps.BT,
-                TP=ps.TP,
-                TSi=ps.TSi,
-                TS=ps.TS,
-                TF=ps.TF,
-                Ks=ps.Ks,
-            )
-        )
-        ps.update(
-            calc_B_species(pHtot=ps.pHtot, BT=ps.BT, BO3=ps.BO3, BO4=ps.BO4, Ks=ps.Ks)
-        )
+        ps.update(calc_B_species(**ps))
+        ps.update(calc_C_species(**ps))
+        ps.update(calc_B_isotopes(**ps))
+    # if pH can be calculated from B isotopes
+    elif nBiso == 2:
+        ps.update(calc_B_isotopes(**ps))
+        ps.update(calc_B_species(**ps))
+        ps.update(calc_C_species(**ps))
+    # if ther eare two carbon species, or one carbon species + TA and BT
+    elif (nCspec == 2) | ((nCspec == 1) & (NnotNone(ps.TA, ps.BT) == 2)):
+        ps.update(calc_C_species(**ps))
+        ps.update(calc_B_species(**ps))
+        ps.update(calc_B_isotopes(**ps))
+    
     else:  # if neither condition is met, throw an error
         raise ValueError(
             (
-                "Impossible! You haven't provided enough parameters.\n"
+                "Impossible! You haven't provided enough information.\n"
                 + "If you don't know pH, you must provide either:\n"
-                + "  - Two of [DIC, CO2, HCO3, CO3], and one of [BT, BO3, BO4]\n"
+                + "  - Two of [DIC, CO2, HCO3, CO3] and BT\n"
                 + "  - One of [DIC, CO2, HCO3, CO3], and TA and BT\n"
                 + "  - Two of [BT, BO3, BO4] and one of [DIC, CO2, HCO3, CO3]"
+                + "  - Two of [dBT, dBO3, dBO4] and one of [DIC, CO2, HCO3, CO3]"                
             )
         )
 
+    # convert isotopes to delta notation
+    if ps.dBT is None:
+        ps.dBT = A11_to_d11(ps.ABT)
+    if ps.dBO3 is None:
+        ps.dBO3 = A11_to_d11(ps.ABO3)
+    if ps.dBO4 is None:
+        ps.dBO4 = A11_to_d11(ps.ABO4)
+    
     ps["revelle_factor"] = calc_revelle_factor(
         TA=ps.TA,
         DIC=ps.DIC,
@@ -823,10 +763,6 @@ def CBsys(
         TF=ps.TF,
         Ks=ps.Ks,
     )
-
-    # If any isotope parameter specified, calculate the isotope systen.
-    if NnotNone(ps.ABT, ps.ABO3, ps.ABO4, ps.dBT, ps.dBO3, ps.dBO4) != 0:
-        ps.update(ABsys(pdict=ps))
 
     # clean up output
     outputs = [

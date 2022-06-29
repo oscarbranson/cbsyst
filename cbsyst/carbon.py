@@ -493,14 +493,15 @@ def calc_C_species(
     TA=None,
     fCO2=None,
     pCO2=None,
-    T=None,
-    S=None,
+    T_in=None,
+    S_in=None,
     BT=None,
     TP=0,
     TSi=0,
     TS=0,
     TF=0,
     Ks=None,
+    **kwargs
 ):
     """
     Calculate all carbon species from minimal input.
@@ -511,7 +512,7 @@ def calc_C_species(
         if fCO2 is not None:
             CO2 = fCO2_to_CO2(fCO2, Ks)
         elif pCO2 is not None:
-            CO2 = fCO2_to_CO2(pCO2_to_fCO2(pCO2, T), Ks)
+            CO2 = fCO2_to_CO2(pCO2_to_fCO2(pCO2, T_in), Ks)
 
     # Carbon System Calculations (from Zeebe & Wolf-Gladrow, Appendix B)
     # 1. CO2 and pH
@@ -588,7 +589,7 @@ def calc_C_species(
     if fCO2 is None:
         fCO2 = CO2_to_fCO2(CO2, Ks)
     if pCO2 is None:
-        pCO2 = fCO2_to_pCO2(fCO2, T)
+        pCO2 = fCO2_to_pCO2(fCO2, T_in)
     if HCO3 is None:
         HCO3 = cHCO3(H, DIC, Ks)
     if CO3 is None:
@@ -604,7 +605,7 @@ def calc_C_species(
     
     FREEtoTOT = -np.log10((1 + TS / Ks.KS))
     SWStoTOT = -np.log10((1 + TS / Ks.KS) / (1 + TS / Ks.KS + TF / Ks.KF))
-    fH = calc_fH(T + 273.15, S)
+    fH = calc_fH(T_in + 273.15, S_in)
     
     return Bunch(
         {

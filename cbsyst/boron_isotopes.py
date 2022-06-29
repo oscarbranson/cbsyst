@@ -1,7 +1,7 @@
 # B isotope fns
 
 import numpy as np
-from cbsyst.helpers import ch,cp,NnotNone
+from cbsyst.helpers import ch, cp, NnotNone, Bunch
 from .boron import chiB_calc
 
 def get_alphaB():
@@ -202,7 +202,7 @@ def ABO3_or_ABO4(ABO3,ABO4,alphaB):
 # Calculate total boron isotope fractional abundance using borate ion (B(OH)4)
 def calculate_ABT(H, Ks, alphaB, ABO4=None, ABO3=None):
     """
-    Calculates ABT from pH (total scale) and ABO4.
+    Calculate ABT from pH (total scale) and ABO4 or ABO3.
 
     Parameters
     ----------    
@@ -241,7 +241,7 @@ def calculate_ABT(H, Ks, alphaB, ABO4=None, ABO3=None):
 # Calculate pH using isotope fractional abundance of borate ion (B(OH)4)
 def calculate_H(Ks, alphaB, ABT, ABO4=None, ABO3=None):
     """
-    Calculates pHtot from ABO4 and ABT. 
+    Calculate H from ABO4 or ABO3 and ABT. 
 
     Parameters
     ----------
@@ -430,6 +430,32 @@ def calculate_KB(H, alphaB, ABT, ABO4=None, ABO3=None):
             / ((ABO4 - ABT)
             / ( ABT 
             - 1 / ( (1/alphaB) * (1/ABO4 -1) + 1) )))
+
+def calc_B_isotopes(pHtot=None, ABT=None, ABO3=None, ABO4=None, alphaB=None, Ks=None, **kwargs):
+    # determine pH and ABT
+    if pHtot is not None:  # pH is known
+        H = ch(pHtot)
+        if ABT is None:
+            ABT = calculate_ABT(H=H, Ks=Ks, alphaB=alphaB, ABO3=ABO3, ABO4=ABO4)
+    else:  # pH is not known
+        if ABT is not None:
+            H = calculate_H(Ks=Ks, alphaB=alphaB, ABT=ABT, ABO3=ABO3, ABO4=ABO4)
+            pHtot = cp(H)
+        else:
+            raise ValueError('Either ABT or dBT must be specified if pH is missing.')
+    
+    if ABO3 is None:
+        ABO3 = calculate_ABO3(H=H, Ks=Ks, ABT=ABT, alphaB=alphaB)
+    if ABO4 is None:
+        ABO4 = calculate_ABO4(H=H, Ks=Ks, ABT=ABT, alphaB=alphaB)
+    
+    return Bunch({
+        'pHtot': pHtot,
+        'ABT': ABT,
+        'ABO4': ABO4,
+        'ABO3': ABO3,
+        'H': H
+    })
 
 # Wrapper functions using delta values
 def calculate_pH(Ks, d11BT, d11B4, epsilon=get_epsilonB()):
