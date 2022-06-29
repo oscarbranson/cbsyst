@@ -66,22 +66,6 @@ def zero_CO2_CO3(h, CO2, CO3, K1, K2):
 
 
 # 4. CO2 and TA
-# def CO2_TA(CO2, TA, BT, Ks):
-#     """
-#     Returns H
-#     """
-#     CO2, TA, BT = noms(CO2, TA, BT)  # get nominal values of inputs
-#     par = cast_array(CO2, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast parameters into array
-#     return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_TA)
-
-# def zero_CO2_TA(h, CO2, TA, BT, K1, K2, KB, KW):
-#     # Roots: one pos, one neg, 2 conj. complex. Use positive
-#     LH = TA * h**2 * (KB + h)
-#     RH = (CO2 * (KB + h) * (K1 * h + 2 * K1 * K2) +
-#           h**2 * KB * BT + (KB + h) * (KW * h - h**3))
-#     return LH - RH
-
-
 def CO2_TA(CO2, TA, BT, TP, TSi, TS, TF, Ks):
     """
     Returns pH
@@ -170,13 +154,6 @@ def pH_CO3(pH, CO3, Ks):
 
 
 # 8. pH and TA
-# def pH_TA(pH, TA, BT, Ks):
-#     """
-#     Returns CO2
-#     """
-#     h = ch(pH)
-#     return ((TA - Ks.KB * BT / (Ks.KB + h) - Ks.KW / h + h) /
-#             (Ks.K1 / h + 2 * Ks.K1 * Ks.K2 / h**2))
 def pH_TA(pH, TA, BT, TP, TSi, TS, TF, Ks):
     """
     Returns DIC
@@ -375,16 +352,6 @@ def TA_DIC(TA, DIC, BT, TP, TSi, TS, TF, Ks):
         return pHx.reshape(shape)
     return pHx
 
-# def TA_DIC(TA, DIC, BT, Ks):
-#     """
-#     Returns H
-#     """
-#     TA, DIC, BT = noms(TA, DIC, BT)  # get nominal values of inputs
-#     = cast_array(TA, DIC, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # cast meters into array
-
-#     return np.apply_along_axis(_zero_wrapper, 0,  fn=zero_TA_DIC)
-
-
 def zero_TA_DIC(h, TA, DIC, BT, K1, K2, KB, KW):
     # Roots: one pos, four neg. Use pos.
     LH = DIC * (KB + h) * (K1 * h ** 2 + 2 * K1 * K2 * h)
@@ -419,12 +386,6 @@ def cCO3(H, DIC, Ks):
 
 
 # 1.5.80
-# def cTA(CO2, H, BT, Ks, unit=1e6):
-#     """
-#     Returns TA
-#     """
-#     return (CO2 * (Ks.K1 / H + 2 * Ks.K1 * Ks.K2 / H**2) +
-#             BT * Ks.KB / (Ks.KB + H) + unit * Ks.KW / H - H * unit)
 def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode="multi"):
     """
     Calculate Alkalinity. H is on Total scale.
@@ -454,16 +415,6 @@ def cTA(H, DIC, BT, TP, TSi, TS, TF, Ks, mode="multi"):
         return TA, CAlk, BAlk, PAlk, SiAlk, OH, Hfree, HSO4, HF
     else:
         return TA
-
-
-# # 1.2.28
-# def cTA(HCO3, CO3, BT, H, Ks):
-#     """
-#     Total Alkalinity
-#     """
-#     OH = Ks.KW / H
-#     return HCO3 + 2 * CO3 + cBO4(BT, H, Ks) + OH - H
-
 
 # C.4.14
 def fCO2_to_CO2(fCO2, Ks):
