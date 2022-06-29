@@ -171,22 +171,6 @@ def Csys(
         Ks=ps.Ks,
     )
 
-    # calculate pHs on all scales, if not done before (i.e. if pH not specified in input).
-    # (note this only runs if some of the pHX inputs are missing)
-    # ps.update(
-    #     calc_pH_scales(
-    #         pHtot=ps.pHtot,
-    #         pHfree=ps.pHfree,
-    #         pHsws=ps.pHsws,
-    #         pHNBS=ps.pHNBS,
-    #         TS=ps.TS,
-    #         TF=ps.TF,
-    #         TempK=ps.T_in + 273.15,
-    #         Sal=ps.S_in,
-    #         Ks=ps.Ks
-    #     )
-    # )
-
     # clean up output
     outputs = [
         "BT", "CO2", "CO3", "Ca", "DIC", "H", "HCO3", 
@@ -218,20 +202,6 @@ def Csys(
             P_in=ps.P_out,
             unit=ps.unit,
         )
-        # # Calculate pH scales at output conditions (does nothing if no pH given)
-        # out_cond.update(
-        #     calc_pH_scales(
-        #         pHtot=out_cond.pHtot,
-        #         pHfree=out_cond.pHfree,
-        #         pHsws=out_cond.pHsws,
-        #         pHNBS=out_cond.pHNBS,
-        #         TS=out_cond.TS,
-        #         TF=out_cond.TF,
-        #         TempK=out_cond.T_in + 273.15,
-        #         Sal=out_cond.S_in,
-        #         Ks=out_cond.Ks,
-        #     )
-        # )
 
         # rename parameters in output conditions
         outputs = [
@@ -923,20 +893,6 @@ def CBsys(
             P_in=ps.P_out,
             unit=ps.unit,
         )
-        # Calculate pH scales (does nothing if no pH given)
-        # out_cond.update(
-        #     calc_pH_scales(
-        #         pHtot=out_cond.pHtot,
-        #         pHfree=out_cond.pHfree,
-        #         pHsws=out_cond.pHsws,
-        #         pHNBS=out_cond.pHNBS,
-        #         TS=out_cond.TS,
-        #         TF=out_cond.TF,
-        #         TempK=out_cond.T_in + 273.15,
-        #         Sal=out_cond.S_in,
-        #         Ks=out_cond.Ks,
-        #     )
-        # )
         # rename parameters in output conditions
         ps.update({k + "_in": ps[k] for k in outputs})
         ps.update({k: out_cond[k] for k in outputs})
