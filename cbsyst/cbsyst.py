@@ -5,8 +5,8 @@ Functions for calculating the carbon and boron chemistry of seawater.
 import numpy as np
 from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
 from cbsyst.boron import calc_B_species
-from cbsyst.boron_isotopes import d11_to_A11, A11_to_d11, calculate_pH, get_alphaB, calculate_ABO3, calculate_ABO4
-from cbsyst.helpers import Bunch, ch, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales, calc_Ks
+from cbsyst.boron_isotopes import d11_to_A11, A11_to_d11, calculate_H, get_alphaB, calculate_ABO3, calculate_ABO4, calculate_ABT
+from cbsyst.helpers import Bunch, ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales, calc_Ks
 
 # C Speciation
 # ------------
@@ -419,8 +419,8 @@ def ABsys(
     Parameters
     ----------
     pH, ABT, ABO3, ABO4, dBT, dBO3, dBO4 : array-like
-        Boron isotope system parameters. pH and one other
-        parameter must be provided.
+        Boron isotope system parameters. Two of pH, {ABT, dBT},
+        {ABO4, dBO4}, {ABO3, dBO3} must be provided.
     alphaB : array-like
         Alpha value describing B fractionation (1.0XXX).
         If missing, it's calculated using the temperature
@@ -464,7 +464,7 @@ def ABsys(
     # Calculate Ks
     ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
 
-    # Calculate pH scales (does nothing if none pH given)
+    # Calculate pH scales (does nothing if no pH given)
     ps.update(
         calc_pH_scales(
             pHtot=ps.pHtot,
@@ -493,14 +493,18 @@ def ABsys(
     else:
         ps.alphaB = alphaB
 
-    if ps.pHtot is not None and ps.ABT is not None:
+    # case 1: pH is provided
+    if ps.pHtot is not None:
         ps.H = ch(ps.pHtot)
-    elif ps.pHtot is not None and ps.ABO3 is not None:
-        ps.ABT = calculate_pH(ps.pHtot, ps.Ks, ps.alphaB,ABO3=ps.ABO3)
-    elif ps.pHtot is not None and ps.ABO4 is not None:
-        ps.ABT = calculate_pH(ps.pHtot, ps.Ks, ps.alphaB, ps.ABO4)
-    else:
-        raise ValueError("pH must be determined to calculate isotopes.")
+        if ps.ABT is None:
+            ps.ABT = calculate_ABT(H=ps.H, Ks=ps.Ks, alphaB=ps.alphaB, ABO3=ps.ABO3, ABO4=ps.ABO4)
+    else:  # case 2: pH is noty provided
+        if ps.ABT is not None:
+            ps.H = calculate_H(Ks=ps.Ks, alphaB=ps.alphaB, ABT=ps.ABT, ABO3=ps.ABO3, ABO4=ps.ABO4)
+            ps.pHtot = cp(ps.H)
+        else:
+            raise ValueError('Either ABT and dBT must be specified if pH is missing.')
+        
 
     if ps.ABO3 is None:
         ps.ABO3 = calculate_ABO3(H=ps.H, ABT=ps.ABT, Ks=ps.Ks, alphaB=ps.alphaB)
