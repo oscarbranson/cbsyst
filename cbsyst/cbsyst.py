@@ -310,7 +310,7 @@ def Bsys(
         ps.TF = calc_TF(ps.S_in)
     
     # Remove negative values 
-    for p in ["BT", "BO3", "BO4", "TP", "TSi"]:
+    for p in ["BT", "BO3", "BO4", "TS", "TF"]:
         if ps[p] is not None:
             if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
                 ps[p][ps[p] < 0] = np.nan
