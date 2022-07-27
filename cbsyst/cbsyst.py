@@ -3,6 +3,7 @@ Functions for calculating the carbon and boron chemistry of seawater.
 """
 
 import numpy as np
+import pandas as pd
 from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
 from cbsyst.boron import calc_B_species
 from cbsyst.boron_isotopes import d11_to_A11, A11_to_d11, get_alphaB, calc_B_isotopes
@@ -124,7 +125,7 @@ def Csys(
     # Remove negative values 
     for p in ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "fCO2", "pCO2", "TP", "TSi"]:
         if ps[p] is not None:
-            if isinstance(ps[p], np.ndarray):
+            if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
                 ps[p][ps[p] < 0] = np.nan
             elif ps[p] < 0:
                 ps[p] = np.nan
@@ -311,7 +312,7 @@ def Bsys(
     # Remove negative values 
     for p in ["BT", "BO3", "BO4", "TP", "TSi"]:
         if ps[p] is not None:
-            if isinstance(ps[p], np.ndarray):
+            if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
                 ps[p][ps[p] < 0] = np.nan
             elif ps[p] < 0:
                 ps[p] = np.nan
@@ -686,7 +687,7 @@ def CBsys(
     # Remove negative values 
     for p in ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "BO3", "BO4", "fCO2", "pCO2", "TP", "TSi"]:
         if ps[p] is not None:
-            if isinstance(ps[p], np.ndarray):
+            if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
                 ps[p][ps[p] < 0] = np.nan
             elif ps[p] < 0:
                 ps[p] = np.nan
