@@ -112,7 +112,7 @@ def Csys(
         for p in upar:
             if ps[p] is not None:
                 ps[p] = np.divide(ps[p], ps.unit)  # convert to molar
-
+    
     # Conserved seawater chemistry
     if ps.TS is None:
         ps.TS = calc_TS(ps.S_in)
@@ -121,6 +121,15 @@ def Csys(
     if ps.BT is None:
         ps.BT = calc_TB(ps.S_in)
 
+    # Remove negative values 
+    for p in ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "fCO2", "pCO2", "TP", "TSi"]:
+        if ps[p] is not None:
+            if isinstance(ps[p], np.ndarray):
+                ps[p][ps[p] < 0] = np.nan
+            elif ps[p] < 0:
+                ps[p] = np.nan
+
+    
     # Calculate Ks at input conditions
     ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
 
@@ -298,6 +307,14 @@ def Bsys(
         ps.TS = calc_TS(ps.S_in)
     if ps.TF is None:
         ps.TF = calc_TF(ps.S_in)
+    
+    # Remove negative values 
+    for p in ["BT", "BO3", "BO4", "TP", "TSi"]:
+        if ps[p] is not None:
+            if isinstance(ps[p], np.ndarray):
+                ps[p][ps[p] < 0] = np.nan
+            elif ps[p] < 0:
+                ps[p] = np.nan
 
     # Calculate Ks
     ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
@@ -666,6 +683,14 @@ def CBsys(
     if ps.TF is None:
         ps.TF = calc_TF(ps.S_in)
 
+    # Remove negative values 
+    for p in ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "BO3", "BO4", "fCO2", "pCO2", "TP", "TSi"]:
+        if ps[p] is not None:
+            if isinstance(ps[p], np.ndarray):
+                ps[p][ps[p] < 0] = np.nan
+            elif ps[p] < 0:
+                ps[p] = np.nan
+    
     # Calculate Ks
     ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
 
