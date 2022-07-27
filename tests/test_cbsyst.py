@@ -209,6 +209,10 @@ class ReferenceDataTestCase(unittest.TestCase):
         )
         gd.pressure /= 10  # convert pressure to bar
 
+        # set negative nutrient values to zero
+        gd.phosphate[gd.phosphate < 0] = 0
+        gd.silicate[gd.silicate < 0] = 0
+        
         # exclude weird cruise 270 data
         gd = gd.loc[gd.cruise != 270]
 
@@ -296,7 +300,11 @@ class ReferenceDataTestCase(unittest.TestCase):
             inplace=True,
         )
         gd.pressure /= 10  # convert pressure to bar
-
+        
+        # set negative nutrient values to zero
+        gd.phosphate[gd.phosphate < 0] = 0
+        gd.silicate[gd.silicate < 0] = 0
+        
         # exclude weird cruise 270 data
         gd = gd.loc[gd.cruise != 270]
 
