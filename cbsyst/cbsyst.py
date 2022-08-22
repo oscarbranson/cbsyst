@@ -334,6 +334,20 @@ def Bsys(
             Ks=ps.Ks,
         )
     )
+    
+    if ps.pHtot is None:
+        if ps.dBT is None and ps.ABT is None:
+            ps.dBT = 39.61
+        if ps.dBT is not None:
+            ps.ABT = d11_to_A11(ps.dBT)
+        if ps.dBO3 is not None:
+            ps.ABO3 = d11_to_A11(ps.dBO3)
+        if ps.dBO4 is not None:
+            ps.ABO4 = d11_to_A11(ps.dBO4)
+        if ps.alphaB is None:
+            ps.alphaB = get_alphaB()
+            
+        ps.update(calc_B_isotopes(**ps))
 
     ps.update(calc_B_species(**ps))
 
