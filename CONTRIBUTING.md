@@ -51,8 +51,9 @@ Current unittests check internal consistency of functions against stable-state r
 
 ```
 cbsyst/
-  |--- boron_fns.py  : Functions for calculating relating to B speciation / isotopes.
-  |--- carbon_fns.py  : Functions for calculating C speciation.
+  |--- boron.py  : Functions for calculating relating to B speciation.
+  |--- boron_isotopes.py  : Functions for calculating relating to B isotopes.
+  |--- carbon.py  : Functions for calculating C speciation.
   |--- cbsyst.py  : User-facing functions used for calculating seawater chemistry.
   |--- helpers.py  : General functions that are used elsewhere.
   |--- MyAMI_V2.py  : Functions for K0, K1, K2, KB, KW, KS, KspA, KspC and [Mg] and [Ca] corrections.
