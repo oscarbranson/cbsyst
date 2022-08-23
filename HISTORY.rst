@@ -3,7 +3,11 @@
 Release History
 ---------------
 
-0.4.0 (2022)
+0.4.1 (2022-08-23)
+------------
+Technical: Stopped including all GLODAP data in bdist_wheel to reduce file size.
+
+0.4.0 (2022-08-23)
 ------------
 Delegate all K calculation to external packages:
 * [kgen](https://github.com/PalaeoCarb/Kgen) for K calculation.
