@@ -335,6 +335,7 @@ def Bsys(
         )
     )
     
+    # calcualte pH if not provided.
     if ps.pHtot is None:
         if ps.dBT is None and ps.ABT is None:
             ps.dBT = 39.61

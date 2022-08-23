@@ -442,7 +442,7 @@ def calc_B_isotopes(pHtot=None, ABT=None, ABO3=None, ABO4=None, alphaB=None, Ks=
             H = calculate_H(Ks=Ks, alphaB=alphaB, ABT=ABT, ABO3=ABO3, ABO4=ABO4)
             pHtot = cp(H)
         else:
-            raise ValueError('Either ABT or dBT must be specified if pH is missing.')
+            raise ValueError('ABT and one of ABO3 or ABO4 must be specified if pH is missing.')
     
     if ABO3 is None:
         ABO3 = calculate_ABO3(H=H, Ks=Ks, ABT=ABT, alphaB=alphaB)
