@@ -1,3 +1,4 @@
 from cbsyst.cbsyst import *
-from cbsyst.helpers import data_out, Bunch
-__version__ = '0.3.7'
+from cbsyst.helpers import data_out, Bunch, calc_Ks, pH_scale_converter
+
+VERSION = '0.4.1'

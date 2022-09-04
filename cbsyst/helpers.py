@@ -1,4 +1,5 @@
 import uncertainties.unumpy as unp
+import kgen
 import numpy as np
 import pandas as pd
 
@@ -55,7 +56,7 @@ def data_out(cbdat, path=None, include_constants=False):
         "Mg",
     ]
 
-    consts = ["K0", "K1", "K2", "KB", "KW", "KSO4", "KspA", "KspC"]
+    consts = ["K0", "K1", "K2", "KB", "KW", "KS", "KspA", "KspC"]
 
     size = cbdat.pH.size
     out = pd.DataFrame(index=range(size))
@@ -149,7 +150,30 @@ def maxL(*it):
         return max(m)
     else:
         return 1
+    
+def maxD(*it):
+    """
+    Calculate maximum number of dimensions in provided items.
+    
+    Parameters
+    ----------
+    *it : objects
+        Items of various shapes with an .ndim attribute.
+    """
+    return np.max([x.ndim for x in it])
 
+def maxShape(*it):
+    """
+    Returns the shape of the largest array.
+    """
+    size = 0
+    shape = None
+    for i in it:
+        i = np.asanyarray(i)
+        if i.size > size:
+            size = i.size
+            shape = i.shape
+    return shape
 
 def cast_array(*it):
     """
@@ -255,24 +279,22 @@ def swdens(TempC, Sal):
 
 def calc_TS(Sal):
     """
-    Calculate total Sulphur
+    Calculate total Sulphur in mol/kg-SW- lifted directly from CO2SYS.m
 
-    Morris, A. W., and Riley, J. P., Deep-Sea Research 13:699-705, 1966:
-    this is .02824.*Sali./35. = .0008067.*Sali
+    From Dickson et al., 2007, Table 2
+    Note: Sal / 1.80655 = Chlorinity
     """
-    a, b, c = (0.14, 96.062, 1.80655)
-    return (a / b) * (Sal / c)  # mol/kg-SW
+    return 0.14 * Sal / 1.80655 / 96.062 # mol/kg-SW
 
 
 def calc_TF(Sal):
     """
-    Calculate total Fluorine
+    Calculate total Fluorine in mol/kg-SW
 
-    Riley, J. P., Deep-Sea Research 12:219-220, 1965:
-    this is .000068.*Sali./35. = .00000195.*Sali
+    From Dickson et al., 2007, Table 2
+    Note: Sal / 1.80655 = Chlorinity
     """
-    a, b, c = (0.000067, 18.998, 1.80655)
-    return (a / b) * (Sal / c)  # mol/kg-SW
+    return 6.7e-5 * Sal / 1.80655 / 18.9984 # mol/kg-SW
 
 
 # def calc_TB(Sal):
@@ -288,7 +310,7 @@ def calc_TF(Sal):
 
 def calc_TB(Sal):
     """
-    Calculate total Boron
+    Calculate total Boron in mol/kg-SW - lifted directly from CO2SYS.m
 
     Directly from CO2SYS:
     Uppstrom, L., Deep-Sea Research 21:161-162, 1974:
@@ -296,7 +318,7 @@ def calc_TB(Sal):
     TB(FF) = (0.000232 / 10.811) * (Sal / 1.80655) in mol/kg-SW
     """
     a, b = (0.0004157, 35.0)
-    return a * Sal / b
+    return a * Sal / b  # mol/kg-SW
 
 
 def calc_fH(TempK, Sal):
@@ -319,8 +341,8 @@ def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, TS, TF, TempK, Sal, Ks):
 
     if npH == 1:
         # pH scale conversions
-        FREEtoTOT = -np.log10((1 + TS / Ks.KSO4))
-        SWStoTOT = -np.log10((1 + TS / Ks.KSO4) / (1 + TS / Ks.KSO4 + TF / Ks.KF))
+        FREEtoTOT = -np.log10((1 + TS / Ks.KS))
+        SWStoTOT = -np.log10((1 + TS / Ks.KS) / (1 + TS / Ks.KS + TF / Ks.KF))
         fH = calc_fH(TempK, Sal)
 
         if pHtot is not None:
@@ -349,3 +371,37 @@ def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, TS, TF, TempK, Sal, Ks):
             }
     else:
         return {}
+
+def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, MyAMI_Mode='calculate'):
+    """
+    Helper function to calculate Ks.
+
+    If Ks is a dict, those Ks are used
+    transparrently (i.e. no pressure modification).
+    """
+    if isinstance(Ks, dict):
+        Ks = Bunch(Ks)
+    else:
+        Ks = Bunch(kgen.calc_Ks(TempC=T, Sal=S, Pres=P, Mg=Mg, Ca=Ca, MyAMI_mode=MyAMI_Mode))  # calc empirical Ks
+
+    return Ks
+
+def pH_scale_converter(pH, scale, Temp, Sal, Press=None, TS=None, TF=None):
+    """
+    Returns pH on all scales.
+    """
+    pH_scales = ["Total", "FREE", "SWS", "NBS"]
+    if scale not in pH_scales:
+        raise ValueError("scale must be one of Total, NBS, SWS or FREE.")
+    if TS is None:
+        TS = calc_TS(Sal)
+    if TF is None:
+        TF = calc_TF(Sal)
+    TempK = Temp + 273.15
+
+    Ks = kgen.calc_Ks(TempC=Temp, Sal=Sal, Pres=Press)
+
+    inp = [None, None, None, None]
+    inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH
+
+    return calc_pH_scales(*inp, TS, TF, TempK, Sal, Ks)

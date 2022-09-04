@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+0.4.1 (2022-08-23)
+------------
+Technical: Stopped including all GLODAP data in bdist_wheel to reduce file size.
+
+0.4.0 (2022-08-23)
+------------
+Delegate all K calculation to external packages:
+* [kgen](https://github.com/PalaeoCarb/Kgen) for K calculation.
+* [pymyami](https://github.com/PalaeoCarb/MyAMI) for adjusting Ks for seawater major ion composition.
+
+Main code changes:
+* Strip out all old MyAMI code
+* re-organise carbon, boron, and boron isotope functions
+* Added in additional B isotope functions for palaeo-calculations
+* Functionality for providing B isotopes instead of pH for the main functions.
+
 0.3.7 (2021-04-23)
 ------------------
 (including changes from 0.3.6... shoddy record keeping)
