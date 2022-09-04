@@ -151,7 +151,7 @@ def cplot(obs, pred, var, cvar, c, alpha=0.4, pclims=[0.05, 99.95]):
     hax.set_yticklabels([])
 
     # Stats
-    median = np.median(diff)
+    median = np.nanmedian(diff)
     pc95 = np.nanpercentile(diff, [2.5, 97.5])
     hax.axhline(median, color="r", ls="dashed", zorder=2)
     hax.axhspan(*pc95, color="r", alpha=0.2, zorder=1)
