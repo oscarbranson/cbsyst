@@ -44,24 +44,24 @@ def GLODAPv2_comparison(figdir="."):
     cpH = cb.Csys(
         TA=gd.talk,
         DIC=gd.tco2,
-        T=gd.temperature,
-        S=gd.salinity,
-        P=gd.pressure,
+        T_in=gd.temperature,
+        S_in=gd.salinity,
+        P_in=gd.pressure,
         TP=gd.phosphate,
         TSi=gd.silicate,
         BT=415.7,
     )
     print("   Making plots...")
-    fig, axs = cplot(gd.phtsinsitutp, cpH.pH, "pH", "Depth", gd.depth)
+    fig, axs = cplot(gd.phtsinsitutp, cpH.pHtot, "pH", "Depth", gd.depth)
     fig.savefig(figdir + "/Figures/pH_comparison.png", dpi=200)
 
     print("Calculating TA from pH and DIC...")
     cTA = cb.Csys(
-        pH=gd.phtsinsitutp,
+        pHtot=gd.phtsinsitutp,
         DIC=gd.tco2,
-        T=gd.temperature,
-        S=gd.salinity,
-        P=gd.pressure,
+        T_in=gd.temperature,
+        S_in=gd.salinity,
+        P_in=gd.pressure,
         TP=gd.phosphate,
         TSi=gd.silicate,
         BT=415.7,
@@ -72,11 +72,11 @@ def GLODAPv2_comparison(figdir="."):
 
     print("Calculating DIC from pH and TA...")
     cDIC = cb.Csys(
-        pH=gd.phtsinsitutp,
+        pHtot=gd.phtsinsitutp,
         TA=gd.talk,
-        T=gd.temperature,
-        S=gd.salinity,
-        P=gd.pressure,
+        T_in=gd.temperature,
+        S_in=gd.salinity,
+        P_in=gd.pressure,
         TP=gd.phosphate,
         TSi=gd.silicate,
         BT=415.7,
