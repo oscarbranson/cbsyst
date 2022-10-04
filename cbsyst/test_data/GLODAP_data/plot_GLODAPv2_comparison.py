@@ -101,7 +101,7 @@ def cplot(obs, pred, var, cvar, c, alpha=0.4, pclims=[0.05, 99.95]):
     cax = fig.add_axes([0.9, 0.13, 0.015, 0.8])
 
     ad = np.concatenate([obs, pred])
-    mn, mx = np.percentile(ad, pclims)
+    mn, mx = np.nanpercentile(ad, pclims)
     xr = mx - mn
     pad = 0.1 * xr
 
@@ -130,7 +130,7 @@ def cplot(obs, pred, var, cvar, c, alpha=0.4, pclims=[0.05, 99.95]):
 
     # Measured vs Difference
     diff = obs - pred
-    mn, mx = np.percentile(diff, pclims)
+    mn, mx = np.nanpercentile(diff, pclims)
     xr = mx - mn
     pad = 0.15 * xr
 
@@ -151,8 +151,8 @@ def cplot(obs, pred, var, cvar, c, alpha=0.4, pclims=[0.05, 99.95]):
     hax.set_yticklabels([])
 
     # Stats
-    median = np.median(diff)
-    pc95 = np.percentile(diff, [2.5, 97.5])
+    median = np.nanmedian(diff)
+    pc95 = np.nanpercentile(diff, [2.5, 97.5])
     hax.axhline(median, color="r", ls="dashed", zorder=2)
     hax.axhspan(*pc95, color="r", alpha=0.2, zorder=1)
     hax.set_ylim(ax2.get_ylim())
