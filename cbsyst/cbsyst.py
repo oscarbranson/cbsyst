@@ -123,7 +123,7 @@ def Csys(
         ps.BT = calc_TB(ps.S_in)
 
     # Remove negative values 
-    for p in ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "fCO2", "pCO2", "TP", "TSi"]:
+    for p in ["DIC", "CO2", "HCO3", "CO3", "BT", "fCO2", "pCO2", "TP", "TSi"]:
         if ps[p] is not None:
             if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
                 ps[p][ps[p] < 0] = np.nan
@@ -700,7 +700,7 @@ def CBsys(
         ps.TF = calc_TF(ps.S_in)
 
     # Remove negative values 
-    for p in ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "BO3", "BO4", "fCO2", "pCO2", "TP", "TSi"]:
+    for p in ["DIC", "CO2", "HCO3", "CO3", "BT", "BO3", "BO4", "fCO2", "pCO2", "TP", "TSi"]:
         if ps[p] is not None:
             if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
                 ps[p][ps[p] < 0] = np.nan
