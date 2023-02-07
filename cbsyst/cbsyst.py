@@ -199,6 +199,9 @@ def Csys(
             S_in=ps.S_out,
             P_in=ps.P_out,
             unit=ps.unit,
+            Ca=ps.Ca,
+            Mg=ps.Mg,
+            BT=ps.BT,
         )
 
         # rename parameters in output conditions
@@ -888,6 +891,8 @@ def CBsys(
             S_in=ps.S_out,
             P_in=ps.P_out,
             unit=ps.unit,
+            Ca=ps.Ca,
+            Mg=ps.Mg
         )
         # rename parameters in output conditions
         ps.update({k + "_in": ps[k] for k in outputs})
