@@ -52,9 +52,11 @@ def Csys(
     pH, DIC, CO2, HCO3, CO3, TA : array-like
         Carbon system parameters. Two of these must be provided.
     BT : array-like
-        Total B at Salinity = 35, used in Alkalinity calculations.
-    Ca, Mg : arra-like
-        The [Ca] and [Mg] of the seawater, in mol / kg.
+        Total B at the input salinity used in Alkalinity calculations. 
+        If missing, this is calculated as 0.000416 * Sal/35 
+        (Uppstrom et al. 1974).
+    Ca, Mg : array-like
+        The [Ca] and [Mg] of seawater, in mol / kg.
         Used in calculating MyAMI constants.
     T_in, S_in : array-like
         Temperature in Celcius and Salinity in PSU that the
@@ -165,9 +167,11 @@ def Csys(
     
     # calc Omega
     if Ca is None:
-        Ca = 0.0102821 * ps.S_in / 35.
-    ps['OmegaA'] = ps['CO3'] / ps.unit * Ca / ps.Ks.KspA
-    ps['OmegaC'] = ps['CO3'] / ps.unit * Ca / ps.Ks.KspA
+        oCa = 0.0102821 * ps.S_in / 35.
+    else:
+        oCa = Ca * ps.S_in / 35.
+    ps['OmegaA'] = ps['CO3'] / ps.unit * oCa / ps.Ks.KspA
+    ps['OmegaC'] = ps['CO3'] / ps.unit * oCa / ps.Ks.KspA
 
     # clean up output
     outputs = [
@@ -189,9 +193,20 @@ def Csys(
             ps.T_out = ps.T_in
         if ps.S_out is None:
             ps.S_out = ps.S_in
+        else:
+            # if salinity is modified, update salinity-dependent parameters
+            BT = ps.BT * ps.S_out / ps.S_in
+            TS = ps.TS * ps.S_out / ps.S_in
+            TF = ps.TF * ps.S_out / ps.S_in
+            if Ca is not None:
+                Ca = ps.Ca * ps.S_out / ps.S_in
+            if Mg is not None:
+                Mg = ps.Mg * ps.S_out / ps.S_in
         if ps.P_out is None:
             ps.P_out = ps.P_in
         # assumes conserved alkalinity and DIC
+        
+        # This needs to be different depending on whether T or S is changing.
         out_cond = Csys(
             TA=ps.TA,
             DIC=ps.DIC,
@@ -199,9 +214,11 @@ def Csys(
             S_in=ps.S_out,
             P_in=ps.P_out,
             unit=ps.unit,
-            Ca=ps.Ca,
-            Mg=ps.Mg,
-            BT=ps.BT,
+            Ca=Ca,
+            Mg=Mg,
+            BT=BT,
+            TF=TF,
+            TS=TS,
         )
 
         # rename parameters in output conditions
@@ -816,9 +833,11 @@ def CBsys(
 
     # calc Omega
     if Ca is None:
-        Ca = 0.0102821 * ps.S_in / 35.
-    ps['OmegaA'] = ps['CO3'] / ps.unit * Ca / ps.Ks.KspA
-    ps['OmegaC'] = ps['CO3'] / ps.unit * Ca / ps.Ks.KspA
+        oCa = 0.0102821 * ps.S_in / 35.
+    else:
+        oCa = Ca * ps.S_in / 35.
+    ps['OmegaA'] = ps['CO3'] / ps.unit * oCa / ps.Ks.KspA
+    ps['OmegaC'] = ps['CO3'] / ps.unit * oCa / ps.Ks.KspA
     
     # clean up output
     outputs = [
@@ -879,20 +898,31 @@ def CBsys(
             ps.T_out = ps.T_in
         if ps.S_out is None:
             ps.S_out = ps.S_in
+        else:
+            # if salinity is modified, update salinity-dependent parameters
+            BT = ps.BT * ps.S_out / ps.S_in
+            TS = ps.TS * ps.S_out / ps.S_in
+            TF = ps.TF * ps.S_out / ps.S_in
+            if Ca is not None:
+                Ca = ps.Ca * ps.S_out / ps.S_in
+            if Mg is not None:
+                Mg = ps.Mg * ps.S_out / ps.S_in
         if ps.P_out is None:
             ps.P_out = ps.P_in
         # assumes conserved alkalinity, DIC and BT
         out_cond = CBsys(
             TA=ps.TA,
             DIC=ps.DIC,
-            BT=ps.BT,
             dBT=ps.dBT,
             T_in=ps.T_out,
             S_in=ps.S_out,
             P_in=ps.P_out,
             unit=ps.unit,
-            Ca=ps.Ca,
-            Mg=ps.Mg
+            Ca=Ca,
+            Mg=Mg,
+            BT=BT,
+            TF=TF,
+            TS=TS,
         )
         # rename parameters in output conditions
         ps.update({k + "_in": ps[k] for k in outputs})
