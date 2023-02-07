@@ -162,12 +162,18 @@ def Csys(
         TF=ps.TF,
         Ks=ps.Ks,
     )
+    
+    # calc Omega
+    if Ca is None:
+        Ca = 0.0102821 * ps.S_in / 35.
+    ps['OmegaA'] = ps['CO3'] / ps.unit * Ca / ps.Ks.KspA
+    ps['OmegaC'] = ps['CO3'] / ps.unit * Ca / ps.Ks.KspA
 
     # clean up output
     outputs = [
         "BT", "CO2", "CO3", "Ca", "DIC", "H", "HCO3", 
         "Mg", "S_in", "T_in", "TA", "CAlk", "PAlk", 
-        "SiAlk", "OH"]
+        "SiAlk", "OH", 'OmegaA', 'OmegaC', 'revelle_factor']
     for k in outputs:
         if not isinstance(ps[k], np.ndarray):
             # convert all outputs to (min) 1D numpy arrays.
@@ -200,7 +206,7 @@ def Csys(
             "BAlk", "BT", "CAlk", "CO2", "CO3", "DIC", "H", "HCO3", 
             "HF", "HSO4", "Hfree", "Ks", "OH", "PAlk", "SiAlk", "TA", "TF",
             "TP", "TS", "TSi", "fCO2", "pCO2", "pHfree", "pHsws", 
-            "pHtot", "pHNBS", "revelle_factor",
+            "pHtot", "pHNBS", 'OmegaA', 'OmegaC', "revelle_factor",
         ]
 
         ps.update({k + "_in": ps[k] for k in outputs})
@@ -805,6 +811,12 @@ def CBsys(
         Ks=ps.Ks,
     )
 
+    # calc Omega
+    if Ca is None:
+        Ca = 0.0102821 * ps.S_in / 35.
+    ps['OmegaA'] = ps['CO3'] / ps.unit * Ca / ps.Ks.KspA
+    ps['OmegaC'] = ps['CO3'] / ps.unit * Ca / ps.Ks.KspA
+    
     # clean up output
     outputs = [
         "BAlk",
@@ -833,6 +845,9 @@ def CBsys(
         "pHsws",
         "pHtot",
         "pHNBS",
+        'OmegaA',
+        'OmegaC',
+        'revelle_factor',
         "BO3",
         "BO4",
         "ABO3",
