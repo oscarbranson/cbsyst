@@ -170,8 +170,8 @@ def Csys(
         oCa = 0.0102821 * ps.S_in / 35.
     else:
         oCa = Ca * ps.S_in / 35.
-    ps['OmegaA'] = ps['CO3'] / ps.unit * oCa / ps.Ks.KspA
-    ps['OmegaC'] = ps['CO3'] / ps.unit * oCa / ps.Ks.KspC
+    ps['OmegaA'] = ps['CO3'] * oCa / ps.Ks.KspA
+    ps['OmegaC'] = ps['CO3'] * oCa / ps.Ks.KspC
 
     # clean up output
     outputs = [
@@ -836,8 +836,8 @@ def CBsys(
         oCa = 0.0102821 * ps.S_in / 35.
     else:
         oCa = Ca * ps.S_in / 35.
-    ps['OmegaA'] = ps['CO3'] / ps.unit * oCa / ps.Ks.KspA
-    ps['OmegaC'] = ps['CO3'] / ps.unit * oCa / ps.Ks.KspC
+    ps['OmegaA'] = ps['CO3'] * oCa / ps.Ks.KspA
+    ps['OmegaC'] = ps['CO3'] * oCa / ps.Ks.KspC
     
     # clean up output
     outputs = [
