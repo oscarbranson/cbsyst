@@ -3,6 +3,15 @@
 Release History
 ---------------
 
+0.4.3 (2023-02-07)
+------------
+Omega calculation.
+
+Main code changes:
+* Added calculation of OmegaA and OmegaC.
+* Corrected calculation of conservative ions when S_out is specified.
+* Modified test_in_out.py to accommodate S_out handling.
+
 0.4.1 (2022-08-23)
 ------------
 Technical: Stopped including all GLODAP data in bdist_wheel to reduce file size.
