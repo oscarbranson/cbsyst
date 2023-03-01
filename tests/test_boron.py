@@ -1,7 +1,8 @@
 import unittest
-from .check_vals import boron_ref as ref
 from cbsyst import boron as bf
 
+from tests import check_vals
+ref = check_vals.boron_ref
 class BoronFunctions(unittest.TestCase):
     """Test B concentration and speciation functions"""
 

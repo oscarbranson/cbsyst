@@ -1,6 +1,8 @@
 import unittest
-from .check_vals import carbon_ref as ref
 import cbsyst as cb
+
+from tests import check_vals
+ref = check_vals.carbon_ref
 
 class TestInputOutput(unittest.TestCase):
     """Test internal consistency of input/output condition calculations"""

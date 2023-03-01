@@ -1,6 +1,8 @@
 import unittest
-from .check_vals import carbon_ref as ref
 from cbsyst import carbon as cf
+
+from tests import check_vals
+ref = check_vals.carbon_ref
 
 class CarbonFnTestCase(unittest.TestCase):
     """Test all C functions"""
