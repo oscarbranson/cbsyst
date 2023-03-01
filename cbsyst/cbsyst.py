@@ -110,11 +110,16 @@ def Csys(
     if isinstance(ps.unit, str):
         ps.unit = udict[ps.unit]
 
-    if ps.unit != 1:
-        upar = ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "fCO2", "pCO2", "TP", "TSi"]
+    upar = ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "TP", "TSi"]
+    if ps.unit != 1:    
         for p in upar:
             if ps[p] is not None:
                 ps[p] = np.divide(ps[p], ps.unit)  # convert to molar
+    
+    gupar = ['pCO2', 'fCO2']  # special unit case: pCO2, fCO2 because pCO2 is always in ppm
+    for p in gupar:
+        if ps[p] is not None:
+            ps[p] = np.divide(ps[p], 1e6)  # convert to mole fraction
     
     # Conserved seawater chemistry
     if ps.TS is None:
@@ -185,6 +190,8 @@ def Csys(
     if ps.unit != 1:
         for p in upar + ["CAlk", "BAlk", "PAlk", "SiAlk", "OH", "HSO4", "HF", "Hfree"]:
             ps[p] *= ps.unit  # convert back to input units
+        for p in gupar:
+            ps[p] = np.multiply(ps[p], 1e6)  # convert to ppm
 
     # Calculate Output Conditions
     # ===========================
@@ -707,18 +714,22 @@ def CBsys(
         "HCO3",
         "CO3",
         "TA",
-        "fCO2",
-        "pCO2",
         "BT",
         "BO3",
         "BO4",
         "TP",
         "TSi",
     ]
+ 
     for p in upar:
         if ps[p] is not None:
             ps[p] = np.divide(ps[p], ps.unit)  # convert to molar
 
+    gupar = ['pCO2', 'fCO2']  # special unit case: pCO2, fCO2 because pCO2 is always in ppm
+    for p in gupar:
+        if ps[p] is not None:
+            ps[p] = np.divide(ps[p], 1e6)  # convert to mole fraction
+    
     # Conserved seawater chemistry
     if ps.TS is None:
         ps.TS = calc_TS(ps.S_in)
@@ -884,9 +895,13 @@ def CBsys(
             # convert all outputs to (min) 1D numpy arrays.
             ps[k] = np.array(ps[k], ndmin=1)
 
-    # Handle Units
+    # Handle Units - at this point everything is in mol/kg-SW
     for p in upar + ["CAlk", "BAlk", "PAlk", "SiAlk", "OH", "HSO4", "HF", "Hfree"]:
         ps[p] *= ps.unit  # convert back to input units
+
+    for p in gupar:
+        if ps[p] is not None:
+            ps[p] = np.multiply(ps[p], 1e6)  # convert to ppm
 
     # Calculate Output Conditions
     # ===========================
