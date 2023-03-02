@@ -1,6 +1,6 @@
 import scipy.optimize as opt
 import numpy as np
-from cbsyst.helpers import ch, noms, cast_array, maxL, Bunch, cp, maxShape, calc_fH
+from cbsyst.helpers import noms, cast_array, maxL, Bunch, maxShape, calc_fH
 
 def _zero_wrapper(ps, fn, bounds=(10 ** -14, 10 ** -1)):
     """
@@ -25,7 +25,7 @@ def CO2_pH(CO2, pH, Ks):
     """
     Returns DIC
     """
-    h = ch(pH)
+    h = 10**-pH
     return CO2 * (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h ** 2)
 
 
@@ -140,7 +140,7 @@ def pH_HCO3(pH, HCO3, Ks):
     """
     Returns DIC
     """
-    h = ch(pH)
+    h = 10**-pH
     return HCO3 * (1 + h / Ks.K1 + Ks.K2 / h)
 
 
@@ -149,7 +149,7 @@ def pH_CO3(pH, CO3, Ks):
     """
     Returns DIC
     """
-    h = ch(pH)
+    h = 10**-pH
     return CO3 * (1 + h / Ks.K2 + h ** 2 / (Ks.K1 * Ks.K2))
 
 
@@ -182,7 +182,7 @@ def pH_DIC(pH, DIC, Ks):
     """
     Returns CO2
     """
-    h = ch(pH)
+    h = 10**-pH
     return DIC / (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h ** 2)
 
 
@@ -517,52 +517,52 @@ def calc_C_species(
     # Carbon System Calculations (from Zeebe & Wolf-Gladrow, Appendix B)
     # 1. CO2 and pH
     if CO2 is not None and pHtot is not None:
-        H = ch(pHtot)
+        H = 10**-pHtot
         DIC = CO2_pH(CO2, pHtot, Ks)
     # 2. CO2 and HCO3
     elif CO2 is not None and HCO3 is not None:
         H = CO2_HCO3(CO2, HCO3, Ks)
-        DIC = CO2_pH(CO2, cp(H), Ks)
+        DIC = CO2_pH(CO2, -np.log10(H), Ks)
     # 3. CO2 and CO3
     elif CO2 is not None and CO3 is not None:
         H = CO2_CO3(CO2, CO3, Ks)
-        DIC = CO2_pH(CO2, cp(H), Ks)
+        DIC = CO2_pH(CO2, -np.log10(H), Ks)
     # 4. CO2 and TA
     elif CO2 is not None and TA is not None:
         # unit conversion because OH and H wrapped
         # up in TA fns - all need to be in same units.
         pHtot = CO2_TA(CO2=CO2, TA=TA, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
-        H = ch(pHtot)
+        H = 10**-pHtot
         DIC = CO2_pH(CO2, pHtot, Ks)
     # 5. CO2 and DIC
     elif CO2 is not None and DIC is not None:
         H = CO2_DIC(CO2, DIC, Ks)
     # 6. pHtot and HCO3
     elif pHtot is not None and HCO3 is not None:
-        H = ch(pHtot)
+        H = 10**-pHtot
         DIC = pH_HCO3(pHtot, HCO3, Ks)
     # 7. pHtot and CO3
     elif pHtot is not None and CO3 is not None:
-        H = ch(pHtot)
+        H = 10**-pHtot
         DIC = pH_CO3(pHtot, CO3, Ks)
     # 8. pHtot and TA
     elif pHtot is not None and TA is not None:
-        H = ch(pHtot)
+        H = 10**-pHtot
         DIC = pH_TA(pH=pHtot, TA=TA, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
     # 9. pHtot and DIC
     elif pHtot is not None and DIC is not None:
-        H = ch(pHtot)
+        H = 10**-pHtot
     # 10. HCO3 and CO3
     elif HCO3 is not None and CO3 is not None:
         H = HCO3_CO3(HCO3, CO3, Ks)
-        DIC = pH_CO3(cp(H), CO3, Ks)
+        DIC = pH_CO3(-np.log10(H), CO3, Ks)
     # 11. HCO3 and TA
     elif HCO3 is not None and TA is not None:
         Warning(
             "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
         )
         H = HCO3_TA(HCO3, TA, BT, Ks)
-        DIC = pH_HCO3(cp(H), HCO3, Ks)
+        DIC = pH_HCO3(-np.log10(H), HCO3, Ks)
     # 12. HCO3 amd DIC
     elif HCO3 is not None and DIC is not None:
         H = HCO3_DIC(HCO3, DIC, Ks)
@@ -572,14 +572,14 @@ def calc_C_species(
             "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
         )
         H = CO3_TA(CO3, TA, BT, Ks)
-        DIC = pH_CO3(cp(H), CO3, Ks)
+        DIC = pH_CO3(-np.log10(H), CO3, Ks)
     # 14. CO3 and DIC
     elif CO3 is not None and DIC is not None:
         H = CO3_DIC(CO3, DIC, Ks)
     # 15. TA and DIC
     elif TA is not None and DIC is not None:
         pHtot = TA_DIC(TA=TA, DIC=DIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
-        H = ch(pHtot)
+        H = 10**-pHtot
 
     # The above makes sure that DIC and H are known,
     # this next bit calculates all the missing species
@@ -601,7 +601,7 @@ def calc_C_species(
 
     # if pH not calced yet, calculate on all scales.
     if pHtot is None:
-        pHtot = np.array(cp(H), ndmin=1)
+        pHtot = np.array(-np.log10(H), ndmin=1)
     
     FREEtoTOT = -np.log10((1 + TS / Ks.KS))
     SWStoTOT = -np.log10((1 + TS / Ks.KS) / (1 + TS / Ks.KS + TF / Ks.KF))
@@ -642,13 +642,13 @@ def calc_revelle_factor(TA, DIC, BT, TP, TSi, TS, TF, Ks):
     dDIC = 1e-6  # (1 umol kg-1)
 
     pH = TA_DIC(TA=TA, DIC=DIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
-    fCO2 = cCO2(ch(pH), DIC, Ks) / Ks.K0
+    fCO2 = cCO2(10**-pH, DIC, Ks) / Ks.K0
 
     # Calculate new fCO2 above and below given value
     pH_hi = TA_DIC(TA=TA, DIC=DIC + dDIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
-    fCO2_hi = cCO2(ch(pH_hi), DIC, Ks) / Ks.K0
+    fCO2_hi = cCO2(10**-pH_hi, DIC, Ks) / Ks.K0
 
     pH_lo = TA_DIC(TA=TA, DIC=DIC - dDIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
-    fCO2_lo = cCO2(ch(pH_lo), DIC, Ks) / Ks.K0
+    fCO2_lo = cCO2(10**-pH_lo, DIC, Ks) / Ks.K0
 
     return (fCO2_hi - fCO2_lo) * DIC / (fCO2 * 2 * dDIC)

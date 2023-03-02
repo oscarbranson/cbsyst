@@ -200,22 +200,6 @@ def NnotNone(*it):
     """
     return sum([i is not None for i in it])
 
-
-# pK <--> K converters
-def ch(pK):
-    """
-    Convert pK to K
-    """
-    return np.power(10.0, np.multiply(pK, -1.0))
-
-
-def cp(K):
-    """
-    Convert K to pK
-    """
-    return -np.log10(K)
-
-
 # Helpers for aspects of seawater chemistry
 # -----------------------------------------
 def prescorr(P, Tc, a0, a1, a2, b0, b1):
