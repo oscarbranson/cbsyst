@@ -7,7 +7,7 @@ import pandas as pd
 from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
 from cbsyst.boron import calc_B_species
 from cbsyst.boron_isotopes import d11_to_A11, A11_to_d11, get_alphaB, calc_B_isotopes
-from cbsyst.helpers import Bunch, ch, cp, NnotNone, calc_TF, calc_TS, calc_TB, calc_pH_scales, calc_Ks
+from cbsyst.helpers import Bunch, NnotNone, calc_FT, calc_ST, calc_BT, calc_pH_scales, calc_Ks
 
 # C Speciation
 # ------------
@@ -20,8 +20,8 @@ def Csys(
     T_in=25.0, T_out=None, 
     S_in=35.0, S_out=None,
     P_in=None, P_out=None,
-    TP=0.0, TSi=0.0,
-    TS=None, TF=None,
+    PT=0.0, SiT=0.0,
+    ST=None, FT=None,
     pHsws=None, pHfree=None, pHNBS=None,
     unit="umol", Ks=None,
     pdict=None,
@@ -110,7 +110,7 @@ def Csys(
     if isinstance(ps.unit, str):
         ps.unit = udict[ps.unit]
 
-    upar = ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "TP", "TSi"]
+    upar = ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "PT", "SiT"]
     if ps.unit != 1:    
         for p in upar:
             if ps[p] is not None:
@@ -122,15 +122,15 @@ def Csys(
             ps[p] = np.divide(ps[p], 1e6)  # convert to mole fraction
     
     # Conserved seawater chemistry
-    if ps.TS is None:
-        ps.TS = calc_TS(ps.S_in)
-    if ps.TF is None:
-        ps.TF = calc_TF(ps.S_in)
+    if ps.ST is None:
+        ps.ST = calc_ST(ps.S_in)
+    if ps.FT is None:
+        ps.FT = calc_FT(ps.S_in)
     if ps.BT is None:
-        ps.BT = calc_TB(ps.S_in)
+        ps.BT = calc_BT(ps.S_in)
 
     # Remove negative values 
-    for p in ["DIC", "CO2", "HCO3", "CO3", "BT", "fCO2", "pCO2", "TP", "TSi"]:
+    for p in ["DIC", "CO2", "HCO3", "CO3", "BT", "fCO2", "pCO2", "PT", "SiT"]:
         if ps[p] is not None:
             if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
                 ps[p][ps[p] < 0] = np.nan
@@ -139,7 +139,7 @@ def Csys(
 
     
     # Calculate Ks at input conditions
-    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
+    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
 
     # Calculate pH scales at input conditions (does nothing if no pH given)
     ps.update(
@@ -148,8 +148,8 @@ def Csys(
             pHfree=ps.pHfree,
             pHsws=ps.pHsws,
             pHNBS=ps.pHNBS,
-            TS=ps.TS,
-            TF=ps.TF,
+            ST=ps.ST,
+            FT=ps.FT,
             TempK=ps.T_in + 273.15,
             Sal=ps.S_in,
             Ks=ps.Ks
@@ -163,10 +163,10 @@ def Csys(
         TA=ps.TA,
         DIC=ps.DIC,
         BT=ps.BT,
-        TP=ps.TP,
-        TSi=ps.TSi,
-        TS=ps.TS,
-        TF=ps.TF,
+        PT=ps.PT,
+        SiT=ps.SiT,
+        ST=ps.ST,
+        FT=ps.FT,
         Ks=ps.Ks,
     )
     
@@ -203,8 +203,8 @@ def Csys(
         else:
             # if salinity is modified, update salinity-dependent parameters
             BT = ps.BT * ps.S_out / ps.S_in
-            TS = ps.TS * ps.S_out / ps.S_in
-            TF = ps.TF * ps.S_out / ps.S_in
+            ST = ps.ST * ps.S_out / ps.S_in
+            FT = ps.FT * ps.S_out / ps.S_in
             if Ca is not None:
                 Ca = ps.Ca * ps.S_out / ps.S_in
             if Mg is not None:
@@ -224,15 +224,15 @@ def Csys(
             Ca=Ca,
             Mg=Mg,
             BT=BT,
-            TF=TF,
-            TS=TS,
+            FT=FT,
+            ST=ST,
         )
 
         # rename parameters in output conditions
         outputs = [
             "BAlk", "BT", "CAlk", "CO2", "CO3", "DIC", "H", "HCO3", 
-            "HF", "HSO4", "Hfree", "Ks", "OH", "PAlk", "SiAlk", "TA", "TF",
-            "TP", "TS", "TSi", "fCO2", "pCO2", "pHfree", "pHsws", 
+            "HF", "HSO4", "Hfree", "Ks", "OH", "PAlk", "SiAlk", "TA", "FT",
+            "PT", "ST", "SiT", "fCO2", "pCO2", "pHfree", "pHsws", 
             "pHtot", "pHNBS", 'OmegaA', 'OmegaC', "revelle_factor",
         ]
 
@@ -267,8 +267,8 @@ def Bsys(
     P_in=None,
     Ca=None,
     Mg=None,
-    TS=None,
-    TF=None,
+    ST=None,
+    FT=None,
     pHsws=None,
     pHfree=None,
     pHNBS=None,
@@ -337,13 +337,13 @@ def Bsys(
         ps.update(pdict)
 
     # Conserved seawater chemistry
-    if ps.TS is None:
-        ps.TS = calc_TS(ps.S_in)
-    if ps.TF is None:
-        ps.TF = calc_TF(ps.S_in)
+    if ps.ST is None:
+        ps.ST = calc_ST(ps.S_in)
+    if ps.FT is None:
+        ps.FT = calc_FT(ps.S_in)
     
     # Remove negative values 
-    for p in ["BT", "BO3", "BO4", "TS", "TF"]:
+    for p in ["BT", "BO3", "BO4", "ST", "FT"]:
         if ps[p] is not None:
             if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
                 ps[p][ps[p] < 0] = np.nan
@@ -351,7 +351,7 @@ def Bsys(
                 ps[p] = np.nan
 
     # Calculate Ks
-    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
+    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
 
     # Calculate pH scales (does nothing if no pH given)
     ps.update(
@@ -360,8 +360,8 @@ def Bsys(
             pHfree=ps.pHfree,
             pHsws=ps.pHsws,
             pHNBS=ps.pHNBS,
-            TS=ps.TS,
-            TF=ps.TF,
+            ST=ps.ST,
+            FT=ps.FT,
             TempK=ps.T_in + 273.15,
             Sal=ps.S_in,
             Ks=ps.Ks,
@@ -392,8 +392,8 @@ def Bsys(
             pHfree=ps.pHfree,
             pHsws=ps.pHsws,
             pHNBS=ps.pHNBS,
-            TS=ps.TS,
-            TF=ps.TF,
+            ST=ps.ST,
+            FT=ps.FT,
             TempK=ps.T_in + 273.15,
             Sal=ps.S_in,
             Ks=ps.Ks,
@@ -435,8 +435,8 @@ def ABsys(
     P_in=None,
     Ca=None,
     Mg=None,
-    TS=None,
-    TF=None,
+    ST=None,
+    FT=None,
     pHsws=None,
     pHfree=None,
     pHNBS=None,
@@ -502,13 +502,13 @@ def ABsys(
         ps.update(pdict)
 
     # Conserved seawater chemistry
-    if ps.TS is None:
-        ps.TS = calc_TS(ps.S_in)
-    if ps.TF is None:
-        ps.TF = calc_TF(ps.S_in)
+    if ps.ST is None:
+        ps.ST = calc_ST(ps.S_in)
+    if ps.FT is None:
+        ps.FT = calc_FT(ps.S_in)
 
     # Calculate Ks
-    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
+    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
 
     # Calculate pH scales (does nothing if no pH given)
     ps.update(
@@ -517,8 +517,8 @@ def ABsys(
             pHfree=ps.pHfree,
             pHsws=ps.pHsws,
             pHNBS=ps.pHNBS,
-            TS=ps.TS,
-            TF=ps.TF,
+            ST=ps.ST,
+            FT=ps.FT,
             TempK=ps.T_in + 273.15,
             Sal=ps.S_in,
             Ks=ps.Ks,
@@ -605,10 +605,10 @@ def CBsys(
     P_out=None,
     Ca=None,
     Mg=None,
-    TP=0.0,
-    TSi=0.0,
-    TS=None,
-    TF=None,
+    PT=0.0,
+    SiT=0.0,
+    ST=None,
+    FT=None,
     pHsws=None,
     pHfree=None,
     pHNBS=None,
@@ -717,8 +717,8 @@ def CBsys(
         "BT",
         "BO3",
         "BO4",
-        "TP",
-        "TSi",
+        "PT",
+        "SiT",
     ]
  
     for p in upar:
@@ -731,13 +731,13 @@ def CBsys(
             ps[p] = np.divide(ps[p], 1e6)  # convert to mole fraction
     
     # Conserved seawater chemistry
-    if ps.TS is None:
-        ps.TS = calc_TS(ps.S_in)
-    if ps.TF is None:
-        ps.TF = calc_TF(ps.S_in)
+    if ps.ST is None:
+        ps.ST = calc_ST(ps.S_in)
+    if ps.FT is None:
+        ps.FT = calc_FT(ps.S_in)
 
     # Remove negative values 
-    for p in ["DIC", "CO2", "HCO3", "CO3", "BT", "BO3", "BO4", "fCO2", "pCO2", "TP", "TSi"]:
+    for p in ["DIC", "CO2", "HCO3", "CO3", "BT", "BO3", "BO4", "fCO2", "pCO2", "PT", "SiT"]:
         if ps[p] is not None:
             if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
                 ps[p][ps[p] < 0] = np.nan
@@ -745,7 +745,7 @@ def CBsys(
                 ps[p] = np.nan
     
     # Calculate Ks
-    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, TS=ps.TS, TF=ps.TF, Ks=ps.Ks)
+    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
 
     # calculate alpha
     if alphaB is None:
@@ -772,8 +772,8 @@ def CBsys(
             pHfree=ps.pHfree,
             pHsws=ps.pHsws,
             pHNBS=ps.pHNBS,
-            TS=ps.TS,
-            TF=ps.TF,
+            ST=ps.ST,
+            FT=ps.FT,
             TempK=ps.T_in + 273.15,
             Sal=ps.S_in,
             Ks=ps.Ks,
@@ -790,7 +790,7 @@ def CBsys(
     # if no B info provided, assume modern conc.
     nBspec = NnotNone(ps.BT, ps.BO3, ps.BO4)
     if nBspec == 0:
-        ps.BT = calc_TB(ps.S_in)
+        ps.BT = calc_BT(ps.S_in)
 
     # count number of not None C parameters
     nCspec = NnotNone(ps.DIC, ps.CO2, ps.HCO3, ps.CO3)  # used below
@@ -835,10 +835,10 @@ def CBsys(
         TA=ps.TA,
         DIC=ps.DIC,
         BT=ps.BT,
-        TP=ps.TP,
-        TSi=ps.TSi,
-        TS=ps.TS,
-        TF=ps.TF,
+        PT=ps.PT,
+        SiT=ps.SiT,
+        ST=ps.ST,
+        FT=ps.FT,
         Ks=ps.Ks,
     )
 
@@ -868,10 +868,10 @@ def CBsys(
         "PAlk",
         "SiAlk",
         "TA",
-        "TF",
-        "TP",
-        "TS",
-        "TSi",
+        "FT",
+        "PT",
+        "ST",
+        "SiT",
         "fCO2",
         "pCO2",
         "pHfree",
@@ -916,8 +916,8 @@ def CBsys(
         else:
             # if salinity is modified, update salinity-dependent parameters
             BT = ps.BT * ps.S_out / ps.S_in
-            TS = ps.TS * ps.S_out / ps.S_in
-            TF = ps.TF * ps.S_out / ps.S_in
+            ST = ps.ST * ps.S_out / ps.S_in
+            FT = ps.FT * ps.S_out / ps.S_in
             if Ca is not None:
                 Ca = ps.Ca * ps.S_out / ps.S_in
             if Mg is not None:
@@ -936,8 +936,8 @@ def CBsys(
             Ca=Ca,
             Mg=Mg,
             BT=BT,
-            TF=TF,
-            TS=TS,
+            FT=FT,
+            ST=ST,
         )
         # rename parameters in output conditions
         ps.update({k + "_in": ps[k] for k in outputs})

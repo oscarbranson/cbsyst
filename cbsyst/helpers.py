@@ -277,7 +277,7 @@ def swdens(TempC, Sal):
     return (pSMOW + A * Sal + B * Sal ** 1.5 + C * Sal ** 2) / 1000
 
 
-def calc_TS(Sal):
+def calc_ST(Sal):
     """
     Calculate total Sulphur in mol/kg-SW- lifted directly from CO2SYS.m
 
@@ -287,7 +287,7 @@ def calc_TS(Sal):
     return 0.14 * Sal / 1.80655 / 96.062 # mol/kg-SW
 
 
-def calc_TF(Sal):
+def calc_FT(Sal):
     """
     Calculate total Fluorine in mol/kg-SW
 
@@ -297,7 +297,7 @@ def calc_TF(Sal):
     return 6.7e-5 * Sal / 1.80655 / 18.9984 # mol/kg-SW
 
 
-# def calc_TB(Sal):
+# def calc_BT(Sal):
 #     """
 #     Calculate total Boron
 
@@ -308,7 +308,7 @@ def calc_TF(Sal):
 #     return a * Sal / b
 
 
-def calc_TB(Sal):
+def calc_BT(Sal):
     """
     Calculate total Boron in mol/kg-SW - lifted directly from CO2SYS.m
 
@@ -394,9 +394,9 @@ def pH_scale_converter(pH, scale, Temp, Sal, Press=None, TS=None, TF=None):
     if scale not in pH_scales:
         raise ValueError("scale must be one of Total, NBS, SWS or FREE.")
     if TS is None:
-        TS = calc_TS(Sal)
+        TS = calc_ST(Sal)
     if TF is None:
-        TF = calc_TF(Sal)
+        TF = calc_FT(Sal)
     TempK = Temp + 273.15
 
     Ks = kgen.calc_Ks(TempC=Temp, Sal=Sal, Pres=Press)
@@ -405,3 +405,30 @@ def pH_scale_converter(pH, scale, Temp, Sal, Press=None, TS=None, TF=None):
     inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH
 
     return calc_pH_scales(*inp, TS, TF, TempK, Sal, Ks)
+
+
+# TODO: function that correct pH for temperature
+def calc_pH_Tcorr(pH, T, T_ref, scale, Sal, Press=None, TS=None, TF=None):
+    """
+    Returns pH on all scales.
+    """
+    pH_scales = ["Total", "FREE", "SWS", "NBS"]
+    if scale not in pH_scales:
+        raise ValueError("scale must be one of Total, NBS, SWS or FREE.")
+    if TS is None:
+        TS = calc_ST(Sal)
+    if TF is None:
+        TF = calc_FT(Sal)
+    TempK = T + 273.15
+    TempK_ref = T_ref + 273.15
+
+    # Ks = kgen.calc_Ks(TempC=T, Sal=Sal, Pres=Press)
+    # Ks_ref = kgen.calc_Ks(TempC=T_ref, Sal=Sal, Pres=Press)
+
+    # inp = [None, None, None, None]
+    # inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH
+
+    # pH_dict = calc_pH_scales(*inp, TS, TF, TempK, Sal, Ks)
+    # pH_dict_ref = calc_pH_scales(*inp, TS, TF, TempK_ref, Sal, Ks_ref)
+
+    # return pH_dict, pH_dict_ref
