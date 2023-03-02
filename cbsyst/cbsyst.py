@@ -139,7 +139,7 @@ def Csys(
 
     
     # Calculate Ks at input conditions
-    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
+    ps.Ks = calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
 
     # Calculate pH scales at input conditions (does nothing if no pH given)
     ps.update(
@@ -351,7 +351,7 @@ def Bsys(
                 ps[p] = np.nan
 
     # Calculate Ks
-    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
+    ps.Ks = calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
 
     # Calculate pH scales (does nothing if no pH given)
     ps.update(
@@ -508,7 +508,7 @@ def ABsys(
         ps.FT = calc_FT(ps.S_in)
 
     # Calculate Ks
-    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
+    ps.Ks = calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
 
     # Calculate pH scales (does nothing if no pH given)
     ps.update(
@@ -745,7 +745,7 @@ def CBsys(
                 ps[p] = np.nan
     
     # Calculate Ks
-    ps.Ks = calc_Ks(T=ps.T_in, S=ps.S_in, P=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
+    ps.Ks = calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
 
     # calculate alpha
     if alphaB is None:
