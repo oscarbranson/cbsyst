@@ -755,7 +755,7 @@ def CBsys(
     if isinstance(Ks, dict):
         ps.Ks = Bunch(Ks)
     else:
-        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT, Ks=ps.Ks))
+        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT))
 
     # calculate alpha
     if alphaB is None:
