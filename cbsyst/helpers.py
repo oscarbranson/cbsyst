@@ -356,7 +356,7 @@ def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, ST, FT, TempK, Sal, Ks):
     else:
         return {}
 
-def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, MyAMI_Mode='calculate'):
+def calc_Ks(T, S, P=None, Mg=None, Ca=None, ST=None, FT=None, Ks=None, MyAMI_Mode='calculate'):
     """
     Helper function to calculate Ks.
 
@@ -370,17 +370,17 @@ def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, MyAMI_Mod
 
     return Ks
 
-def pH_scale_converter(pH, scale, Temp, Sal, Press=None, TS=None, TF=None):
+def pH_scale_converter(pH, scale, Temp, Sal, Press=None, ST=None, FT=None):
     """
     Returns pH on all scales.
     """
     pH_scales = ["Total", "FREE", "SWS", "NBS"]
     if scale not in pH_scales:
         raise ValueError("scale must be one of Total, NBS, SWS or FREE.")
-    if TS is None:
-        TS = calc_ST(Sal)
-    if TF is None:
-        TF = calc_FT(Sal)
+    if ST is None:
+        ST = calc_ST(Sal)
+    if FT is None:
+        FT = calc_FT(Sal)
     TempK = Temp + 273.15
 
     Ks = kgen.calc_Ks(TempC=Temp, Sal=Sal, Pres=Press)
@@ -388,21 +388,21 @@ def pH_scale_converter(pH, scale, Temp, Sal, Press=None, TS=None, TF=None):
     inp = [None, None, None, None]
     inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH
 
-    return calc_pH_scales(*inp, TS, TF, TempK, Sal, Ks)
+    return calc_pH_scales(*inp, TS, FT, TempK, Sal, Ks)
 
 
 # TODO: function that correct pH for temperature
-def calc_pH_Tcorr(pH, T, T_ref, scale, Sal, Press=None, TS=None, TF=None):
+def calc_pH_Tcorr(pH, T, T_ref, scale, Sal, Press=None, ST=None, FT=None):
     """
     Returns pH on all scales.
     """
     pH_scales = ["Total", "FREE", "SWS", "NBS"]
     if scale not in pH_scales:
         raise ValueError("scale must be one of Total, NBS, SWS or FREE.")
-    if TS is None:
-        TS = calc_ST(Sal)
-    if TF is None:
-        TF = calc_FT(Sal)
+    if ST is None:
+        ST = calc_ST(Sal)
+    if FT is None:
+        FT = calc_FT(Sal)
     TempK = T + 273.15
     TempK_ref = T_ref + 273.15
 
@@ -412,7 +412,7 @@ def calc_pH_Tcorr(pH, T, T_ref, scale, Sal, Press=None, TS=None, TF=None):
     # inp = [None, None, None, None]
     # inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH
 
-    # pH_dict = calc_pH_scales(*inp, TS, TF, TempK, Sal, Ks)
-    # pH_dict_ref = calc_pH_scales(*inp, TS, TF, TempK_ref, Sal, Ks_ref)
+    # pH_dict = calc_pH_scales(*inp, TS, FT, TempK, Sal, Ks)
+    # pH_dict_ref = calc_pH_scales(*inp, TS, FT, TempK_ref, Sal, Ks_ref)
 
     # return pH_dict, pH_dict_ref
