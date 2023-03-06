@@ -633,7 +633,7 @@ def calc_C_species(
     )
 
 
-def calc_revelle_factor(TA, DIC, BT, TP, TSi, TS, TF, Ks):
+def calc_revelle_factor(TA, DIC, BT, PT, SiT, ST, FT, Ks):
     """
     Calculate Revelle Factor
 
@@ -641,14 +641,14 @@ def calc_revelle_factor(TA, DIC, BT, TP, TSi, TS, TF, Ks):
     """
     dDIC = 1e-6  # (1 umol kg-1)
 
-    pH = TA_DIC(TA=TA, DIC=DIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
+    pH = TA_DIC(TA=TA, DIC=DIC, BT=BT, TP=PT, TSi=SiT, TS=ST, TF=FT, Ks=Ks)
     fCO2 = cCO2(10**-pH, DIC, Ks) / Ks.K0
 
     # Calculate new fCO2 above and below given value
-    pH_hi = TA_DIC(TA=TA, DIC=DIC + dDIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
+    pH_hi = TA_DIC(TA=TA, DIC=DIC + dDIC, BT=BT, TP=PT, TSi=SiT, TS=ST, TF=FT, Ks=Ks)
     fCO2_hi = cCO2(10**-pH_hi, DIC, Ks) / Ks.K0
 
-    pH_lo = TA_DIC(TA=TA, DIC=DIC - dDIC, BT=BT, TP=TP, TSi=TSi, TS=TS, TF=TF, Ks=Ks)
+    pH_lo = TA_DIC(TA=TA, DIC=DIC - dDIC, BT=BT, TP=PT, TSi=SiT, TS=ST, TF=FT, Ks=Ks)
     fCO2_lo = cCO2(10**-pH_lo, DIC, Ks) / Ks.K0
 
     return (fCO2_hi - fCO2_lo) * DIC / (fCO2 * 2 * dDIC)
