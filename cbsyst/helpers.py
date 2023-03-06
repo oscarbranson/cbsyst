@@ -315,7 +315,7 @@ def calc_fH(TempK, Sal):
 
 
 # Convert between pH scales
-def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, TS, TF, TempK, Sal, Ks):
+def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, ST, FT, TempK, Sal, Ks):
     """
     Calculate pH on all scales, given one.
     """
@@ -325,8 +325,8 @@ def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, TS, TF, TempK, Sal, Ks):
 
     if npH == 1:
         # pH scale conversions
-        FREEtoTOT = -np.log10((1 + TS / Ks.KS))
-        SWStoTOT = -np.log10((1 + TS / Ks.KS) / (1 + TS / Ks.KS + TF / Ks.KF))
+        FREEtoTOT = -np.log10((1 + ST / Ks.KS))
+        SWStoTOT = -np.log10((1 + ST / Ks.KS) / (1 + ST / Ks.KS + FT / Ks.KF))
         fH = calc_fH(TempK, Sal)
 
         if pHtot is not None:
