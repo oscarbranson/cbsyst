@@ -7,7 +7,8 @@ import pandas as pd
 from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
 from cbsyst.boron import calc_B_species
 from cbsyst.boron_isotopes import d11_to_A11, A11_to_d11, get_alphaB, calc_B_isotopes
-from cbsyst.helpers import Bunch, NnotNone, calc_FT, calc_ST, calc_BT, calc_pH_scales, calc_Ks
+from cbsyst.helpers import Bunch, NnotNone, calc_FT, calc_ST, calc_BT, calc_pH_scales
+from kgen import calc_Ks
 
 # C Speciation
 # ------------
@@ -139,7 +140,10 @@ def Csys(
 
     
     # Calculate Ks at input conditions
-    ps.Ks = calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
+    if isinstance(Ks, dict):
+        ps.Ks = Bunch(Ks)
+    else:
+        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT))
 
     # Calculate pH scales at input conditions (does nothing if no pH given)
     ps.update(
@@ -351,7 +355,7 @@ def Bsys(
                 ps[p] = np.nan
 
     # Calculate Ks
-    ps.Ks = calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
+    ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT))
 
     # Calculate pH scales (does nothing if no pH given)
     ps.update(
@@ -508,7 +512,10 @@ def ABsys(
         ps.FT = calc_FT(ps.S_in)
 
     # Calculate Ks
-    ps.Ks = calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
+    if isinstance(Ks, dict):
+        ps.Ks = Bunch(Ks)
+    else:
+        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT))
 
     # Calculate pH scales (does nothing if no pH given)
     ps.update(
@@ -745,7 +752,10 @@ def CBsys(
                 ps[p] = np.nan
     
     # Calculate Ks
-    ps.Ks = calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, Mg=ps.Mg, Ca=ps.Ca, ST=ps.ST, FT=ps.FT, Ks=ps.Ks)
+    if isinstance(Ks, dict):
+        ps.Ks = Bunch(Ks)
+    else:
+        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT, Ks=ps.Ks))
 
     # calculate alpha
     if alphaB is None:
