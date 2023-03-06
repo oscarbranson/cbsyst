@@ -1,5 +1,5 @@
 import numpy as np
-from cbsyst.helpers import ch, cp, Bunch
+from cbsyst.helpers import Bunch
 
 def chiB_calc(H, Ks):
     return 1 / (1 + Ks.KB / H)
