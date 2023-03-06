@@ -356,20 +356,6 @@ def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, ST, FT, TempK, Sal, Ks):
     else:
         return {}
 
-def calc_Ks(T, S, P=None, Mg=None, Ca=None, ST=None, FT=None, Ks=None, MyAMI_Mode='calculate'):
-    """
-    Helper function to calculate Ks.
-
-    If Ks is a dict, those Ks are used
-    transparrently (i.e. no pressure modification).
-    """
-    if isinstance(Ks, dict):
-        Ks = Bunch(Ks)
-    else:
-        Ks = Bunch(kgen.calc_Ks(TempC=T, Sal=S, Pres=P, Mg=Mg, Ca=Ca, MyAMI_mode=MyAMI_Mode))  # calc empirical Ks
-
-    return Ks
-
 def pH_scale_converter(pH, scale, Temp, Sal, Press=None, ST=None, FT=None):
     """
     Returns pH on all scales.
