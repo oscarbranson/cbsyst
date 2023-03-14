@@ -382,8 +382,7 @@ def calc_Ks(T, S, P=None, Mg=None, Ca=None, TS=None, TF=None, Ks=None, MyAMI_Mod
     if isinstance(Ks, dict):
         Ks = Bunch(Ks)
     else:
-        Ks = Bunch(kgen.calc_Ks(TempC=T, Sal=S, Pres=P, Mg=Mg, Ca=Ca, MyAMI_mode=MyAMI_Mode))  # calc empirical Ks
-
+        Ks = Bunch(kgen.calc_Ks(temp_c=T, sal=S, p_bar=P, magnesium=Mg, calcium=Ca, MyAMI_mode=MyAMI_Mode))  # calc empirical Ks
     return Ks
 
 def pH_scale_converter(pH, scale, Temp, Sal, Press=None, TS=None, TF=None):
