@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+0.4.7 (2023-03-14)
+------------
+Updates to work with Kgen 0.2.0.
+
+0.4.6 (2023-03)
+------------
+Fix Omega Units
+
+0.4.4 (2023-03)
+------------
+Fix OmegaC
+
 0.4.3 (2023-02-07)
 ------------
 Omega calculation.
