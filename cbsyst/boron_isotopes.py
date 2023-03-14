@@ -512,7 +512,7 @@ def calculate_pKB(pH, d11BT, d11B4, epsilonB=get_epsilonB()):
 
     return cp(calculate_KB(H,alphaB,ABT,ABO4))
 
-def calculate_d11BT(pH, KB, d11B4, epsilonB=get_epsilonB()):
+def calculate_d11BT(pH, Ks, d11B4, epsilonB=get_epsilonB()):
     """
     Calcluates the isotope ratio of total boron in delta units
 
@@ -535,9 +535,9 @@ def calculate_d11BT(pH, KB, d11B4, epsilonB=get_epsilonB()):
     ABO4 = d11_to_A11(d11B4)
     alphaB = epsilon_to_alpha(epsilonB)
     H = ch(pH)
-    return A11_to_d11(calculate_ABT(H,KB,alphaB,ABO4))
+    return A11_to_d11(calculate_ABT(H,Ks,alphaB,ABO4))
 
-def calculate_d11B4(pH, KB, d11BT, epsilonB=get_epsilonB()):
+def calculate_d11B4(pH, Ks, d11BT, epsilonB=get_epsilonB()):
     """
     Calculates the isotope ratio of borate ion in delta units
 
@@ -560,9 +560,9 @@ def calculate_d11B4(pH, KB, d11BT, epsilonB=get_epsilonB()):
     ABOT = d11_to_A11(d11BT)
     alphaB = epsilon_to_alpha(epsilonB)
 
-    return A11_to_d11(calculate_ABO4(ch(pH),KB,ABOT,alphaB))
+    return A11_to_d11(calculate_ABO4(ch(pH),Ks,ABOT,alphaB))
 
-def calculate_epsilon(pH, KB, d11BT, d11B4):
+def calculate_epsilon(pH, Ks, d11BT, d11B4):
     """
     Returns isotope ratio of borate ion in delta units
 
@@ -586,6 +586,84 @@ def calculate_epsilon(pH, KB, d11BT, d11B4):
     ABT = d11_to_A11(d11BT)
     H = ch(pH)
 
-    alphaB = calculate_alpha_ABO4(H,KB,ABT,ABO4)
+    alphaB = calculate_alpha_ABO4(H,Ks,ABT,ABO4)
 
     return alpha_to_epsilon(alphaB)
+
+def calculate_d11BT_minimum(d11B4=None, d11B3=None, epsilonB=get_epsilonB()):
+    """
+    Returns minimum d11B of total boron in delta units
+
+    Parameters
+    ----------
+    d11B4 : float or array-like, optional (either d11B4 or d11B3 must be specified)
+        pH on the total scale
+    d11B3 : float or array-like, optional
+        bunch containing the boron speciation constant KB
+    epsilonB : float or array-like, optional, assumed if not specified
+        fractionation factor in delta units
+        
+    Returns
+    -------
+    array-like
+        minimum viable d11BT (in ‰)
+    """
+    if NnotNone(d11B3, d11B4) < 1:
+        raise(ValueError("Either d11B3 or d11B4 must be specified"))
+    if d11B3 is not None:
+        RBO3 = d11_to_R11(d11B3)
+        alphaB = epsilon_to_alpha(epsilonB)
+
+        minimum_RBO3 = RBO3/alphaB
+        return R11_to_d11(minimum_RBO3)
+    if d11B4 is not None:
+        return d11B4
+
+def calculate_d11BT_maximum(d11B4=None, d11B3=None, epsilonB=get_epsilonB()):
+    """
+    Returns maximum d11B of total boron in delta units
+
+    Parameters
+    ----------
+    d11B4 : float or array-like, optional (either d11B4 or d11B3 must be specified)
+        pH on the total scale
+    d11B3 : float or array-like, optional
+        bunch containing the boron speciation constant KB
+    epsilonB : float or array-like, optional, assumed if not specified
+        fractionation factor in delta units
+        
+    Returns
+    -------
+    array-like
+        maximum viable d11BT (in ‰)
+    """
+    if NnotNone(d11B3, d11B4) < 1:
+        raise(ValueError("Either d11B3 or d11B4 must be specified"))
+    if d11B3 is not None:
+        return d11B3
+    if d11B4 is not None:
+        RBO4 = d11_to_R11(d11B4)
+        alphaB = epsilon_to_alpha(epsilonB)
+
+        maximum_RBOT = RBO4*alphaB
+        return R11_to_d11(maximum_RBOT)
+
+def calculate_d11BT_range(d11B4=None, d11B3=None, epsilonB=get_epsilonB()):
+    """
+    Returns range of possible d11B of total boron in delta units
+
+    Parameters
+    ----------
+    d11B4 : float or array-like, optional (either d11B4 or d11B3 must be specified)
+        pH on the total scale
+    d11B3 : float or array-like, optional
+        bunch containing the boron speciation constant KB
+    epsilonB : float or array-like, optional, assumed if not specified
+        fractionation factor in delta units
+        
+    Returns
+    -------
+    array-like
+        list of tuples of (minimum,maximum) viable d11BT (in ‰)
+    """
+    return [(minimum,maximum) for minimum,maximum in zip(calculate_d11BT_minimum(d11B4,d11B3,epsilonB),calculate_d11BT_maximum(d11B4,d11B3,epsilonB))]
