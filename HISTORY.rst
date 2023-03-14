@@ -7,6 +7,10 @@ Release History
 ------------
 Updates to work with Kgen 0.2.0.
 
+**Minor breaking change**: All TX quantities have been renamed to XT (i.e. TF and TS are not FT and ST to be consistent with BT nomenclature)
+
+
+
 0.4.6 (2023-03)
 ------------
 Fix Omega Units
