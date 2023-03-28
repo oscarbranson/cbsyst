@@ -72,19 +72,19 @@ def CO2_TA(CO2, TA, BT, PT, SiT, ST, FT, Ks):
 
     Taken from matlab CO2SYS
     """
-    shape = maxShape(CO2, TA, BT, PT, SiT, ST, FT)
-    if len(shape) > 1:
-        CO2, TA, BT, PT, SiT, ST, FT = [np.ravel(i) for i in [CO2, TA, BT, PT, SiT, ST, FT]]
-
+    
     fCO2 = CO2 / Ks.K0
-    L = maxL(TA, CO2, BT, PT, SiT, ST, FT, Ks.K1)
+    L = maxShape(TA, CO2, BT, PT, SiT, ST, FT, Ks.K1)
+    if len(L) == 0:
+        L = (1,)
+        
     pHguess = 8.0
     pHtol = 0.0000001
     pHx = np.full(L, pHguess)
     deltapH = np.array(pHtol + 1, ndmin=1)
     ln10 = np.log(10)
 
-    while any(abs(deltapH) > pHtol):
+    while np.any(abs(deltapH) > pHtol):
         H = 10 ** -pHx
         HCO3 = Ks.K0 * Ks.K1 * fCO2 / H
         CO3 = Ks.K0 * Ks.K1 * Ks.K2 * fCO2 / H ** 2
@@ -106,14 +106,12 @@ def CO2_TA(CO2, TA, BT, PT, SiT, ST, FT, Ks):
         Slope = ln10 * (HCO3 + 4.0 * CO3 + BAlk * H / (Ks.KB + H) + OH + H)
         deltapH = Residual / Slope
 
-        while any(abs(deltapH) > 1):
+        while np.any(abs(deltapH) > 1):
             FF = abs(deltapH) > 1
             deltapH[FF] = deltapH[FF] / 2
 
         pHx += deltapH
 
-    if len(shape) > 1:
-        return pHx.reshape(shape)
     return pHx
 
 
@@ -302,19 +300,17 @@ def TA_DIC(TA, DIC, BT, PT, SiT, ST, FT, Ks):
     Taken directly from MATLAB CO2SYS.
     """
     # determine shape of input
-    shape = maxShape(TA, DIC, BT, PT, SiT, ST, FT)
-    if len(shape) > 1:
-        # flatten inputs
-        TA, DIC, BT, PT, SiT, ST, FT = [np.ravel(i) for i in [TA, DIC, BT, PT, SiT, ST, FT]]
-    # determine largest input
-    L = maxL(TA, DIC, BT, PT, SiT, ST, FT, Ks.K1)
-    pHguess = 7.0
+    L = maxShape(TA, DIC, BT, PT, SiT, ST, FT, Ks.K1)
+    if len(L) == 0:
+        L = (1,)
+        
+    pHguess = 8.0
     pHtol = 0.00000001
     pHx = np.full(L, pHguess)
     deltapH = np.array(pHtol + 1, ndmin=1)
     ln10 = np.log(10)
 
-    while any(abs(deltapH) > pHtol):
+    while np.any(abs(deltapH) > pHtol):
         H = 10 ** -pHx
         # negative
         Denom = H ** 2 + Ks.K1 * H + Ks.K1 * Ks.K2
@@ -342,15 +338,14 @@ def TA_DIC(TA, DIC, BT, PT, SiT, ST, FT, Ks):
         )
         deltapH = Residual / Slope
 
-        while any(abs(deltapH) > 1):
+        while np.any(abs(deltapH) > 1):
             FF = abs(deltapH) > 1
             deltapH[FF] = deltapH[FF] / 2
 
         pHx += deltapH
 
-    if len(shape) > 1:
-        return pHx.reshape(shape)
     return pHx
+
 
 def zero_TA_DIC(h, TA, DIC, BT, K1, K2, KB, KW):
     # Roots: one pos, four neg. Use pos.
