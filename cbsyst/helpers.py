@@ -369,12 +369,12 @@ def pH_scale_converter(pH, scale, Temp, Sal, Press=None, ST=None, FT=None):
         FT = calc_FT(Sal)
     TempK = Temp + 273.15
 
-    Ks = kgen.calc_Ks(TempC=Temp, Sal=Sal, Pres=Press)
+    Ks = Bunch(kgen.calc_Ks(temp_c=Temp, sal=Sal, p_bar=Press))
 
     inp = [None, None, None, None]
     inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH
 
-    return calc_pH_scales(*inp, TS, FT, TempK, Sal, Ks)
+    return calc_pH_scales(*inp, ST, FT, TempK, Sal, Ks)
 
 
 # TODO: function that correct pH for temperature
