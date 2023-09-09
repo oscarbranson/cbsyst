@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+0.4.8 (2023-09-04)
+------------
+Updates to work with Kgen 0.3.0
+
+Main code changes:
+* Explicitly set default Ca (0.0102821) and Mg (0.0528171) concentrations so pymyami is not run at ambient conditions.
+* Explicitly set P_in to 0.0 so pressure calculation is not run at surface conditions.
+
 0.4.7 (2023-03-14)
 ------------
 Updates to work with Kgen 0.2.0.
