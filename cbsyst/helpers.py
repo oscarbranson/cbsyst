@@ -32,7 +32,10 @@ def data_out(cbdat, path=None, include_constants=False):
     """
 
     cols = [
-        "pH",
+        "pHtot",
+        "pHfree",
+        "pHsws",
+        "pHNBS",
         "DIC",
         "fCO2",
         "pCO2",
@@ -49,21 +52,24 @@ def data_out(cbdat, path=None, include_constants=False):
         "ABT",
         "ABO3",
         "ABO4",
-        "T",
-        "S",
-        "P",
+        "T_in",
+        "S_in",
+        "P_in",
+        "T_out",
+        "S_out",
+        "P_out",
         "Ca",
         "Mg",
     ]
 
     consts = ["K0", "K1", "K2", "KB", "KW", "KS", "KspA", "KspC"]
 
-    size = cbdat.pH.size
+    size = cbdat.pHtot.size
     out = pd.DataFrame(index=range(size))
 
     for c in cols:
         if c in cbdat and cbdat[c] is not None:
-            if (np.ndim(cbdat[c]) == 1) & (cbdat[c].size == 1):
+            if (np.ndim(cbdat[c]) == 1) and (cbdat[c].size == 1):
                 cbdat[c] = cbdat[c][0]
             if c in cbdat:
                 out.loc[:, c] = cbdat[c]
@@ -71,11 +77,11 @@ def data_out(cbdat, path=None, include_constants=False):
     if include_constants:
         for c in consts:
             if c in cbdat.Ks and cbdat.Ks[c] is not None:
-                if (np.ndim(cbdat.Ks[c]) == 1) & (cbdat.Ks[c].size == 1):
+                if (np.ndim(cbdat.Ks[c]) == 1) and (cbdat.Ks[c].size == 1):
                     cbdat.Ks[c] = cbdat.Ks[c][0]
                 out.loc[:, "p" + c] = -np.log10(cbdat.Ks[c])
         if "alphaB" in cbdat and cbdat.alphaB is not None:
-            if (np.ndim(cbdat.alphaB) == 1) & (cbdat.alphaB.size == 1):
+            if (np.ndim(cbdat.alphaB) == 1) and (cbdat.alphaB.size == 1):
                 cbdat.alphaB = cbdat.alphaB[0]
             out.loc[:, "alphaB"] = cbdat.alphaB
 
