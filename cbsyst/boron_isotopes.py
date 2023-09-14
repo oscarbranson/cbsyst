@@ -1,7 +1,7 @@
 # B isotope fns
 
 import numpy as np
-from cbsyst.helpers import ch, cp, NnotNone, Bunch
+from cbsyst.helpers import NnotNone, Bunch
 from .boron import chiB_calc
 
 def get_alphaB():
@@ -434,13 +434,13 @@ def calculate_KB(H, alphaB, ABT, ABO4=None, ABO3=None):
 def calc_B_isotopes(pHtot=None, ABT=None, ABO3=None, ABO4=None, alphaB=None, Ks=None, **kwargs):
     # determine pH and ABT
     if pHtot is not None:  # pH is known
-        H = ch(pHtot)
+        H = 10**-pHtot
         if ABT is None:
             ABT = calculate_ABT(H=H, Ks=Ks, alphaB=alphaB, ABO3=ABO3, ABO4=ABO4)
     else:  # pH is not known
         if ABT is not None:
             H = calculate_H(Ks=Ks, alphaB=alphaB, ABT=ABT, ABO3=ABO3, ABO4=ABO4)
-            pHtot = cp(H)
+            pHtot = -np.log10(H)
         else:
             raise ValueError('ABT and one of ABO3 or ABO4 must be specified if pH is missing.')
     
@@ -482,7 +482,7 @@ def calculate_pH(Ks, d11BT, d11B4, epsilon=get_epsilonB()):
     ABT = d11_to_A11(d11BT)
     alphaB = epsilon_to_alpha(epsilon)
 
-    return cp(calculate_H(Ks,alphaB,ABT,ABO4))
+    return -np.log10(calculate_H(Ks,alphaB,ABT,ABO4))
 
 def calculate_pKB(pH, d11BT, d11B4, epsilonB=get_epsilonB()):
     """
@@ -506,11 +506,11 @@ def calculate_pKB(pH, d11BT, d11B4, epsilonB=get_epsilonB()):
     """
     ABO4 = d11_to_A11(d11B4)
     ABT = d11_to_A11(d11BT)
-    H = ch(pH)
+    H = 10**-pH
 
     alphaB = epsilon_to_alpha(epsilonB)
 
-    return cp(calculate_KB(H,alphaB,ABT,ABO4))
+    return -np.log10(calculate_KB(H,alphaB,ABT,ABO4))
 
 def calculate_d11BT(pH, KB, d11B4, epsilonB=get_epsilonB()):
     """
@@ -534,7 +534,7 @@ def calculate_d11BT(pH, KB, d11B4, epsilonB=get_epsilonB()):
     """
     ABO4 = d11_to_A11(d11B4)
     alphaB = epsilon_to_alpha(epsilonB)
-    H = ch(pH)
+    H = 10**-pH
     return A11_to_d11(calculate_ABT(H,KB,alphaB,ABO4))
 
 def calculate_d11B4(pH, KB, d11BT, epsilonB=get_epsilonB()):
@@ -560,7 +560,7 @@ def calculate_d11B4(pH, KB, d11BT, epsilonB=get_epsilonB()):
     ABOT = d11_to_A11(d11BT)
     alphaB = epsilon_to_alpha(epsilonB)
 
-    return A11_to_d11(calculate_ABO4(ch(pH),KB,ABOT,alphaB))
+    return A11_to_d11(calculate_ABO4(10**-pH,KB,ABOT,alphaB))
 
 def calculate_epsilon(pH, KB, d11BT, d11B4):
     """
@@ -584,7 +584,7 @@ def calculate_epsilon(pH, KB, d11BT, d11B4):
     """
     ABO4 = d11_to_A11(d11B4)
     ABT = d11_to_A11(d11BT)
-    H = ch(pH)
+    H = 10**-pH
 
     alphaB = calculate_alpha_ABO4(H,KB,ABT,ABO4)
 

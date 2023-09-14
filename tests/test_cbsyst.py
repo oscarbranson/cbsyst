@@ -240,8 +240,8 @@ class ReferenceDataTestCase(unittest.TestCase):
             T_in=gd.temperature,
             S_in=gd.salinity,
             P_in=gd.pressure,
-            TP=gd.phosphate,
-            TSi=gd.silicate,
+            PT=gd.phosphate,
+            SiT=gd.silicate,
             BT=415.7,
         )
         TA_resid = gd.talk - cTA.TA
@@ -259,8 +259,8 @@ class ReferenceDataTestCase(unittest.TestCase):
             T_in=gd.temperature,
             S_in=gd.salinity,
             P_in=gd.pressure,
-            TP=gd.phosphate,
-            TSi=gd.silicate,
+            PT=gd.phosphate,
+            SiT=gd.silicate,
             BT=415.7,
         )
         DIC_resid = gd.tco2 - cDIC.DIC
@@ -315,8 +315,8 @@ class ReferenceDataTestCase(unittest.TestCase):
             T_in=gd.temperature,
             S_in=gd.salinity,
             P_in=gd.pressure,
-            TP=gd.phosphate,
-            TSi=gd.silicate,
+            PT=gd.phosphate,
+            SiT=gd.silicate,
             BT=415.7,
         )
         pH_resid = gd.phtsinsitutp - cpH.pHtot
@@ -333,8 +333,8 @@ class ReferenceDataTestCase(unittest.TestCase):
             T_in=gd.temperature,
             S_in=gd.salinity,
             P_in=gd.pressure,
-            TP=gd.phosphate,
-            TSi=gd.silicate,
+            PT=gd.phosphate,
+            SiT=gd.silicate,
             BT=415.7,
         )
         TA_resid = gd.talk - cTA.TA
@@ -351,8 +351,8 @@ class ReferenceDataTestCase(unittest.TestCase):
             T_in=gd.temperature,
             S_in=gd.salinity,
             P_in=gd.pressure,
-            TP=gd.phosphate,
-            TSi=gd.silicate,
+            PT=gd.phosphate,
+            SiT=gd.silicate,
             BT=415.7,
         )
         DIC_resid = gd.tco2 - cDIC.DIC

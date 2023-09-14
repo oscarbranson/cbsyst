@@ -1,5 +1,5 @@
 import numpy as np
-from cbsyst.helpers import ch, cp, Bunch
+from cbsyst.helpers import Bunch
 
 def chiB_calc(H, Ks):
     return 1 / (1 + Ks.KB / H)
@@ -23,7 +23,7 @@ def pH_BO3(pH, BO3, Ks):
     """
     Returns BT
     """
-    H = ch(pH)
+    H = 10**-pH
     return BO3 * (1 + Ks.KB / H)
 
 
@@ -31,7 +31,7 @@ def pH_BO4(pH, BO4, Ks):
     """
     Returns BT
     """
-    H = ch(pH)
+    H = 10**-pH
     return BO4 * (1 + H / Ks.KB)
 
 
@@ -45,7 +45,7 @@ def cBO3(BT, H, Ks):
 def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None, **kwargs):
     # B system calculations
     if pHtot is not None and BT is not None:
-        H = ch(pHtot)
+        H = 10**-pHtot
     elif BT is not None and BO3 is not None:
         H = BT_BO3(BT, BO3, Ks)
     elif BT is not None and BO4 is not None:
@@ -54,10 +54,10 @@ def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None, **kwargs):
         BT = BO3 + BO3
         H = BT_BO3(BT, BO3, Ks)
     elif pHtot is not None and BO3 is not None:
-        H = ch(pHtot)
+        H = 10**-pHtot
         BT = pH_BO3(pHtot, BO3, Ks)
     elif pHtot is not None and BO4 is not None:
-        H = ch(pHtot)
+        H = 10**-pHtot
         BT = pH_BO4(pHtot, BO4, Ks)
 
     # The above makes sure that BT and H are known,
@@ -69,6 +69,6 @@ def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None, **kwargs):
     if BO4 is None:
         BO4 = cBO4(BT, H, Ks)
     if pHtot is None:
-        pHtot = np.array(cp(H), ndmin=1)
+        pHtot = np.array(-np.log10(H), ndmin=1)
 
-    return Bunch({"pHtot": pHtot, "H": H, "BT": BT, "BO3": BO3, "BO4": BO4})
+    return Bunch({"Htot": pHtot, "H": H, "BT": BT, "BO3": BO3, "BO4": BO4})
