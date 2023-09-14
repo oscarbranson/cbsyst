@@ -223,9 +223,8 @@ class ReferenceDataTestCase(unittest.TestCase):
             T_in=gd.temperature,
             S_in=gd.salinity,
             P_in=gd.pressure,
-            TP=gd.phosphate,
-            TSi=gd.silicate,
-            BT=415.7,
+            PT=gd.phosphate,
+            SiT=gd.silicate,
         )
         pH_resid = gd.phtsinsitutp - cpH.pHtot
         pH_median = np.median(pH_resid)
@@ -249,6 +248,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         TA_median = np.median(TA_resid)
         TA_pc95 = np.percentile(TA_resid, [2.5, 97.5])
 
+        print(abs(TA_median))
         self.assertLessEqual(abs(TA_median), 0.5, msg="TA Offset <= 0.5")
         self.assertTrue(all(abs(TA_pc95) < 13), msg="TA 95% Conf <= 13")
 

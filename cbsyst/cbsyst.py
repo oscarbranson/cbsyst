@@ -56,7 +56,7 @@ def Csys(
         If missing, this is calculated as 0.000416 * Sal/35 
         (Uppstrom et al. 1974).
     Ca, Mg : array-like
-        The [Ca] and [Mg] of seawater, in mol / kg.
+        The [Ca] and [Mg] of STANDARD seawater (i.e. 35 salinity), in mol / kg.
         Used in calculating MyAMI constants.
     T_in, S_in : array-like
         Temperature in Celcius and Salinity in PSU that the
@@ -171,10 +171,7 @@ def Csys(
     )
     
     # calc Omega
-    if Ca is None:
-        oCa = 0.0102821 * ps.S_in / 35.
-    else:
-        oCa = Ca * ps.S_in / 35.
+    oCa = ps.Ca * ps.S_in / 35.
     ps['OmegaA'] = ps['CO3'] * oCa / ps.Ks.KspA
     ps['OmegaC'] = ps['CO3'] * oCa / ps.Ks.KspC
 
@@ -203,12 +200,8 @@ def Csys(
         else:
             # if salinity is modified, update salinity-dependent parameters
             BT = ps.BT * ps.S_out / ps.S_in
-            TS = ps.TS * ps.S_out / ps.S_in
-            TF = ps.TF * ps.S_out / ps.S_in
-            if Ca is not None:
-                Ca = ps.Ca * ps.S_out / ps.S_in
-            if Mg is not None:
-                Mg = ps.Mg * ps.S_out / ps.S_in
+            ST = ps.ST * ps.S_out / ps.S_in
+            FT = ps.FT * ps.S_out / ps.S_in
         if ps.P_out is None:
             ps.P_out = ps.P_in
         # assumes conserved alkalinity and DIC
@@ -308,7 +301,7 @@ def Bsys(
         Pressure in Bar.
         Used in calculating MyAMI constants.
     Ca, Mg : arra-like
-        The [Ca] and [Mg] of the seawater, in mol / kg.
+        The [Ca] and [Mg] of STANDARD seawater (i.e. 35 salinity), in mol / kg.
         Used in calculating MyAMI constants.
     Ks : dict
         A dictionary of constants. Must contain keys
@@ -478,7 +471,7 @@ def ABsys(
         Pressure in Bar.
         Used in calculating MyAMI constants.
     Ca, Mg : arra-like
-        The [Ca] and [Mg] of the seawater, in mol / kg.
+        The [Ca] and [Mg] of STANDARD seawater (i.e. 35 salinity), in mol / kg.
         Used in calculating MyAMI constants.
     Ks : dict
         A dictionary of constants. Must contain keys
@@ -672,7 +665,7 @@ def CBsys(
         Can be 'mol', 'mmol', 'umol', 'nmol', 'pmol' or 'fmol'.
         Used in calculating Alkalinity. Default is 'umol'.
     Ca, Mg : arra-like
-        The [Ca] and [Mg] of the seawater, * in mol / kg *.
+        The [Ca] and [Mg] of STANDARD seawater (i.e. 35 salinity), in mol / kg.
         Used in calculating MyAMI constants.
     Ks : dict
         A dictionary of constants. Must contain keys
@@ -916,12 +909,8 @@ def CBsys(
         else:
             # if salinity is modified, update salinity-dependent parameters
             BT = ps.BT * ps.S_out / ps.S_in
-            TS = ps.TS * ps.S_out / ps.S_in
-            TF = ps.TF * ps.S_out / ps.S_in
-            if Ca is not None:
-                Ca = ps.Ca * ps.S_out / ps.S_in
-            if Mg is not None:
-                Mg = ps.Mg * ps.S_out / ps.S_in
+            ST = ps.ST * ps.S_out / ps.S_in
+            FT = ps.FT * ps.S_out / ps.S_in
         if ps.P_out is None:
             ps.P_out = ps.P_in
         # assumes conserved alkalinity, DIC and BT

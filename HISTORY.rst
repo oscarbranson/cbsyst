@@ -3,6 +3,34 @@
 Release History
 ---------------
 
+0.4.9 (2023-09-04)
+------------
+Updates to work with Kgen 0.3.0
+
+Main code changes:
+* Explicitly set default Ca (0.0102821) and Mg (0.0528171) concentrations so pymyami is not run at ambient conditions (kgen does not accept None as a valid input).
+* Explicitly set P_in to 0.0 so pressure calculation is not run at surface conditions.
+* Clarified that Ca and Mg are specified for STANDARD seawater (i.e. 35 salinity).
+* Set minumum required Kgen version to 0.3.0.
+
+0.4.8 (2023-03-15)
+------------
+Set minumum required Kgen version to 0.2.0.
+
+0.4.7 (2023-03-14)
+------------
+Updates to work with Kgen 0.2.0.
+
+**Minor breaking change**: All TX quantities have been renamed to XT (i.e. TF and TS are not FT and ST to be consistent with BT nomenclature)
+
+0.4.6 (2023-03)
+------------
+Fix Omega Units
+
+0.4.4 (2023-03)
+------------
+Fix OmegaC
+
 0.4.3 (2023-02-07)
 ------------
 Omega calculation.
