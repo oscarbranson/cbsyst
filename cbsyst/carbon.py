@@ -25,7 +25,7 @@ def CO2_pH(CO2, pH, Ks):
     """
     Returns DIC
     """
-    h = 10**-pH
+    h = 10.0**-pH
     return CO2 * (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h ** 2)
 
 
@@ -138,7 +138,7 @@ def pH_HCO3(pH, HCO3, Ks):
     """
     Returns DIC
     """
-    h = 10**-pH
+    h = 10.0**-pH
     return HCO3 * (1 + h / Ks.K1 + Ks.K2 / h)
 
 
@@ -147,7 +147,7 @@ def pH_CO3(pH, CO3, Ks):
     """
     Returns DIC
     """
-    h = 10**-pH
+    h = 10.0**-pH
     return CO3 * (1 + h / Ks.K2 + h ** 2 / (Ks.K1 * Ks.K2))
 
 
@@ -180,7 +180,7 @@ def pH_DIC(pH, DIC, Ks):
     """
     Returns CO2
     """
-    h = 10**-pH
+    h = 10.0**-pH
     return DIC / (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h ** 2)
 
 
@@ -512,7 +512,7 @@ def calc_C_species(
     # Carbon System Calculations (from Zeebe & Wolf-Gladrow, Appendix B)
     # 1. CO2 and pH
     if CO2 is not None and pHtot is not None:
-        H = 10**-pHtot
+        H = 10.0**-pHtot
         DIC = CO2_pH(CO2, pHtot, Ks)
     # 2. CO2 and HCO3
     elif CO2 is not None and HCO3 is not None:
@@ -527,26 +527,26 @@ def calc_C_species(
         # unit conversion because OH and H wrapped
         # up in TA fns - all need to be in same units.
         pHtot = CO2_TA(CO2=CO2, TA=TA, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks)
-        H = 10**-pHtot
+        H = 10.0**-pHtot
         DIC = CO2_pH(CO2, pHtot, Ks)
     # 5. CO2 and DIC
     elif CO2 is not None and DIC is not None:
         H = CO2_DIC(CO2, DIC, Ks)
     # 6. pHtot and HCO3
     elif pHtot is not None and HCO3 is not None:
-        H = 10**-pHtot
+        H = 10.0**-pHtot
         DIC = pH_HCO3(pHtot, HCO3, Ks)
     # 7. pHtot and CO3
     elif pHtot is not None and CO3 is not None:
-        H = 10**-pHtot
+        H = 10.0**-pHtot
         DIC = pH_CO3(pHtot, CO3, Ks)
     # 8. pHtot and TA
     elif pHtot is not None and TA is not None:
-        H = 10**-pHtot
+        H = 10.0**-pHtot
         DIC = pH_TA(pH=pHtot, TA=TA, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks)
     # 9. pHtot and DIC
     elif pHtot is not None and DIC is not None:
-        H = 10**-pHtot
+        H = 10.0**-pHtot
     # 10. HCO3 and CO3
     elif HCO3 is not None and CO3 is not None:
         H = HCO3_CO3(HCO3, CO3, Ks)
@@ -574,7 +574,7 @@ def calc_C_species(
     # 15. TA and DIC
     elif TA is not None and DIC is not None:
         pHtot = TA_DIC(TA=TA, DIC=DIC, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks)
-        H = 10**-pHtot
+        H = 10.0**-pHtot
 
     # The above makes sure that DIC and H are known,
     # this next bit calculates all the missing species
@@ -637,13 +637,13 @@ def calc_revelle_factor(TA, DIC, BT, PT, SiT, ST, FT, Ks):
     dDIC = 1e-6  # (1 umol kg-1)
 
     pH = TA_DIC(TA=TA, DIC=DIC, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks)
-    fCO2 = cCO2(10**-pH, DIC, Ks) / Ks.K0
+    fCO2 = cCO2(10.0**-pH, DIC, Ks) / Ks.K0
 
     # Calculate new fCO2 above and below given value
     pH_hi = TA_DIC(TA=TA, DIC=DIC + dDIC, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks)
-    fCO2_hi = cCO2(10**-pH_hi, DIC, Ks) / Ks.K0
+    fCO2_hi = cCO2(10.0**-pH_hi, DIC, Ks) / Ks.K0
 
     pH_lo = TA_DIC(TA=TA, DIC=DIC - dDIC, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks)
-    fCO2_lo = cCO2(10**-pH_lo, DIC, Ks) / Ks.K0
+    fCO2_lo = cCO2(10.0**-pH_lo, DIC, Ks) / Ks.K0
 
     return (fCO2_hi - fCO2_lo) * DIC / (fCO2 * 2 * dDIC)
