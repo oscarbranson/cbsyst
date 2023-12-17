@@ -1,6 +1,6 @@
 import scipy.optimize as opt
 import numpy as np
-from cbsyst.helpers import noms, cast_array, maxL, Bunch, maxShape, calc_fH
+from cbsyst.helpers import noms, cast_array, Bunch, maxShape, calc_fH
 
 def _zero_wrapper(ps, fn, bounds=(10 ** -14, 10 ** -1)):
     """
@@ -36,8 +36,10 @@ def CO2_HCO3(CO2, HCO3, Ks):
     """
     CO2, HCO3 = noms(CO2, HCO3)  # get nominal values of inputs
     par = cast_array(CO2, HCO3, Ks.K1, Ks.K2)  # cast parameters into array
+    shape = maxShape(CO2, HCO3, Ks.K1, Ks.K2)  # get shape of output
 
-    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_HCO3)
+
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_HCO3).reshape(shape)
 
 
 def zero_CO2_HCO3(h, CO2, HCO3, K1, K2):
@@ -54,8 +56,10 @@ def CO2_CO3(CO2, CO3, Ks):
     """
     CO2, CO3 = noms(CO2, CO3)
     par = cast_array(CO2, CO3, Ks.K1, Ks.K2)  # cast parameters into array
+    shape = maxShape(CO2, CO3, Ks.K1, Ks.K2)  # get shape of output
 
-    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_CO3)
+
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_CO3).reshape(shape)
 
 
 def zero_CO2_CO3(h, CO2, CO3, K1, K2):
@@ -122,8 +126,9 @@ def CO2_DIC(CO2, DIC, Ks):
     """
     CO2, DIC = noms(CO2, DIC)  # get nominal values of inputs
     par = cast_array(CO2, DIC, Ks.K1, Ks.K2)  # cast parameters into array
+    shape = maxShape(CO2, DIC, Ks.K1, Ks.K2)  # get shape of output
 
-    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_DIC)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_DIC).reshape(shape)
 
 
 def zero_CO2_DIC(h, CO2, DIC, K1, K2):
@@ -191,8 +196,9 @@ def HCO3_CO3(HCO3, CO3, Ks):
     """
     HCO3, CO3 = noms(HCO3, CO3)  # get nominal values of inputs
     par = cast_array(HCO3, CO3, Ks.K1, Ks.K2)  # cast parameters into array
-
-    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_CO3)
+    shape = maxShape(HCO3, CO3, Ks.K1, Ks.K2)  # get shape of output
+    
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_CO3).reshape(shape)
 
 
 def zero_HCO3_CO3(h, HCO3, CO3, K1, K2):
@@ -211,8 +217,9 @@ def HCO3_TA(HCO3, TA, BT, Ks):
     par = cast_array(
         HCO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW
     )  # cast parameters into array
+    shape = maxShape(HCO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # get shape of output
 
-    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_TA)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_TA).reshape(shape)
 
 
 def zero_HCO3_TA(h, HCO3, TA, BT, K1, K2, KB, KW):
@@ -236,8 +243,9 @@ def HCO3_DIC(HCO3, DIC, Ks):
     """
     HCO3, DIC = noms(HCO3, DIC)  # get nominal values of inputs
     par = cast_array(HCO3, DIC, Ks.K1, Ks.K2)  # cast parameters into array
-
-    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_DIC)
+    shape = maxShape(HCO3, DIC, Ks.K1, Ks.K2)  # get shape of output
+    
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_DIC).reshape(shape)
 
 
 def zero_HCO3_DIC(h, HCO3, DIC, K1, K2):
@@ -256,8 +264,9 @@ def CO3_TA(CO3, TA, BT, Ks):
     par = cast_array(
         CO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW
     )  # cast parameters into array
-
-    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO3_TA)
+    shape = maxShape(CO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # get shape of output
+    
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO3_TA).reshape(shape)
 
 
 def zero_CO3_TA(h, CO3, TA, BT, K1, K2, KB, KW):
@@ -281,8 +290,9 @@ def CO3_DIC(CO3, DIC, Ks):
     """
     CO3, DIC = noms(CO3, DIC)  # get nominal values of inputs
     par = cast_array(CO3, DIC, Ks.K1, Ks.K2)  # cast parameters into array
+    shape = maxShape(CO3, DIC, Ks.K1, Ks.K2)  # get shape of output
 
-    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO3_DIC)
+    return np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO3_DIC).reshape(shape)
 
 
 def zero_CO3_DIC(h, CO3, DIC, K1, K2):
@@ -509,7 +519,7 @@ def calc_C_species(
         elif pCO2 is not None:
             CO2 = fCO2_to_CO2(pCO2_to_fCO2(pCO2, T_in), Ks)
 
-    # Carbon System Calculations (from Zeebe & Wolf-Gladrow, Appendix B)
+    # Carbon System Calculations (logic from Zeebe & Wolf-Gladrow, Appendix B)
     # 1. CO2 and pH
     if CO2 is not None and pHtot is not None:
         H = 10.0**-pHtot

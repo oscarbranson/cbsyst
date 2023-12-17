@@ -157,6 +157,31 @@ def maxL(*it):
     else:
         return 1
     
+def maxSize(*it):
+    """
+    Calculate maximum size of provided items.
+
+    Parameters
+    ----------
+    *it : objects
+        Items of various sizes. Only sizes
+        of iterables are returned.
+
+    Returns
+    -------
+    size of largest object (int).
+    """
+    m = set()
+    for i in it:
+        try:
+            m.add(np.size(i))
+        except TypeError:
+            pass
+    if np.size(m) > 0:
+        return max(m)
+    else:
+        return 1
+    
 def maxD(*it):
     """
     Calculate maximum number of dimensions in provided items.
@@ -183,11 +208,11 @@ def maxShape(*it):
 
 def cast_array(*it):
     """
-    Recasts inputs into array of shape (len(it), maxL(*it))
+    Recasts inputs into array of shape (len(it), maxSize(*it))
     """
-    new = np.zeros((len(it), maxL(*it)))
+    new = np.zeros((len(it), maxSize(*it)))
     for i, t in enumerate(it):
-        new[i, :] = t
+        new[i, :] = np.ravel(t)
     return new
 
 
