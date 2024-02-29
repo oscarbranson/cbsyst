@@ -3,6 +3,10 @@
 Release History
 ---------------
 
+0.4.9 (2024-02-29)
+------------
+Updated default Ca and Mg values to prevent pitzer model running at default conditions.
+
 0.4.8 (2023-03-15)
 ------------
 Set minumum required Kgen version to 0.2.0.
