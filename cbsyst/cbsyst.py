@@ -26,6 +26,7 @@ def Csys(
     pHsws=None, pHfree=None, pHNBS=None,
     unit="umol", Ks=None,
     pdict=None,
+    OmegaC=None, OmegaA=None
 ):
     """
     Calculate the carbon chemistry of seawater from a minimal parameter set.
@@ -50,7 +51,7 @@ def Csys(
 
     Parameters
     ----------
-    pH, DIC, CO2, HCO3, CO3, TA : array-like
+    pH, DIC, CO2, HCO3, CO3, TA, OmegaC, OmegaA : array-like
         Carbon system parameters. Two of these must be provided.
     BT : array-like
         Total B at the input salinity used in Alkalinity calculations. 
@@ -143,8 +144,8 @@ def Csys(
     if isinstance(Ks, dict):
         ps.Ks = Bunch(Ks)
     else:
-        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT))
-
+        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT))        
+        
     # Calculate pH scales at input conditions (does nothing if no pH given)
     ps.update(
         calc_pH_scales(
@@ -159,7 +160,13 @@ def Csys(
             Ks=ps.Ks
         )
     )
-
+    
+    # If OmegaA or OmegaC are provided, calculate CO3 from them
+    if OmegaA is not None:
+        ps['CO3'] = OmegaA * ps.Ks.KspA / (ps.Ca * ps.S_in / 35.)
+    elif OmegaC is not None:
+        ps['CO3'] = OmegaC * ps.Ks.KspC / (ps.Ca * ps.S_in / 35.)
+    
     # calculate C system at input conditions
     ps.update(calc_C_species(**ps))
     
