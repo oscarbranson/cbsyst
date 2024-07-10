@@ -10,20 +10,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11"]
+        os: [windows-latest, ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Testing ${{ matrix.os }}, python ${{ matrix.python-version }}
       shell: bash -l {0}
       run: |
-        python3 -m pip install -e .
-        pushd tests/test_data/GLODAP_data && python3 get_GLODAP_data.py && popd
-        python3 -m unittest
+        python -m pip install --upgrade pip
+        python -m pip install -e .
+        pushd tests/test_data/GLODAP_data && python get_GLODAP_data.py && popd
+        python -m unittest
