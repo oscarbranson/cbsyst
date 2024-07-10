@@ -16,12 +16,12 @@ class CarbonFnTestCase(unittest.TestCase):
 
         with self.subTest(msg='CO2_HCO3 (zf)'):
             self.assertAlmostEqual(
-                cf.CO2_HCO3(CO2=ref.CO2, HCO3=ref.HCO3, Ks=ref.Ks)[0], ref.H, places=6
+                cf.CO2_HCO3(CO2=ref.CO2, HCO3=ref.HCO3, Ks=ref.Ks), ref.H, places=6
             )
 
         with self.subTest(msg='CO2_CO3 (zf)'):
             self.assertAlmostEqual(
-                cf.CO2_CO3(CO2=ref.CO2, CO3=ref.CO3, Ks=ref.Ks)[0], ref.H, places=6
+                cf.CO2_CO3(CO2=ref.CO2, CO3=ref.CO3, Ks=ref.Ks), ref.H, places=6
             )
 
         with self.subTest(msg='CO2_TA'):
@@ -42,7 +42,7 @@ class CarbonFnTestCase(unittest.TestCase):
         
         with self.subTest(msg='CO2_DIC (zf)'):        
             self.assertAlmostEqual(
-                cf.CO2_DIC(CO2=ref.CO2, DIC=ref.DIC, Ks=ref.Ks)[0], ref.H, places=6
+                cf.CO2_DIC(CO2=ref.CO2, DIC=ref.DIC, Ks=ref.Ks), ref.H, places=6
             )
 
         with self.subTest(msg='pH_HCO3'):        
@@ -79,33 +79,31 @@ class CarbonFnTestCase(unittest.TestCase):
 
         with self.subTest(msg='HCO3_CO3 (zf)'):        
             self.assertAlmostEqual(
-                cf.HCO3_CO3(HCO3=ref.HCO3, CO3=ref.CO3, Ks=ref.Ks)[0], ref.H, places=6
+                cf.HCO3_CO3(HCO3=ref.HCO3, CO3=ref.CO3, Ks=ref.Ks), ref.H, places=6
             )
 
         with self.subTest(msg='HCO3_TA (zf)'):        
             self.assertAlmostEqual(
-                cf.HCO3_TA(HCO3=ref.HCO3 / ref.unit, TA=ref.TA / ref.unit, BT=ref.BT / ref.unit, Ks=ref.Ks)[
-                    0
-                ],
+                cf.HCO3_TA(HCO3=ref.HCO3 / ref.unit, TA=ref.TA / ref.unit, BT=ref.BT / ref.unit, Ks=ref.Ks),
                 ref.H,
                 places=6,
             )
 
         with self.subTest(msg='HCO3_DIC (zf)'):        
             self.assertAlmostEqual(
-                cf.HCO3_DIC(HCO3=ref.HCO3, DIC=ref.DIC, Ks=ref.Ks)[0], ref.H, places=6
+                cf.HCO3_DIC(HCO3=ref.HCO3, DIC=ref.DIC, Ks=ref.Ks), ref.H, places=6
             )
 
         with self.subTest(msg='CO3_TA (zf)'):        
             self.assertAlmostEqual(
-                cf.CO3_TA(CO3=ref.CO3 / ref.unit, TA=ref.TA / ref.unit, BT=ref.BT / ref.unit, Ks=ref.Ks)[0],
+                cf.CO3_TA(CO3=ref.CO3 / ref.unit, TA=ref.TA / ref.unit, BT=ref.BT / ref.unit, Ks=ref.Ks),
                 ref.H,
                 places=6,
             )
 
         with self.subTest(msg='CO3_DIC (zf)'):        
             self.assertAlmostEqual(
-                cf.CO3_DIC(CO3=ref.CO3, DIC=ref.DIC, Ks=ref.Ks)[0], ref.H, places=6
+                cf.CO3_DIC(CO3=ref.CO3, DIC=ref.DIC, Ks=ref.Ks), ref.H, places=6
             )
 
         with self.subTest(msg='TA_DIC'):        
