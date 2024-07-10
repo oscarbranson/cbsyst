@@ -1,0 +1,2 @@
+global-exclude **/*.pdf
+global-exclude **/*.png

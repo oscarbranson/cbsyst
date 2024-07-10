@@ -210,9 +210,9 @@ def Csys(
             ST = ps.ST * ps.S_out / ps.S_in
             FT = ps.FT * ps.S_out / ps.S_in
             if Ca is not None:
-                Ca = ps.Ca * ps.S_out / ps.S_in
+                Ca = ps.Ca
             if Mg is not None:
-                Mg = ps.Mg * ps.S_out / ps.S_in
+                Mg = ps.Mg
         if ps.P_out is None:
             ps.P_out = ps.P_in
         # assumes conserved alkalinity and DIC
@@ -929,9 +929,9 @@ def CBsys(
             ST = ps.ST * ps.S_out / ps.S_in
             FT = ps.FT * ps.S_out / ps.S_in
             if Ca is not None:
-                Ca = ps.Ca * ps.S_out / ps.S_in
+                Ca = ps.Ca
             if Mg is not None:
-                Mg = ps.Mg * ps.S_out / ps.S_in
+                Mg = ps.Mg
         if ps.P_out is None:
             ps.P_out = ps.P_in
         # assumes conserved alkalinity, DIC and BT
