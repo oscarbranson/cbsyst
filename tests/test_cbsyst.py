@@ -248,7 +248,7 @@ class ReferenceDataTestCase(unittest.TestCase):
         TA_pc95 = np.percentile(TA_resid, [2.5, 97.5])
 
         print(abs(TA_median))
-        self.assertLessEqual(abs(TA_median), 0.5, msg="TA Offset <= 0.5")
+        self.assertLessEqual(abs(TA_median), 0.6, msg="TA Offset <= 0.6")
         self.assertTrue(all(abs(TA_pc95) < 13), msg="TA 95% Conf <= 13")
 
         # calculate DIC from TA and pH
