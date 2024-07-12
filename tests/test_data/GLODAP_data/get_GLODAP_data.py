@@ -28,10 +28,11 @@ class TqdmUpTo(tqdm):
 
 def get_GLODAP(path="./", leave_zip=True):
     if not os.path.exists(path + "/GLODAPv2 Merged Master File.csv.zip"):
-        print("Fetching GLODAPv2 Data (Olsen et al, 2020)...")
+        print("Fetching GLODAPv2 Data...")
 
         GLODAP_urls = [
             "https://www.glodap.info/glodap_files/v2.2020/GLODAPv2.2020_Merged_Master_File.csv.zip",
+            # "https://www.glodap.info/glodap_files/v2.2023/GLODAPv2.2023_Merged_Master_File.csv.zip",
         ]
         downloaded = False
         # download GLODAP data
@@ -61,7 +62,7 @@ def get_GLODAP(path="./", leave_zip=True):
         #     for data in tqdm(file.iter_content(1024), total=total_size / (1024), unit='KB', unit_scale=True):
         #         f.write(data)
     else:
-        print("Found GLODAPv2 Data (Olsen et al, 2020)...")
+        print("Found GLODAPv2 Data...")
 
     print("Reading data...")
     # open zip
@@ -69,6 +70,7 @@ def get_GLODAP(path="./", leave_zip=True):
 
     # read data into pandas
     gd = pd.read_csv(zf.open("GLODAPv2.2020_Merged_Master_File.csv"))
+    # gd = pd.read_csv(zf.open("GLODAPv2.2023_Merged_Master_File.csv"))
 
     # replace missing values with nan
     gd.replace(-9999, np.nan, inplace=True)
