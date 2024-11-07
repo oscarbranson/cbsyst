@@ -135,7 +135,8 @@ def Csys(
     for p in ["DIC", "CO2", "HCO3", "CO3", "BT", "fCO2", "pCO2", "PT", "SiT"]:
         if ps[p] is not None:
             if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
-                ps[p][ps[p] < 0] = np.nan
+                if any(ps[p] < 0):
+                    ps[p][ps[p] < 0] = np.nan
             elif ps[p] < 0:
                 ps[p] = np.nan
 
