@@ -26,7 +26,8 @@ def Csys(
     pHsws=None, pHfree=None, pHNBS=None,
     unit="umol", Ks=None,
     pdict=None,
-    OmegaC=None, OmegaA=None
+    OmegaC=None, OmegaA=None,
+    MyAMI_mode="calculate"
 ):
     """
     Calculate the carbon chemistry of seawater from a minimal parameter set.
@@ -54,7 +55,7 @@ def Csys(
     pH, DIC, CO2, HCO3, CO3, TA, OmegaC, OmegaA : array-like
         Carbon system parameters. Two of these must be provided.
     BT : array-like
-        Total B at the input salinity used in Alkalinity calculations. 
+        Total B at the input salinity (in umol/kg) used in Alkalinity calculations. 
         If missing, this is calculated as 0.000416 * Sal/35 
         (Uppstrom et al. 1974).
     Ca, Mg : array-like
@@ -145,7 +146,7 @@ def Csys(
     if isinstance(Ks, dict):
         ps.Ks = Bunch(Ks)
     else:
-        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT))        
+        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT, MyAMI_mode=ps.MyAMI_mode))
         
     # Calculate pH scales at input conditions (does nothing if no pH given)
     ps.update(
@@ -279,6 +280,7 @@ def Bsys(
     pHNBS=None,
     Ks=None,
     pdict=None,
+    MyAMI_mode="calculate"
 ):
     """
     Calculate the boron chemistry of seawater from a minimal parameter set.
@@ -356,7 +358,7 @@ def Bsys(
                 ps[p] = np.nan
 
     # Calculate Ks
-    ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT))
+    ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT, MyAMI_mode=ps.MyAMI_mode))
 
     # Calculate pH scales (does nothing if no pH given)
     ps.update(
@@ -447,6 +449,7 @@ def ABsys(
     pHNBS=None,
     Ks=None,
     pdict=None,
+    MyAMI_mode="calculate"
 ):
     """
     Calculate the boron isotope chemistry of seawater from a minimal parameter set.
@@ -516,7 +519,7 @@ def ABsys(
     if isinstance(Ks, dict):
         ps.Ks = Bunch(Ks)
     else:
-        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT))
+        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT, MyAMI_mode=ps.MyAMI_mode))
 
     # Calculate pH scales (does nothing if no pH given)
     ps.update(
@@ -623,6 +626,7 @@ def CBsys(
     Ks=None,
     pdict=None,
     unit="umol",
+    MyAMI_mode="calculate"
 ):
     """
     Calculate carbon, boron and boron isotope chemistry of seawater from a minimal parameter set.
@@ -756,7 +760,7 @@ def CBsys(
     if isinstance(Ks, dict):
         ps.Ks = Bunch(Ks)
     else:
-        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT))
+        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT, MyAMI_mode=ps.MyAMI_mode))
 
     # calculate alpha
     if alphaB is None:
