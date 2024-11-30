@@ -25,3 +25,4 @@ Data_Source_CCHDO.webloc
 isotope_calc_doc
 *.pyc
 .vscode/*
+support/*
