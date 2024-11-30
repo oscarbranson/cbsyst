@@ -2,4 +2,4 @@ from cbsyst.cbsyst import *
 from cbsyst.helpers import data_out, Bunch, pH_scale_converter
 from kgen import calc_Ks
 
-VERSION = '0.4.10-dev'
+VERSION = '0.4.9'
