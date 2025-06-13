@@ -3,6 +3,7 @@ import numpy as np
 import uncertainties
 import uncertainties.unumpy as unp
 from cbsyst.helpers import noms, cast_array, Bunch, maxShape, calc_fH
+from .uncertainties import negative_log10_preserve_type, _has_uncertainties, _extract_nominal_values
 
 def _zero_wrapper(ps, fn, bounds=(10 ** -14, 10 ** -1)):
     """
@@ -86,45 +87,6 @@ def _zero_wrapper_with_uncertainties(ps, fn, bounds=(10 ** -14, 10 ** -1)):
         return uncertainties.ufloat(result_nominal, np.sqrt(total_variance))
     else:
         return result_nominal
-
-
-def _has_uncertainties(obj):
-    """
-    Check if an object contains uncertainties.
-    
-    Returns True if:
-    - obj is a ufloat (has nominal_value attribute)
-    - obj is a uarray (numpy array containing ufloat objects)
-    """
-    if hasattr(obj, 'nominal_value'):
-        # Individual ufloat object
-        return True
-    elif hasattr(obj, '__iter__') and hasattr(obj, 'dtype') and obj.dtype == object:
-        # Possibly a uarray (numpy array with object dtype)
-        if len(obj) > 0 and hasattr(obj.flat[0], 'nominal_value'):
-            return True
-    return False
-
-
-def _extract_nominal_values(obj):
-    """
-    Extract nominal values from ufloat or uarray objects.
-    
-    Returns:
-    - For ufloat: obj.nominal_value
-    - For uarray: array of nominal values
-    - For regular objects: obj unchanged
-    """
-    if hasattr(obj, 'nominal_value'):
-        # Individual ufloat object
-        return obj.nominal_value
-    elif hasattr(obj, '__iter__') and hasattr(obj, 'dtype') and obj.dtype == object:
-        # Possibly a uarray (numpy array with object dtype)
-        if len(obj) > 0 and hasattr(obj.flat[0], 'nominal_value'):
-            return np.array([item.nominal_value for item in obj])
-    # Regular object without uncertainties
-    return obj
-
 
 def uncertainty_propagation_decorator(func):
     """
@@ -875,11 +837,11 @@ def calc_C_species(
     # 2. CO2 and HCO3
     elif CO2 is not None and HCO3 is not None:
         H = CO2_HCO3(CO2, HCO3, Ks)
-        DIC = CO2_pH(CO2, -unp.log10(H), Ks)
+        DIC = CO2_pH(CO2, negative_log10_preserve_type(H), Ks)
     # 3. CO2 and CO3
     elif CO2 is not None and CO3 is not None:
         H = CO2_CO3(CO2, CO3, Ks)
-        DIC = CO2_pH(CO2, -unp.log10(H), Ks)
+        DIC = CO2_pH(CO2, negative_log10_preserve_type(H), Ks)
     # 4. CO2 and TA
     elif CO2 is not None and TA is not None:
         # unit conversion because OH and H wrapped
@@ -908,14 +870,14 @@ def calc_C_species(
     # 10. HCO3 and CO3
     elif HCO3 is not None and CO3 is not None:
         H = HCO3_CO3(HCO3, CO3, Ks)
-        DIC = pH_CO3(-unp.log10(H), CO3, Ks)
+        DIC = pH_CO3(negative_log10_preserve_type(H), CO3, Ks)
     # 11. HCO3 and TA
     elif HCO3 is not None and TA is not None:
         Warning(
             "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
         )
         H = HCO3_TA(HCO3, TA, BT, Ks)
-        DIC = pH_HCO3(-unp.log10(H), HCO3, Ks)
+        DIC = pH_HCO3(negative_log10_preserve_type(H), HCO3, Ks)
     # 12. HCO3 amd DIC
     elif HCO3 is not None and DIC is not None:
         H = HCO3_DIC(HCO3, DIC, Ks)
@@ -925,7 +887,7 @@ def calc_C_species(
             "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
         )
         H = CO3_TA(CO3, TA, BT, Ks)
-        DIC = pH_CO3(-unp.log10(H), CO3, Ks)
+        DIC = pH_CO3(negative_log10_preserve_type(H), CO3, Ks)
     # 14. CO3 and DIC
     elif CO3 is not None and DIC is not None:
         H = CO3_DIC(CO3, DIC, Ks)
@@ -947,17 +909,25 @@ def calc_C_species(
         HCO3 = cHCO3(H, DIC, Ks)
     if CO3 is None:
         CO3 = cCO3(H, DIC, Ks)
+    
     # Calculate all elements of Alkalinity
-    (TA, CAlk, BAlk, PAlk, SiAlk, OH, Hfree, HSO4, HF) = cTA(
-        H=H, DIC=DIC, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks, mode="multi"
-    )
+    # If TA was provided as input, preserve it. Otherwise calculate it.
+    if TA is None:
+        (TA, CAlk, BAlk, PAlk, SiAlk, OH, Hfree, HSO4, HF) = cTA(
+            H=H, DIC=DIC, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks, mode="multi"
+        )
+    else:
+        # TA was provided as input - preserve it and only calculate the other alkalinity components
+        (_, CAlk, BAlk, PAlk, SiAlk, OH, Hfree, HSO4, HF) = cTA(
+            H=H, DIC=DIC, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks, mode="multi"
+        )
 
     # if pH not calced yet, calculate on all scales.
     if pHtot is None:
-        pHtot = np.array(-unp.log10(H), ndmin=1)
+        pHtot = np.array(negative_log10_preserve_type(H), ndmin=1)
     
-    FREEtoTOT = -unp.log10((1 + ST / Ks.KS))
-    SWStoTOT = -unp.log10((1 + ST / Ks.KS) / (1 + ST / Ks.KS + FT / Ks.KF))
+    FREEtoTOT = negative_log10_preserve_type((1 + ST / Ks.KS))
+    SWStoTOT = negative_log10_preserve_type((1 + ST / Ks.KS) / (1 + ST / Ks.KS + FT / Ks.KF))
     fH = calc_fH(T_in + 273.15, S_in)
     
     return Bunch(

@@ -4,6 +4,7 @@ import numpy as np
 import uncertainties.unumpy as unp
 from cbsyst.helpers import NnotNone, Bunch
 from .boron import chiB_calc
+from .uncertainties import negative_log10_preserve_type, sqrt_preserve_type
 
 def get_alphaB():
     """
@@ -291,7 +292,7 @@ def calculate_ABO3(H, Ks, ABT, alphaB):
         - ABT
         + alphaB * chiB
         - chiB
-        - unp.sqrt(
+        - sqrt_preserve_type(
             ABT ** 2 * alphaB ** 2
             - 2 * ABT ** 2 * alphaB
             + ABT ** 2
@@ -336,7 +337,7 @@ def calculate_ABO4(H, Ks, ABT, alphaB):
         - ABT
         - alphaB * chiB
         + chiB
-        + unp.sqrt(
+        + sqrt_preserve_type(
             ABT ** 2 * alphaB ** 2
             - 2 * ABT ** 2 * alphaB
             + ABT ** 2
@@ -441,7 +442,7 @@ def calc_B_isotopes(pHtot=None, ABT=None, ABO3=None, ABO4=None, alphaB=None, Ks=
     else:  # pH is not known
         if ABT is not None:
             H = calculate_H(Ks=Ks, alphaB=alphaB, ABT=ABT, ABO3=ABO3, ABO4=ABO4)
-            pHtot = -np.log10(H)
+            pHtot = negative_log10_preserve_type(H)
         else:
             raise ValueError('ABT and one of ABO3 or ABO4 must be specified if pH is missing.')
     

@@ -1,5 +1,6 @@
 import numpy as np
 from cbsyst.helpers import Bunch
+from .uncertainties import negative_log10_preserve_type
 
 def chiB_calc(H, Ks):
     return 1 / (1 + Ks.KB / H)
@@ -69,6 +70,6 @@ def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None, **kwargs):
     if BO4 is None:
         BO4 = cBO4(BT, H, Ks)
     if pHtot is None:
-        pHtot = np.array(-np.log10(H), ndmin=1)
+        pHtot = np.array(negative_log10_preserve_type(H), ndmin=1)
 
     return Bunch({"Htot": pHtot, "H": H, "BT": BT, "BO3": BO3, "BO4": BO4})

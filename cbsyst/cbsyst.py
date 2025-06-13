@@ -8,6 +8,7 @@ from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO
 from cbsyst.boron import calc_B_species
 from cbsyst.boron_isotopes import d11_to_A11, A11_to_d11, get_alphaB, calc_B_isotopes
 from cbsyst.helpers import Bunch, NnotNone, calc_FT, calc_ST, calc_BT, calc_pH_scales
+from cbsyst.uncertainties import remove_negatives
 from kgen import calc_Ks
 
 # C Speciation
@@ -133,12 +134,7 @@ def Csys(
 
     # Remove negative values 
     for p in ["DIC", "CO2", "HCO3", "CO3", "BT", "fCO2", "pCO2", "PT", "SiT"]:
-        if ps[p] is not None:
-            if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
-                if np.any(ps[p] < 0):
-                    ps[p][ps[p] < 0] = np.nan
-            elif ps[p] < 0:
-                ps[p] = np.nan
+        ps[p] = remove_negatives(ps[p])
 
     
     # Calculate Ks at input conditions
