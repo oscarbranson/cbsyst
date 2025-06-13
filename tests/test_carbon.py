@@ -35,7 +35,7 @@ class CarbonFnTestCase(unittest.TestCase):
                     ST=ref.TS,
                     FT=ref.TF,
                     Ks=ref.Ks,
-                )[0],
+                ),
                 ref.pHtot,
                 places=6,
             )
@@ -117,7 +117,7 @@ class CarbonFnTestCase(unittest.TestCase):
                     ST=ref.TS,
                     FT=ref.TF,
                     Ks=ref.Ks,
-                )[0],
+                ),
                 ref.pHtot,
                 places=6,
             )

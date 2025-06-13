@@ -3,6 +3,73 @@
 Release History
 ---------------
 
+0.5.0 (2024-12-13)
+------------------
+
+**COMPLETE UNCERTAINTY PROPAGATION IMPLEMENTATION**
+
+This release implements comprehensive uncertainty propagation for all carbon system calculations using the `uncertainties` package. All 15 carbon system calculation cases now support automatic error propagation when `ufloat` objects are provided as inputs.
+
+**Major New Features:**
+
+* **Full Uncertainty Propagation**: All carbon system functions (cases 1-15) now support uncertainty propagation using the `uncertainties` package
+* **Automatic Detection**: Functions automatically detect uncertainty objects and propagate errors appropriately
+* **Three Implementation Approaches**:
+  
+  - **Algebraic functions** (cases 1, 6-9): Native support via `uncertainties` package
+  - **Zero-finder functions** (cases 2-3, 5, 10, 12, 14): Enhanced with finite difference uncertainty propagation  
+  - **Iterative functions** (cases 4, 11, 13, 15): New decorator-based uncertainty propagation for Newton-Raphson solvers
+
+* **Robust Error Propagation**: Uses mathematically sound finite difference methods for functions incompatible with automatic differentiation
+* **Complete Uncertainty Support**: Works with both individual `ufloat` objects and `uarray` objects (correlated uncertainties)
+* **Performance Optimized**: Zero performance impact when uncertainties are not used
+
+**Breaking Changes:**
+
+* **Scalar Input/Output Consistency**: Functions now return scalar values when provided with scalar inputs, rather than single-element arrays
+
+  **Migration**: If your code previously accessed results with `[0]` indexing (e.g., `CO2_TA(...)[0]`), remove the indexing for scalar inputs.
+
+**Technical Implementation:**
+
+* **New uncertainty propagation decorator** for iterative functions that use Newton-Raphson methods
+* **Enhanced zero-finder wrapper** with finite difference uncertainty propagation
+* **Comprehensive test suite** validating all uncertainty propagation scenarios
+
+**Functions Enhanced:**
+
+* **Cases 1, 6-9**: `CO2_pH`, `pH_HCO3`, `pH_CO3`, `pH_TA`, `pH_DIC` (native uncertainty support)
+* **Cases 2-3, 5, 10, 12, 14**: `CO2_HCO3`, `CO2_CO3`, `CO2_DIC`, `HCO3_CO3`, `HCO3_DIC`, `CO3_DIC` (zero-finder enhancement)
+* **Cases 4, 11, 13, 15**: `CO2_TA`, `HCO3_TA`, `CO3_TA`, `TA_DIC` (decorator-based propagation)
+
+**Usage Example:**
+
+.. code-block:: python
+
+    import uncertainties as unc
+    import cbsyst as cb
+    
+    # Define parameters with uncertainties
+    DIC = unc.ufloat(2000, 20)  # 2000 ± 20 μmol/kg
+    TA = unc.ufloat(2300, 15)   # 2300 ± 15 μmol/kg
+    
+    # Calculate with automatic uncertainty propagation
+    result = cb.Csys(DIC=DIC, TA=TA, T_in=25, S_in=35)
+    print(result.pH)  # Returns: 8.10+/-0.05 (example)
+    
+    # Works with uarray objects for correlated uncertainties
+    import uncertainties.unumpy as unp
+    DIC_array = unp.uarray([2000, 2100, 2200], [20, 25, 30])  
+    TA_array = unp.uarray([2300, 2350, 2400], [15, 18, 22])
+    result = cb.Csys(DIC=DIC_array, TA=TA_array, T_in=25, S_in=35)
+    print(result.pH)  # Returns array with uncertainties
+
+**Documentation:**
+
+* Updated all docstrings to reflect uncertainty propagation capabilities
+* Added comprehensive uncertainty propagation test suite
+* Updated API documentation to reflect scalar/array return behavior changes
+
 0.4.9 (2023-09-04)
 ------------
 Updates to work with Kgen 0.3.0

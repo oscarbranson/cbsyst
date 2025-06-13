@@ -210,9 +210,19 @@ def cast_array(*it):
     """
     Recasts inputs into array of shape (len(it), maxSize(*it))
     """
-    new = np.zeros((len(it), maxSize(*it)))
+    max_size = maxSize(*it)
+    new = np.empty((len(it), max_size), dtype=object)
     for i, t in enumerate(it):
-        new[i, :] = np.ravel(t)
+        raveled = np.ravel(t)
+        if raveled.size == 1:
+            # If single value, broadcast to all positions
+            new[i, :] = raveled[0]
+        else:
+            # If array, assign directly
+            new[i, :raveled.size] = raveled
+            if raveled.size < max_size:
+                # Fill remaining positions with last value
+                new[i, raveled.size:] = raveled[-1]
     return new
 
 

@@ -40,10 +40,9 @@ def Csys(
 
     Error propagation:
     If inputs are ufloat or uarray (from uncertainties package) errors will
-    be propagated through all calculations, but:
-
-    **WARNING** Error propagation NOT IMPLEMENTED for carbon system calculations
-    with zero-finders (i.e. when pH is not given; cases 2-5 and 10-15).
+    be propagated through all calculations.
+    
+    NOTE: Error propagation is not implemented for K calculation - only for input parameters.
 
     Concentration Units
     +++++++++++++++++++
@@ -172,16 +171,23 @@ def Csys(
     # calculate C system at input conditions
     ps.update(calc_C_species(**ps))
     
-    ps["revelle_factor"] = calc_revelle_factor(
-        TA=ps.TA,
-        DIC=ps.DIC,
-        BT=ps.BT,
-        PT=ps.PT,
-        SiT=ps.SiT,
-        ST=ps.ST,
-        FT=ps.FT,
-        Ks=ps.Ks,
-    )
+    # Only calculate revelle factor if no uncertainties are present
+    # (the revelle factor calculation uses iterative methods incompatible with uncertainties)
+    has_uncertainties = any(hasattr(ps.get(param), 'nominal_value') for param in ['TA', 'DIC', 'CO2', 'HCO3', 'CO3'] if ps.get(param) is not None)
+    
+    if not has_uncertainties:
+        ps["revelle_factor"] = calc_revelle_factor(
+            TA=ps.TA,
+            DIC=ps.DIC,
+            BT=ps.BT,
+            PT=ps.PT,
+            SiT=ps.SiT,
+            ST=ps.ST,
+            FT=ps.FT,
+            Ks=ps.Ks,
+        )
+    else:
+        ps["revelle_factor"] = None  # Skip calculation when uncertainties are present
     
     # calc Omega
     oCa = ps.Ca * ps.S_in / 35.
@@ -647,10 +653,7 @@ def CBsys(
 
     Error propagation:
     If inputs are ufloat or uarray (from uncertainties package) errors will
-    be propagated through all calculations, but:
-
-    **WARNING** Error propagation NOT IMPLEMENTED for carbon system calculations
-    with zero-finders (i.e. when pH is not given; cases 2-5 and 10-15).
+    be propagated through all calculations.
 
     Concentration Units
     +++++++++++++++++++

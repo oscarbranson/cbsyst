@@ -1,6 +1,7 @@
 # B isotope fns
 
 import numpy as np
+import uncertainties.unumpy as unp
 from cbsyst.helpers import NnotNone, Bunch
 from .boron import chiB_calc
 
@@ -290,7 +291,7 @@ def calculate_ABO3(H, Ks, ABT, alphaB):
         - ABT
         + alphaB * chiB
         - chiB
-        - np.sqrt(
+        - unp.sqrt(
             ABT ** 2 * alphaB ** 2
             - 2 * ABT ** 2 * alphaB
             + ABT ** 2
@@ -335,7 +336,7 @@ def calculate_ABO4(H, Ks, ABT, alphaB):
         - ABT
         - alphaB * chiB
         + chiB
-        + np.sqrt(
+        + unp.sqrt(
             ABT ** 2 * alphaB ** 2
             - 2 * ABT ** 2 * alphaB
             + ABT ** 2
