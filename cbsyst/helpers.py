@@ -408,28 +408,26 @@ def pH_scale_converter(pH, scale, Temp, Sal, Press=None, ST=None, FT=None):
     return calc_pH_scales(*inp, ST, FT, TempK, Sal, Ks)
 
 
-# TODO: function that correct pH for temperature
-def calc_pH_Tcorr(pH, T, T_ref, scale, Sal, Press=None, ST=None, FT=None):
-    """
-    Returns pH on all scales.
-    """
-    pH_scales = ["Total", "FREE", "SWS", "NBS"]
-    if scale not in pH_scales:
-        raise ValueError("scale must be one of Total, NBS, SWS or FREE.")
-    if ST is None:
-        ST = calc_ST(Sal)
-    if FT is None:
-        FT = calc_FT(Sal)
-    TempK = T + 273.15
-    TempK_ref = T_ref + 273.15
+# # TODO: function that correct pH for temperature
+# def calc_pH_Tcorr(pH, T_in, T_out, scale, Sal, Press=None, ST=None, FT=None):
+#     """
+#     Returns pH on all scales.
+#     """
+#     pH_scales = ["Total", "FREE", "SWS", "NBS"]
+#     if scale not in pH_scales:
+#         raise ValueError("scale must be one of Total, NBS, SWS or FREE.")
+#     if ST is None:
+#         ST = calc_ST(Sal)
+#     if FT is None:
+#         FT = calc_FT(Sal)
 
-    # Ks = kgen.calc_Ks(TempC=T, Sal=Sal, Pres=Press)
-    # Ks_ref = kgen.calc_Ks(TempC=T_ref, Sal=Sal, Pres=Press)
+#     Ks_in = Bunch(kgen.calc_Ks(temp_c=T_in, sal=Sal, p_bar=Press))
+#     Ks_out = Bunch(kgen.calc_Ks(temp_c=T_out, sal=Sal, p_bar=Press))
 
-    # inp = [None, None, None, None]
-    # inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH
+#     inp = [None, None, None, None]
+#     inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH
 
-    # pH_dict = calc_pH_scales(*inp, TS, FT, TempK, Sal, Ks)
-    # pH_dict_ref = calc_pH_scales(*inp, TS, FT, TempK_ref, Sal, Ks_ref)
+#     pH_in = calc_pH_scales(*inp, ST, FT, T_in + 273.15, Sal, Ks_in)
+#     pH_out = calc_pH_scales(*inp, ST, FT, T_out + 273.15, Sal, Ks_out)
 
-    # return pH_dict, pH_dict_ref
+#     return pH_in, pH_out
