@@ -6,6 +6,8 @@ repo_name: cbsyst
 
 theme:
   name: material
+  logo: img/cbsyst.png
+  favicon: img/favicon.png
   palette:
     - scheme: default
       primary: blue
