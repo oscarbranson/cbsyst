@@ -11,7 +11,7 @@
 
 **A Python module for calculating seawater carbon and boron chemistry.** 
 
-This will be particularly useful for anyone thinking about oceans in the distant past, when Mg and Ca concentrations were different. I use [Mathis Hain's MyAMI model](http://www.mathis-hain.net/resources/Hain_et_al_2015_GBC.pdf) to adjust speciation constants for Mg and Ca concentration.
+This will be particularly useful for anyone thinking about oceans in the distant past, when Mg and Ca concentrations were different. We use [Kgen](https://palaeocarbonatechemistry.github.io/Kgen/) to adjust speciation constants for Mg and Ca concentration.
 
 ***Tested** in the modern ocean against GLODAPv2 data (see below). Performs as well as Matlab CO2SYS.*
 
@@ -38,10 +38,10 @@ Next, calculate the carbonate system from sets of two of the measured carbonate 
 
 ### Results:
 **Calculated pH** (from DIC and Alkalinity) is offset from measured values by -0.00061 (-0.029/+0.029).
-![Calculated vs Measured pH](tests/test_data/GLODAP_data/Figures/DIC_comparison.png)
+![Calculated vs Measured pH](tests/test_data/GLODAP_data/Figures/pH_comparison.png)
 
 **Calculated Alkalinity** (from pH and DIC) is offset from measured values by 0.23 (-12/+11) umol/kg.
-![Calculated vs Measured TA](tests/test_data/GLODAP_data/Figures/DIC_comparison.png)
+![Calculated vs Measured TA](tests/test_data/GLODAP_data/Figures/TA_comparison.png)
 
 **Calculated DIC** (from pH and Alkalinity) is offset from measured values by -0.22 (-11/+11) umol/kg.
 ![Calculated vs Measured DIC](tests/test_data/GLODAP_data/Figures/DIC_comparison.png)
