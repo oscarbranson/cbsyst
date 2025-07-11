@@ -38,13 +38,13 @@ Next, calculate the carbonate system from sets of two of the measured carbonate 
 
 ### Results:
 **Calculated pH** (from DIC and Alkalinity) is offset from measured values by -0.00061 (-0.029/+0.029).
-![Calculated vs Measured pH](cbsyst/test_data/GLODAP_data/Figures/pH_comparison.png)
+![Calculated vs Measured pH](tests/test_data/GLODAP_data/Figures/DIC_comparison.png)
 
 **Calculated Alkalinity** (from pH and DIC) is offset from measured values by 0.23 (-12/+11) umol/kg.
-![Calculated vs Measured TA](cbsyst/test_data/GLODAP_data/Figures/TA_comparison.png)
+![Calculated vs Measured TA](tests/test_data/GLODAP_data/Figures/DIC_comparison.png)
 
 **Calculated DIC** (from pH and Alkalinity) is offset from measured values by -0.22 (-11/+11) umol/kg.
-![Calculated vs Measured DIC](cbsyst/test_data/GLODAP_data/Figures/DIC_comparison.png)
+![Calculated vs Measured DIC](tests/test_data/GLODAP_data/Figures/DIC_comparison.png)
 
 Reported statistics are median ±95% confidence intervals extracted from the residuals (n = 79,896).
 
