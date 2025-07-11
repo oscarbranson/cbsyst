@@ -11,7 +11,3 @@
 ::: cbsyst.helpers.Bunch
 
 ::: cbsyst.helpers.pH_scale_converter
-
-## Constants and Calculations
-
-::: kgen.calc_Ks
