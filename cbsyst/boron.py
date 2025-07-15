@@ -1,6 +1,7 @@
 import numpy as np
 from cbsyst.helpers import Bunch
 from .uncertainties import negative_log10_preserve_type
+from . import pH
 
 def chiB_calc(H, Ks):
     return 1 / (1 + Ks.KB / H)
@@ -73,3 +74,58 @@ def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None, **kwargs):
         pHtot = np.array(negative_log10_preserve_type(H), ndmin=1)
 
     return Bunch({"Htot": pHtot, "H": H, "BT": BT, "BO3": BO3, "BO4": BO4})
+
+# CBsyst 1.0 functions
+
+def solve_pH_BT(params):
+    params.H = 10.0**-params.pHtot
+
+def solve_BT_BO3(params):
+    params.H = BT_BO3(params.BT, params.BO3, params.Ks)
+
+def solve_BT_BO4(params):
+    params.H = BT_BO4(params.BT, params.BO4, params.Ks)
+
+def solve_BO3_BO4(params):
+    params.BT = params.BO3 + params.BO4
+    params.H = BT_BO3(params.BT, params.BO3, params.Ks)
+    
+def solve_pH_BO3(params):
+    params.H = 10.0**-params.pHtot
+    params.BT = pH_BO3(params.pHtot, params.BO3, params.Ks)
+
+
+def solve_pH_BO4(params):
+    params.H = 10.0**-params.pHtot
+    params.BT = pH_BO4(params.pHtot, params.BO4, params.Ks)
+
+SOLVERS = {
+    ('pHtot', 'BT'): solve_pH_BT,
+    ('BT', 'BO3'): solve_BT_BO3,
+    ('BT', 'BO4'): solve_BT_BO4,
+    ('BO3', 'BO4'): solve_BO3_BO4,
+    ('pHtot', 'BO3'): solve_pH_BO3,
+    ('pHtot', 'BO4'): solve_pH_BO4
+}
+
+def n_given(params):
+    valid_inputs = ['BT', 'BO3', 'BO4']
+    return sum(params.get(p) is not None for p in valid_inputs)
+
+def calc_remaining_B_specues(params):
+    params.BO3 = params.BO3 or cBO3(params.BT, params.H, params.Ks)
+    params.BO4 = params.BO4 or cBO4(params.BT, params.H, params.Ks)
+    params.pHtot = params.pHtot or negative_log10_preserve_type(params.H)
+
+def solve_B_system(params):
+    boron_params = ['pHtot', 'BT', 'BO3', 'BO4']
+    provided = tuple([p for p in boron_params if params.get(p) is not None])
+
+    solver = SOLVERS.get(provided)
+    if solver is None:
+        raise ValueError(f"No solver found for parameter combination: {provided}")
+    
+    solver(params)
+
+    calc_remaining_B_specues(params)
+

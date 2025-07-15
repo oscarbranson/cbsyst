@@ -116,6 +116,10 @@ def data_out(cbdat, path=None, include_constants=False):
 
 # Bunch modifies dict to allow item access using dot (.) operator
 class Bunch(dict):
+    """
+    A modified dict that allows access to its items
+    using the dot (.) operator, like an object.
+    """
     def __init__(self, *args, **kwds):
         super(Bunch, self).__init__(*args, **kwds)
         self.__dict__ = self

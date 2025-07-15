@@ -5,7 +5,9 @@ import uncertainties.unumpy as unp
 from cbsyst.helpers import NnotNone, Bunch
 from .boron import chiB_calc
 from .uncertainties import negative_log10_preserve_type, sqrt_preserve_type
+from . import pH
 
+# B isotope fractionation factors
 def get_alphaB():
     """
     Klochko alpha for B fractionation
@@ -459,135 +461,60 @@ def calc_B_isotopes(pHtot=None, ABT=None, ABO3=None, ABO4=None, alphaB=None, Ks=
         'H': H
     })
 
-# Wrapper functions using delta values
-def calculate_pH(Ks, d11BT, d11B4, epsilon=get_epsilonB()):
-    """
-    Calculates pH on the total scale
+# CBsyst 1.0 functions
 
-    Parameters
-    ----------
-    Ks : Bunch (dictionary with . access)
-        bunch containing the boron speciation constant KB
-    d11BT : float or array-like
-        isotope ratio 11B/10B in total boron - delta units
-    d11B4 : float or array-like
-        isotope ratio 11B/10B in BO4 - delta units, in ‰
-    epsilon : float or array-like
-        fractionation factor between BO3 and BO4, in ‰
+def solve_pH_ABT(params):
+    params.H = 10**-params.pHtot
 
-    Returns
-    ----------
-    array-like
-        pH on the total scale
-    """
-    ABO4 = d11_to_A11(d11B4)
-    ABT = d11_to_A11(d11BT)
-    alphaB = epsilon_to_alpha(epsilon)
+# TODO: needs optimising
+def solve_pH_ABO4_ABO3(params):
+    params.H = 10**-params.pHtot
+    params.ABT = calculate_ABT(H=params.H, Ks=params.Ks, alphaB=params.alphaB, ABO3=params.ABO3, ABO4=params.ABO4)
 
-    return -np.log10(calculate_H(Ks,alphaB,ABT,ABO4))
+# TODO: needs optimising
+def solve_ABT_ABO3_ABO4(params):
+    params.H = calculate_H(Ks=params.Ks, ABT=params.ABT, ABO3=params.ABO3, ABO4=params.ABO4)
 
-def calculate_pKB(pH, d11BT, d11B4, epsilonB=get_epsilonB()):
-    """
-    Calculate stoichiometric equilibrium constant for boron with delta inputs
 
-    Parameters
-    ----------
-    pH : array-like
-        pH on the total scale
-    d11BT : array-like
-        The isotope ratio of 11B in total B in delta units, in ‰
-    d11B4 : array-like
-        The isotope ratio of 11B in borate ion (B(OH)4) in delta units, in ‰
-    epsilonB : array-like
-        The fractionation factor between B(OH)3 and B(OH)4- as delta units, in ‰
+SOLVERS = {
+    ('pHtot', 'ABT'): solve_pH_ABT,
+    ('pHtot', 'ABO4'): solve_pH_ABO4_ABO3,
+    ('pHtot', 'ABO3'): solve_pH_ABO4_ABO3,
+    ('ABT', 'ABO4'): solve_ABT_ABO3_ABO4,
+    ('ABT', 'ABO3'): solve_ABT_ABO3_ABO4,
+}
 
-    Returns
-    -------
-    array-like
-        The stoichiometric equilibrium constant for boron (KB)
-    """
-    ABO4 = d11_to_A11(d11B4)
-    ABT = d11_to_A11(d11BT)
-    H = 10.0**-pH
+def n_given(params):
+    valid_inputs = ['ABT', 'ABO3', 'ABO4']
+    return sum(params.get(p) is not None for p in valid_inputs)
 
-    alphaB = epsilon_to_alpha(epsilonB)
+def calculate_ABO3_ABO4(params):
+    params.ABO3 = params.ABO3 or calculate_ABO3(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
+    params.ABO4 = params.ABO4 or calculate_ABO4(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
 
-    return -np.log10(calculate_KB(H,alphaB,ABT,ABO4))
+def delta_to_abundance(params):
+    params.ABT = params.ABT or d11_to_A11(params.dBT)
+    params.ABO3 = params.ABO3 or d11_to_A11(params.dBO3)
+    params.ABO4 = params.ABO4 or d11_to_A11(params.dBO4)
 
-def calculate_d11BT(pH, KB, d11B4, epsilonB=get_epsilonB()):
-    """
-    Calcluates the isotope ratio of total boron in delta units
+def abundance_to_delta(params):
+    params.dBT = params.dBT or A11_to_d11(params.ABT)
+    params.dBO3 = params.dBO3 or A11_to_d11(params.ABO3)
+    params.dBO4 = params.dBO4 or A11_to_d11(params.ABO4)
 
-    Parameters
-    ----------
-    pH : float or array-like
-        pH on the total scale
-    KB : Bunch (dictionary with . access)
-        bunch containing the boron speciation constant KB
-    d11B4 : float or array-like
-        isotope ratio 11B/10B in BO4 - delta units, in ‰
-    epsilonB : float or array-like
-        fractionation factor between BO3 and BO4, units of ‰
+def solve_B_isotopes(params):
+    delta_to_abundance(params)
 
-    Returns
-    -------
-    array-like
-        The isotope ratio 11B/10B in BT - delta units (d11BT), in ‰
-    """
-    ABO4 = d11_to_A11(d11B4)
-    alphaB = epsilon_to_alpha(epsilonB)
-    H = 10.0**-pH
-    return A11_to_d11(calculate_ABT(H,KB,alphaB,ABO4))
+    AB_params = ['pHtot', 'ABT', 'ABO4', 'ABO3']
+    provided = tuple([p for p in AB_params if params.get(p) is not None])
+    # params.inputs += provided
 
-def calculate_d11B4(pH, KB, d11BT, epsilonB=get_epsilonB()):
-    """
-    Calculates the isotope ratio of borate ion in delta units
+    solver = SOLVERS.get(provided)
+    if solver is None:
+        raise ValueError(f"No solver found for parameter combination: {provided}")
 
-    Parameters
-    ----------
-    pH : float or array-like
-        pH on the total scale
-    KB : Bunch (dictionary with . access)
-        bunch containing the boron speciation constant KB
-    d11BT : float or array-like
-        isotope ratio 11B/10B in total boron - delta units, in ‰
-    epsilonB : float or array-like
-        fractionation factor between BO3 and BO4, units of ‰
-    
-    Returns
-    -------
-    array-like
-        The isotope ratio 11B/10B in BO4 - delta units, in ‰
-    """
-    ABOT = d11_to_A11(d11BT)
-    alphaB = epsilon_to_alpha(epsilonB)
+    solver(params)
 
-    return A11_to_d11(calculate_ABO4(10.0**-pH,KB,ABOT,alphaB))
-
-def calculate_epsilon(pH, KB, d11BT, d11B4):
-    """
-    Returns isotope ratio of borate ion in delta units
-
-    Parameters
-    ----------
-    pH : float or array-like
-        pH on the total scale
-    KB : Bunch (dictionary with . access)
-        bunch containing the boron speciation constant KB
-    d11BT : float or array-like
-        isotope ratio 11B/10B in total boron - delta units, in ‰
-    d11B4 : float or array-like
-        isotope ratio 11B/10B in borate ion (B(OH)4) - delta units, in ‰
-        
-    Returns
-    -------
-    array-like
-        fractionation factor between BO3 and BO4 in delta units (epsilon, in ‰)
-    """
-    ABO4 = d11_to_A11(d11B4)
-    ABT = d11_to_A11(d11BT)
-    H = 10.0**-pH
-
-    alphaB = calculate_alpha_ABO4(H,KB,ABT,ABO4)
-
-    return alpha_to_epsilon(alphaB)
+    params.pHtot = params.pHtot or negative_log10_preserve_type(params.H)
+    calculate_ABO3_ABO4(params)
+    abundance_to_delta(params)

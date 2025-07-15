@@ -4,6 +4,11 @@ import uncertainties
 import uncertainties.unumpy as unp
 from cbsyst.helpers import noms, cast_array, Bunch, maxShape, calc_fH
 from .uncertainties import negative_log10_preserve_type, _has_uncertainties, uncertainty_propagation_decorator, _zero_finder_with_uncertainties
+
+from typing import Dict, Tuple, Callable, Optional
+from dataclasses import dataclass
+from . import pH
+
 # Function types
 # Zero-finders: 2-5, 10-15
 # Algebraic: 1, 6-9
@@ -533,7 +538,6 @@ def fCO2_to_pCO2(fCO2, Tc):
 
     return fCO2 / np.exp(P * (B + 2 * delta) / RT)
 
-
 def calc_C_species(
     pHtot=None,
     DIC=None,
@@ -690,7 +694,6 @@ def calc_C_species(
         }
     )
 
-
 def calc_revelle_factor(TA, DIC, BT, PT, SiT, ST, FT, Ks):
     """
     Calculate Revelle Factor
@@ -710,3 +713,159 @@ def calc_revelle_factor(TA, DIC, BT, PT, SiT, ST, FT, Ks):
     fCO2_lo = cCO2(10.0**-pH_lo, DIC, Ks) / Ks.K0
 
     return (fCO2_hi - fCO2_lo) * DIC / (fCO2 * 2 * dDIC)
+
+# CBsyst 1.0 functions
+
+def n_given(params):
+    valid_inputs = ['CO2', 'HCO3', 'CO3', 'TA', 'DIC', 'pCO2', 'fCO2', 'OmegaC', 'OmegaA']
+    return sum(params.get(p) is not None for p in valid_inputs)
+
+def use_Omega(params):
+    if params.OmegaC is not None:
+        params.CO3 = params.OmegaC * params.Ks.KspC / params.Ca
+    if params.OmegaA is not None:
+        params.CO3 = params.OmegaA * params.Ks.KspA / params.Ca
+
+def calculate_Omegas(params):
+    params.OmegaA = params.OmegaA or params.CO3 * params.Ca / params.Ks.KspA
+    params.OmegaC = params.OmegaC or params.CO3 * params.Ca / params.Ks.KspC
+
+def solve_CO2_pHtot(params):
+    params.H = 10.0**-params.pHtot
+    params.DIC = CO2_pH(params.CO2, params.pHtot, params.Ks)
+
+def solve_CO2_HCO3(params):
+    params.H = CO2_HCO3(params.CO2, params.HCO3, params.Ks)
+    params.DIC = CO2_pH(params.CO2, negative_log10_preserve_type(params.H), params.Ks)
+
+def solve_CO2_CO3(params):
+    params.H = CO2_CO3(params.CO2, params.CO3, params.Ks)
+    params.DIC = CO2_pH(params.CO2, negative_log10_preserve_type(params.H), params.Ks)
+
+def solve_CO2_TA(params):
+    params.pHtot = CO2_TA(CO2=params.CO2, TA=params.TA, BT=params.BT, PT=params.PT, SiT=params.SiT, ST=params.ST, FT=params.FT, Ks=params.Ks)
+    params.H = 10.0**-params.pHtot
+    params.DIC = CO2_pH(params.CO2, params.pHtot, params.Ks)
+
+def solve_CO2_DIC(params):
+    params.H = CO2_DIC(params.CO2, params.DIC, params.Ks)
+
+def solve_pHtot_HCO3(params):
+    params.H = 10.0**-params.pHtot
+    params.DIC = pH_HCO3(params.pHtot, params.HCO3, params.Ks)
+
+def solve_pHtot_CO3(params):
+    params.H = 10.0**-params.pHtot
+    params.DIC = pH_CO3(params.pHtot, params.CO3, params.Ks)
+
+def solve_pHtot_TA(params):
+    params.H = 10.0**-params.pHtot
+    params.DIC = pH_TA(pH=params.pHtot, TA=params.TA, BT=params.BT, PT=params.PT, SiT=params.SiT, ST=params.ST, FT=params.FT, Ks=params.Ks)
+
+def solve_pHtot_DIC(params):
+    params.H = 10.0**-params.pHtot
+
+def solve_HCO3_CO3(params):
+    params.H = HCO3_CO3(params.HCO3, params.CO3, params.Ks)
+    params.DIC = pH_CO3(negative_log10_preserve_type(params.H), params.CO3, params.Ks)
+
+def solve_HCO3_TA(params):
+    Warning(
+        "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
+    )
+    params.H = HCO3_TA(params.HCO3, params.TA, params.BT, params.Ks)
+    params.DIC = pH_HCO3(negative_log10_preserve_type(params.H), params.HCO3, params.Ks)
+
+def solve_HCO3_DIC(params):
+    params.H = HCO3_DIC(params.HCO3, params.DIC, params.Ks)
+
+def solve_CO3_TA(params):
+    Warning(
+        "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
+    )
+    params.H = CO3_TA(params.CO3, params.TA, params.BT, params.Ks)
+    params.DIC = pH_CO3(negative_log10_preserve_type(params.H), params.CO3, params.Ks)
+
+def solve_CO3_DIC(params):
+    params.H = CO3_DIC(params.CO3, params.DIC, params.Ks)
+
+def solve_TA_DIC(params):
+    params.pHtot = TA_DIC(TA=params.TA, DIC=params.DIC, BT=params.BT, PT=params.PT, SiT=params.SiT, ST=params.ST, FT=params.FT, Ks=params.Ks)
+    params.H = 10.0**-params.pHtot
+
+SOLVERS = {
+    ('CO2', 'pHtot'): solve_CO2_pHtot,
+    ('CO2', 'HCO3'): solve_CO2_HCO3,
+    ('CO2', 'CO3'): solve_CO2_CO3,
+    ('CO2', 'TA'): solve_CO2_TA,
+    ('CO2', 'DIC'): solve_CO2_DIC,
+    ('pHtot', 'HCO3'): solve_pHtot_HCO3,
+    ('pHtot', 'CO3'): solve_pHtot_CO3,
+    ('pHtot', 'TA'): solve_pHtot_TA,
+    ('pHtot', 'DIC'): solve_pHtot_DIC,
+    ('HCO3', 'CO3'): solve_HCO3_CO3,
+    ('HCO3', 'TA'): solve_HCO3_TA,
+    ('HCO3', 'DIC'): solve_HCO3_DIC,
+    ('CO3', 'TA'): solve_CO3_TA,
+    ('CO3', 'DIC'): solve_CO3_DIC,
+    ('TA', 'DIC'): solve_TA_DIC,
+}
+
+def convert_CO2(params):
+    if params.CO2 is None:
+        if params.fCO2 is not None:
+            params.CO2 = fCO2_to_CO2(params.fCO2, params.Ks)
+        elif params.pCO2 is not None:
+            params.fCO2 = pCO2_to_fCO2(params.pCO2, params.T_in)
+            params.CO2 = fCO2_to_CO2(params.fCO2, params.Ks)
+
+def can_solve_carbon(params):
+    # check that two parameters are available
+    valid_inputs = ['CO2', 'pHtot', 'HCO3', 'CO3', 'TA', 'DIC', 'pCO2', 'fCO2', 'OmegaC', 'OmegaA']
+    n_inputs = sum(params.get(p) is not None for p in valid_inputs)
+
+    return n_inputs == 2
+
+def calculate_remaining_C_species(params):
+    # populate missing carbon parameters
+    params.CO2 = params.CO2 or cCO2(params.H, params.DIC, params.Ks)
+    params.fCO2 = params.fCO2 or CO2_to_fCO2(params.CO2, params.Ks)
+    params.pCO2 = params.pCO2 or fCO2_to_pCO2(params.fCO2, params.T_in)
+    params.HCO3 = params.HCO3 or cHCO3(params.H, params.DIC, params.Ks)
+    params.CO3 = params.CO3 or cCO3(params.H, params.DIC, params.Ks)
+    params.pHtot = params.pHtot or negative_log10_preserve_type(params.H)
+
+    TA_COMPONENTS = ['TA', 'CAlk', 'BAlk', 'PAlk', 'SiAlk', 'OH', 'Hfree', 'HSO4', 'HF']
+    for par, val in zip(TA_COMPONENTS, cTA(
+                H=params.H, DIC=params.DIC, BT=params.BT, PT=params.PT, 
+                SiT=params.SiT, ST=params.ST, FT=params.FT, 
+                Ks=params.Ks, mode="multi"
+            )):
+        params[par] = params[par] or val
+
+def solve_C_system(params):
+
+    convert_CO2(params)
+    use_Omega(params)
+
+    # identify pair of provided params
+    carbon_params = ['CO2', 'pHtot', 'HCO3', 'CO3', 'TA', 'DIC']
+    provided = tuple([p for p in carbon_params if params.get(p) is not None])
+    # params.inputs += provided 
+
+    solver = SOLVERS.get(provided)
+    if solver is None:
+        n_provided = len(provided)
+        if n_provided < 2:
+            msg = f"Not enough carbon parameters provided: {provided}"
+        elif n_provided > 2:
+            msg = f"Too many carbon parameters provided: {provided}"
+        else:
+            msg = f"No carbon system solver for parameter combination: {provided}"
+        raise ValueError(msg)
+    
+    # solve for H and DIC
+    solver(params)
+
+    calculate_remaining_C_species(params)
+    calculate_Omegas(params)
