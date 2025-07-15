@@ -819,7 +819,7 @@ def CBsys(
         ps.update(calc_B_isotopes(**ps))
         ps.update(calc_B_species(**ps))
         ps.update(calc_C_species(**ps))
-    # if ther eare two carbon species, or one carbon species + TA and BT
+    # if there are two carbon species, or one carbon species + TA and BT
     elif (nCspec == 2) | ((nCspec == 1) & (NnotNone(ps.TA, ps.BT) == 2)):
         ps.update(calc_C_species(**ps))
         ps.update(calc_B_species(**ps))
