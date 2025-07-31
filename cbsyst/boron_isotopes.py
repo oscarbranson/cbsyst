@@ -104,7 +104,8 @@ def d11_to_A11(d11, SRM_ratio=4.04367):
     array-like
        Delta notation (d11) expressed as fractional abundance (A11).
     """
-    return SRM_ratio * (d11 / 1000 + 1) / (SRM_ratio * (d11 / 1000 + 1) + 1)
+    print(d11)
+    return SRM_ratio * (d11 / 1e3 + 1.0) / (SRM_ratio * (d11 / 1e3 + 1.0) + 1.0)
 
 def d11_to_R11(d11, SRM_ratio=4.04367):
     """
@@ -464,17 +465,19 @@ def calc_B_isotopes(pHtot=None, ABT=None, ABO3=None, ABO4=None, alphaB=None, Ks=
 # CBsyst 1.0 functions
 
 def solve_pH_ABT(params):
-    params.H = 10**-params.pHtot
+    params.H = params.H or 10**-params.pHtot
 
 # TODO: needs optimising
 def solve_pH_ABO4_ABO3(params):
-    params.H = 10**-params.pHtot
+    params.H = params.H or 10**-params.pHtot
     params.ABT = calculate_ABT(H=params.H, Ks=params.Ks, alphaB=params.alphaB, ABO3=params.ABO3, ABO4=params.ABO4)
 
 # TODO: needs optimising
 def solve_ABT_ABO3_ABO4(params):
-    params.H = calculate_H(Ks=params.Ks, ABT=params.ABT, ABO3=params.ABO3, ABO4=params.ABO4)
+    params.H = params.H or calculate_H(Ks=params.Ks, ABT=params.ABT, ABO3=params.ABO3, ABO4=params.ABO4, alphaB=params.alphaB)
 
+def solve_ABO3_ABO4(params):
+    raise NotImplementedError('ABT and one of ABO3 or ABO4 must be specified if pH is missing.')
 
 SOLVERS = {
     ('pHtot', 'ABT'): solve_pH_ABT,
@@ -482,25 +485,37 @@ SOLVERS = {
     ('pHtot', 'ABO3'): solve_pH_ABO4_ABO3,
     ('ABT', 'ABO4'): solve_ABT_ABO3_ABO4,
     ('ABT', 'ABO3'): solve_ABT_ABO3_ABO4,
+    ('ABO3', 'ABO4'): solve_ABO3_ABO4,
+    ('ABT', 'ABO3', 'ABO4'): solve_ABO3_ABO4,
 }
 
+def given(params):
+    """Check which boron isotope parameters are given in the parameters"""
+    valid_inputs = ['ABT', 'ABO3', 'ABO4', 'dBT', 'dBO3', 'dBO4']
+    return [params.get(p) for p in valid_inputs if params.get(p) is not None]
+
 def n_given(params):
-    valid_inputs = ['ABT', 'ABO3', 'ABO4']
-    return sum(params.get(p) is not None for p in valid_inputs)
+    return len(given(params))
 
 def calculate_ABO3_ABO4(params):
     params.ABO3 = params.ABO3 or calculate_ABO3(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
     params.ABO4 = params.ABO4 or calculate_ABO4(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
 
 def delta_to_abundance(params):
-    params.ABT = params.ABT or d11_to_A11(params.dBT)
-    params.ABO3 = params.ABO3 or d11_to_A11(params.dBO3)
-    params.ABO4 = params.ABO4 or d11_to_A11(params.dBO4)
+    if params.dBT is not None:
+        params.ABT = params.ABT or d11_to_A11(params.dBT)
+    if params.dBO3 is not None:
+        params.ABO3 = params.ABO3 or d11_to_A11(params.dBO3)
+    if params.dBO4 is not None:
+        params.ABO4 = params.ABO4 or d11_to_A11(params.dBO4)
 
 def abundance_to_delta(params):
-    params.dBT = params.dBT or A11_to_d11(params.ABT)
-    params.dBO3 = params.dBO3 or A11_to_d11(params.ABO3)
-    params.dBO4 = params.dBO4 or A11_to_d11(params.ABO4)
+    if params.ABT is not None:
+        params.dBT = params.dBT or A11_to_d11(params.ABT)
+    if params.ABO3 is not None:
+        params.dBO3 = params.dBO3 or A11_to_d11(params.ABO3)
+    if params.ABO4 is not None:
+        params.dBO4 = params.dBO4 or A11_to_d11(params.ABO4)
 
 def solve_B_isotopes(params):
     delta_to_abundance(params)
@@ -508,6 +523,8 @@ def solve_B_isotopes(params):
     AB_params = ['pHtot', 'ABT', 'ABO4', 'ABO3']
     provided = tuple([p for p in AB_params if params.get(p) is not None])
     # params.inputs += provided
+    
+    print(provided, [params.get(p) for p in provided])
 
     solver = SOLVERS.get(provided)
     if solver is None:
