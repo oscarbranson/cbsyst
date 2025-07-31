@@ -3,8 +3,12 @@ from .uncertainties import negative_log10_preserve_type
 
 pH_scales = ['pHtot', 'pHNBS', 'pHsws', 'pHfree']
 
+def given(params):
+    """Check which pH scales are given in the parameters"""
+    return [params.get(p) for p in pH_scales if params.get(p) is not None]
+
 def n_given(params):
-    return sum(params.get(p) is not None for p in pH_scales)
+    return len(given(params))
 
 def calc_fH(TempK, Sal):
     # Same as CO2SYS
