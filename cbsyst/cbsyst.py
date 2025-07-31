@@ -1,961 +1,370 @@
 """
 Functions for calculating the carbon and boron chemistry of seawater.
 """
-
+import inspect
 import numpy as np
-import pandas as pd
-from cbsyst.carbon import calc_C_species, calc_revelle_factor, pCO2_to_fCO2, fCO2_to_CO2
-from cbsyst.boron import calc_B_species
-from cbsyst.boron_isotopes import d11_to_A11, A11_to_d11, get_alphaB, calc_B_isotopes
-from cbsyst.helpers import Bunch, NnotNone, calc_FT, calc_ST, calc_BT, calc_pH_scales
 from cbsyst.uncertainties import remove_negatives
-from kgen import calc_Ks
 
-# C Speciation
-# ------------
+from .dataclasses import CBsystData, create_dataclass
+from . import io, utils, units, constants, carbon, boron, boron_isotopes, pH
+
+from typing import Optional, Union, overload
+from typing_extensions import Unpack, TypedDict    
+
 def Csys(
-    pHtot=None, DIC=None, TA=None,
-    CO2=None, HCO3=None, CO3=None,
-    pCO2=None, fCO2=None,
-    BT=None,
-    Ca=0.0102821, Mg=0.0528171,
-    T_in=25.0, T_out=None, 
-    S_in=35.0, S_out=None,
-    P_in=0.0, P_out=None,
-    PT=0.0, SiT=0.0,
-    ST=None, FT=None,
-    pHsws=None, pHfree=None, pHNBS=None,
-    unit="umol", Ks=None,
-    pdict=None,
-    OmegaC=None, OmegaA=None,
-    MyAMI_mode="calculate"
-):
-    """
-    Calculate the carbon chemistry of seawater from a minimal parameter set.
-
-    Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
-    Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468) Appendix B
-
-    Inputs must either be single values, arrays of equal length or a mixture of both.
-    If you use arrays of unequal length, it won't work.
-
-    Error propagation:
-    If inputs are ufloat or uarray (from uncertainties package) errors will
-    be propagated through all calculations.
+    # Carbon System Parameters
+    pHtot: Optional[Union[float, np.ndarray]] = None,
+    pHsws: Optional[Union[float, np.ndarray]] = None,
+    pHfree: Optional[Union[float, np.ndarray]] = None,
+    pHNBS: Optional[Union[float, np.ndarray]] = None,
+    DIC: Optional[Union[float, np.ndarray]] = None,
+    TA: Optional[Union[float, np.ndarray]] = None,
+    CO2: Optional[Union[float, np.ndarray]] = None,
+    HCO3: Optional[Union[float, np.ndarray]] = None,
+    CO3: Optional[Union[float, np.ndarray]] = None,
+    pCO2: Optional[Union[float, np.ndarray]] = None,
+    fCO2: Optional[Union[float, np.ndarray]] = None,
+    OmegaC: Optional[Union[float, np.ndarray]] = None,
+    OmegaA: Optional[Union[float, np.ndarray]] = None,
+    # Boron System Parameters
+    BT: Optional[Union[float, np.ndarray]] = None,
+    BO3: Optional[Union[float, np.ndarray]] = None,
+    BO4: Optional[Union[float, np.ndarray]] = None,
+    # Boron Isotope Parameters
+    dBT: Optional[Union[float, np.ndarray]] = 39.61,
+    dBO3: Optional[Union[float, np.ndarray]] = None,
+    dBO4: Optional[Union[float, np.ndarray]] = None,
+    ABT: Optional[Union[float, np.ndarray]] = None,
+    ABO3: Optional[Union[float, np.ndarray]] = None,
+    ABO4: Optional[Union[float, np.ndarray]] = None,
+    alphaB:  Optional[Union[float, np.ndarray]] = 1.0272,
+    # Conservative Ions
+    Ca: Union[float, np.ndarray] = 0.0102821,
+    Mg: Union[float, np.ndarray] = 0.0528171,
+    PT: Union[float, np.ndarray] = 0.0,
+    SiT: Union[float, np.ndarray] = 0.0,
+    ST: Optional[Union[float, np.ndarray]] = None,
+    FT: Optional[Union[float, np.ndarray]] = None,
+    # Conditions
+    T_in: Union[float, np.ndarray] = 25.0,
+    T_out: Optional[Union[float, np.ndarray]] = None,
+    S_in: Union[float, np.ndarray] = 35.0,
+    S_out: Optional[Union[float, np.ndarray]] = None,
+    P_in: Union[float, np.ndarray] = 0.0,
+    P_out: Optional[Union[float, np.ndarray]] = None,
+    # Constants
+    Ks: Optional[object] = None,
+    # Configuration
+    unit: str = "umol",
+    MyAMI_mode: str = "calculate",
+    ) ->CBsystData:
     
-    NOTE: Error propagation is not implemented for K calculation - only for input parameters.
-
-    Concentration Units
-    +++++++++++++++++++
-    * Ca and Mg must be in molar units.
-    * All other units must be the same, and can be specified in the 'unit' variable. Defaults to umolar.
-
-    Parameters
-    ----------
-    pH, DIC, CO2, HCO3, CO3, TA, OmegaC, OmegaA : array-like
-        Carbon system parameters. Two of these must be provided.
-    BT : array-like
-        Total B at the input salinity (in umol/kg) used in Alkalinity calculations. 
-        If missing, this is calculated as 0.000416 * Sal/35 
-        (Uppstrom et al. 1974).
-    Ca, Mg : array-like
-        The [Ca] and [Mg] of STANDARD seawater (i.e. 35 salinity), in mol / kg.
-        Used in calculating MyAMI constants.
-    T_in, S_in : array-like
-        Temperature in Celcius and Salinity in PSU that the
-        measurements were conducted under.
-        Used in calculating constants.
-    P_in : array-like
-        Pressure in Bar that the measurements were conducted under.
-        Used in pressure-correcting constants.
-    T_out, S_out : array-like
-        Temperature in Celcius and Salinity in PSU of the desired
-        output conditions.
-        Used in calculating constants.
-    P_in : array-like
-        Pressure in Bar of the desired output conditions.
-        Used in pressure-correcting constants.
-    unit : str
-        Concentration units of C and B parameters (all must be in
-        the same units).
-        Can be 'mol', 'mmol', 'umol', 'nmol', 'pmol' or 'fmol'.
-        Used in calculating Alkalinity. Default is 'umol'.
-    Ks : dict
-        A dictionary of constants. Must contain keys
-        'K1', 'K2', 'KB' and 'KW'.
-        If None, Ks are calculated using MyAMI model.
-    pdict : dict
-        Optionally, you can provide some or all parameters as a dict,
-        with keys the same as the parameter names above. Any parameters
-        included in the dict will overwrite manually specified
-        parameters. This is particularly useful if you're including
-        this in other code.
-
-    Returns
-    -------
-    dict(/Bunch) containing all calculated parameters.
-    """
-
-    # Bunch inputs
-    ps = Bunch(locals())
-    if isinstance(pdict, dict):
-        ps.update(pdict)
-
-    # convert unit to multiplier
-    udict = {
-        "mol": 1.0,
-        "mmol": 1.0e3,
-        "umol": 1.0e6,
-        "nmol": 1.0e9,
-        "pmol": 1.0e12,
-        "fmol": 1.0e15,
+    # get parameter defaults
+    sig = inspect.signature(Csys)
+    defaults = {
+        param.name: param.default 
+        for param in sig.parameters.values() 
+        if param.default is not None
     }
-    if isinstance(ps.unit, str):
-        ps.unit = udict[ps.unit]
 
-    upar = ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "PT", "SiT"]
-    if ps.unit != 1:    
-        for p in upar:
-            if ps[p] is not None:
-                ps[p] = np.divide(ps[p], ps.unit)  # convert to molar
-    
-    gupar = ['pCO2', 'fCO2']  # special unit case: pCO2, fCO2 because pCO2 is always in ppm
-    for p in gupar:
-        if ps[p] is not None:
-            ps[p] = np.divide(ps[p], 1e6)  # convert to mole fraction
-    
-    # Conserved seawater chemistry
-    if ps.ST is None:
-        ps.ST = calc_ST(ps.S_in)
-    if ps.FT is None:
-        ps.FT = calc_FT(ps.S_in)
-    if ps.BT is None:
-        ps.BT = calc_BT(ps.S_in)
+    # create data object
+    csys = create_dataclass(**locals())
 
-    # Remove negative values 
-    for p in ["DIC", "CO2", "HCO3", "CO3", "BT", "fCO2", "pCO2", "PT", "SiT"]:
-        ps[p] = remove_negatives(ps[p])
+    # identify inputs
+    # csys.inputs = {
+    #     k: csys.get(k)
+    #     for k in csys.__dataclass_fields__ 
+    #     if (csys.get(k) is not None) and 
+    #     (k not in ['inputs']) and
+    #     (defaults.get(k) != csys.get(k))
+    # }
+
+    # calculation logic:
+    n_pH_given = pH.n_given(csys)
+    n_C_given = carbon.n_given(csys)
+    n_B_given = boron.n_given(csys)
+    n_iso_given = boron_isotopes.n_given(csys)
+
+    print(n_pH_given, n_C_given, n_B_given, n_iso_given)
+
+    csys.Ks = constants.calc_Ks(csys)  # create_dataclasscalculate constants
+    units.convert_to_molar(csys)  # convert all concentration units to molar
+    constants.calc_conservative_composition(csys)  # calculate seawater composition from salinity
+
+    # 1. pH not given
+    if n_pH_given == 0:
+        # a. two carbon species given --> use to get pH, then calculate boron and isotopes
+        if n_C_given == 2:
+            carbon.solve_C_system(csys)  # calculate carbon system
+        # b. two boron species given --> use to get pH, then calculate carbon and isotopes
+        elif n_B_given == 2:
+            boron.solve_B_system(csys)  # calculate boron system
+        # c. two isotope params given --> use to get pH, then calculate carbon and boron speciation
+        elif n_iso_given >= 2:
+            boron_isotopes.solve_B_isotopes(csys)  # calculate boron isotopes
+    
+    # at this stage, pH is known
+    pH.convert_scales(csys)
+    
+    # if the C system was partially provided, calculate it
+    if n_C_given == 1:
+        print('calculating carbon')
+        carbon.solve_C_system(csys)
+    # if the B system was partially provided, calculate it
+    if n_B_given == 1:
+        print('calculating boron')
+        boron.solve_B_system(csys)
+    # if the isotope system was partially provided, calculate it
+    if n_iso_given == 1:
+        print('calculating boron isotopes')
+        boron_isotopes.solve_B_isotopes(csys)
+
+    # # if has an output condition, recalculate at that condition.
+    # if utils.has_output_condition(csys):
+    #     out = Csys(
+    #         TA=csys.TA, 
+    #         DIC=csys.DIC, 
+    #         T_in=csys.T_out or csys.T_in,
+    #         P_in=csys.P_out or csys.P_in,
+    #         S_in=csys.S_out or csys.S_in,
+    #         unit=csys.unit,
+    #         Ca=csys.Ca,
+    #         Mg=csys.Mg,
+    #         )
+    #     out.input_conditions = csys
+
+    units.convert_from_molar(csys)  # convert back to original concentration unit
+
+    return csys
+
+# def Csys(
+#         pHtot=None, DIC=None, TA=None,
+#         CO2=None, HCO3=None, CO3=None,
+#         pCO2=None, fCO2=None,
+#         BT=None,
+#         Ca=0.0102821, Mg=0.0528171,
+#         T_in=25.0, T_out=None, 
+#         S_in=35.0, S_out=None,
+#         P_in=0.0, P_out=None,
+#         PT=0.0, SiT=0.0,
+#         ST=None, FT=None,
+#         pHsws=None, pHfree=None, pHNBS=None,
+#         unit="umol", Ks=None,
+#         pdict=None,
+#         OmegaC=None, OmegaA=None,
+#         MyAMI_mode="calculate") -> CBsystData:
+    
+#     ps = ClassFactory(**locals())
+
+#     io.validate_carbon_inputs(ps)
+
+#     ps.Ks = constants.calc_Ks(ps)
+
+#     units.convert_to_molar(ps)
+
+#     carbon.use_Omega(ps)
+
+#     constants.calc_conservative_elements(ps)
+
+#     carbon.solve_C_system(ps)
+
+#     carbon.calculate_Omegas(ps)
+
+#     units.convert_from_molar(ps)
+
+#     if utils.has_output_condition(ps):
+#         out = Csys(
+#             TA=ps.TA, 
+#             DIC=ps.DIC, 
+#             T_in=ps.T_out or ps.T_in,
+#             P_in=ps.P_out or ps.P_in,
+#             S_in=ps.S_out or ps.S_in,
+#             unit=ps.unit,
+#             Ca=ps.Ca,
+#             Mg=ps.Mg,
+#             )
+#         out.input_conditions = ps
+
+    # return ps
 
     
-    # Calculate Ks at input conditions
-    if isinstance(Ks, dict):
-        ps.Ks = Bunch(Ks)
-    else:
-        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT, MyAMI_mode=ps.MyAMI_mode))
+
+
+# class CarbonSystemCalculator:
+#     """Main calculator for carbon system"""
+    
+#     def __init__(self):
+#         pass
+    
+#     def calculate(self, **kwargs) -> CarbonSystemParams:
+#         """Calculate carbon system from parameters"""
+#         # Parse inputs
+#         params = self._parse_inputs(kwargs)
         
-    # Calculate pH scales at input conditions (does nothing if no pH given)
-    ps.update(
-        calc_pH_scales(
-            pHtot=ps.pHtot,
-            pHfree=ps.pHfree,
-            pHsws=ps.pHsws,
-            pHNBS=ps.pHNBS,
-            ST=ps.ST,
-            FT=ps.FT,
-            TempK=ps.T_in + 273.15,
-            Sal=ps.S_in,
-            Ks=ps.Ks
-        )
-    )
-    
-    # If OmegaA or OmegaC are provided, calculate CO3 from them
-    if OmegaA is not None:
-        ps['CO3'] = OmegaA * ps.Ks.KspA / (ps.Ca * ps.S_in / 35.)
-    elif OmegaC is not None:
-        ps['CO3'] = OmegaC * ps.Ks.KspC / (ps.Ca * ps.S_in / 35.)
-    
-    # calculate C system at input conditions
-    ps.update(calc_C_species(**ps))
-    
-    # Only calculate revelle factor if no uncertainties are present
-    # (the revelle factor calculation uses iterative methods incompatible with uncertainties)
-    has_uncertainties = any(hasattr(ps.get(param), 'nominal_value') for param in ['TA', 'DIC', 'CO2', 'HCO3', 'CO3'] if ps.get(param) is not None)
-    
-    if not has_uncertainties:
-        ps["revelle_factor"] = calc_revelle_factor(
-            TA=ps.TA,
-            DIC=ps.DIC,
-            BT=ps.BT,
-            PT=ps.PT,
-            SiT=ps.SiT,
-            ST=ps.ST,
-            FT=ps.FT,
-            Ks=ps.Ks,
-        )
-    else:
-        ps["revelle_factor"] = None  # Skip calculation when uncertainties are present
-    
-    # calc Omega
-    oCa = ps.Ca * ps.S_in / 35.
-    ps['OmegaA'] = ps['CO3'] * oCa / ps.Ks.KspA
-    ps['OmegaC'] = ps['CO3'] * oCa / ps.Ks.KspC
-
-    # clean up output
-    outputs = [
-        "BT", "CO2", "CO3", "Ca", "DIC", "H", "HCO3", 
-        "Mg", "S_in", "T_in", "TA", "CAlk", "PAlk", 
-        "SiAlk", "OH", 'OmegaA', 'OmegaC', 'revelle_factor']
-    for k in outputs:
-        if not isinstance(ps[k], np.ndarray):
-            # convert all outputs to (min) 1D numpy arrays.
-            ps[k] = np.array(ps[k], ndmin=1)
-    if ps.unit != 1:
-        for p in upar + ["CAlk", "BAlk", "PAlk", "SiAlk", "OH", "HSO4", "HF", "Hfree"]:
-            ps[p] *= ps.unit  # convert back to input units
-        for p in gupar:
-            ps[p] = np.multiply(ps[p], 1e6)  # convert to ppm
-
-    # Calculate Output Conditions
-    # ===========================
-    if ps.T_out is not None or ps.S_out is not None or ps.P_out is not None:
-        if ps.T_out is None:
-            ps.T_out = ps.T_in
-        if ps.S_out is None:
-            ps.S_out = ps.S_in
-        else:
-            # if salinity is modified, update salinity-dependent parameters
-            BT = ps.BT * ps.S_out / ps.S_in
-            ST = ps.ST * ps.S_out / ps.S_in
-            FT = ps.FT * ps.S_out / ps.S_in
-        if ps.P_out is None:
-            ps.P_out = ps.P_in
-        # assumes conserved alkalinity and DIC
+#         # Validate inputs
+#         self.validator.validate_inputs(params)
         
-        # This needs to be different depending on whether T or S is changing.
-        out_cond = Csys(
-            TA=ps.TA,
-            DIC=ps.DIC,
-            T_in=ps.T_out,
-            S_in=ps.S_out,
-            P_in=ps.P_out,
-            unit=ps.unit,
-            Ca=Ca,
-            Mg=Mg,
-            BT=BT,
-            FT=FT,
-            ST=ST,
-        )
-
-        # rename parameters in output conditions
-        outputs = [
-            "BAlk", "BT", "CAlk", "CO2", "CO3", "DIC", "H", "HCO3", 
-            "HF", "HSO4", "Hfree", "Ks", "OH", "PAlk", "SiAlk", "TA", "FT",
-            "PT", "ST", "SiT", "fCO2", "pCO2", "pHfree", "pHsws", 
-            "pHtot", "pHNBS", 'OmegaA', 'OmegaC', "revelle_factor",
-        ]
-
-        ps.update({k + "_in": ps[k] for k in outputs})
-        ps.update({k: out_cond[k] for k in outputs})
-
-    # remove some superfluous outputs
-    rem = ["pdict"]
-    for r in rem:
-        if r in ps:
-            del ps[r]
-
-    return ps
-
-
-# B Speciation
-# ------------
-def Bsys(
-    pHtot=None,
-    BT=None,
-    BO3=None,
-    BO4=None,
-    ABT=None,
-    ABO3=None,
-    ABO4=None,
-    dBT=None,
-    dBO3=None,
-    dBO4=None,
-    alphaB=None,
-    T_in=25.0,
-    S_in=35.0,
-    P_in=0.0,
-    Ca=0.0102821,
-    Mg=0.0528171,
-    ST=None,
-    FT=None,
-    pHsws=None,
-    pHfree=None,
-    pHNBS=None,
-    Ks=None,
-    pdict=None,
-    MyAMI_mode="calculate"
-):
-    """
-    Calculate the boron chemistry of seawater from a minimal parameter set.
-
-    Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
-    Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468).
-
-    Inputs must either be single values, arrays of equal length or a mixture of both.
-    If you use arrays of unequal length, it won't work.
-
-    Error propagation:
-    If inputs are ufloat or uarray (from uncertainties package) errors will
-    be propagated through all calculations.
-
-    Concentration Units
-    +++++++++++++++++++
-    * All concentrations must be in the same units. Returned in the same units as inputs.
-
-    Parameters
-    ----------
-    pH, BT, BO3, BO4 : array-like
-        Boron system parameters. Two of these must be provided.
-    dBT, dBO3, dBO4, ABT, ABO3, ABO4 : array-like
-        delta (d) or fractional abundance (A) values for the Boron
-        isotope system. One of these must be provided.
-    alphaB : array-like
-        The alpha value for BO3-BO4 isotope fractionation.
-    T, S : array-like
-        Temperature in Celcius and Salinity in PSU.
-        Used in calculating MyAMI constants.
-    P : array-like
-        Pressure in Bar.
-        Used in calculating MyAMI constants.
-    Ca, Mg : arra-like
-        The [Ca] and [Mg] of STANDARD seawater (i.e. 35 salinity), in mol / kg.
-        Used in calculating MyAMI constants.
-    Ks : dict
-        A dictionary of constants. Must contain keys
-        'K1', 'K2', 'KB' and 'KW'.
-        If None, Ks are calculated using MyAMI model.
-    pdict : dict
-        Optionally, you can provide some or all parameters as a dict,
-        with keys the same as the parameter names above. Any parameters
-        included in the dict will overwrite manually specified
-        parameters. This is particularly useful if you're including
-        this in other code.
-
-    Returns
-    -------
-    dict(/Bunch) containing all calculated parameters.
-    """
-    # input checks
-    if NnotNone(BT, BO3, BO4) < 1:
-        raise ValueError("Must provide at least one of BT, BO3 or BO4")
-    if NnotNone(dBT, dBO3, dBO4, ABT, ABO3, ABO4) < 1:
-        raise ValueError("Must provide one of dBT, dBO3, dBO4, ABT, ABO3 or ABO4")
-
-    # Bunch inputs
-    ps = Bunch(locals())
-    if isinstance(pdict, dict):
-        ps.update(pdict)
-
-    # Conserved seawater chemistry
-    if ps.ST is None:
-        ps.ST = calc_ST(ps.S_in)
-    if ps.FT is None:
-        ps.FT = calc_FT(ps.S_in)
-    
-    # Remove negative values 
-    for p in ["BT", "BO3", "BO4", "ST", "FT"]:
-        if ps[p] is not None:
-            if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
-                ps[p][ps[p] < 0] = np.nan
-            elif ps[p] < 0:
-                ps[p] = np.nan
-
-    # Calculate Ks
-    ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT, MyAMI_mode=ps.MyAMI_mode))
-
-    # Calculate pH scales (does nothing if no pH given)
-    ps.update(
-        calc_pH_scales(
-            pHtot=ps.pHtot,
-            pHfree=ps.pHfree,
-            pHsws=ps.pHsws,
-            pHNBS=ps.pHNBS,
-            ST=ps.ST,
-            FT=ps.FT,
-            TempK=ps.T_in + 273.15,
-            Sal=ps.S_in,
-            Ks=ps.Ks,
-        )
-    )
-    
-    # calcualte pH if not provided.
-    if ps.pHtot is None:
-        if ps.dBT is None and ps.ABT is None:
-            ps.dBT = 39.61
-        if ps.dBT is not None:
-            ps.ABT = d11_to_A11(ps.dBT)
-        if ps.dBO3 is not None:
-            ps.ABO3 = d11_to_A11(ps.dBO3)
-        if ps.dBO4 is not None:
-            ps.ABO4 = d11_to_A11(ps.dBO4)
-        if ps.alphaB is None:
-            ps.alphaB = get_alphaB()
-            
-        ps.update(calc_B_isotopes(**ps))
-
-    ps.update(calc_B_species(**ps))
-
-    # If pH not calced yet, calculate on all scales (does nothing if all pH scales already calculated)
-    ps.update(
-        calc_pH_scales(
-            pHtot=ps.pHtot,
-            pHfree=ps.pHfree,
-            pHsws=ps.pHsws,
-            pHNBS=ps.pHNBS,
-            ST=ps.ST,
-            FT=ps.FT,
-            TempK=ps.T_in + 273.15,
-            Sal=ps.S_in,
-            Ks=ps.Ks,
-        )
-    )
-
-    # If any isotope parameter specified, calculate the isotope systen.
-    if NnotNone(ps.ABT, ps.ABO3, ps.ABO4, ps.dBT, ps.dBO3, ps.dBO4) != 0:
-        ps.update(ABsys(pdict=ps))
-
-    for k in ["BT", "H", "BO3", "BO4", "Ca", "Mg", "S_in", "T_in"]:
-        # convert all outputs to (min) 1D numpy arrays.
-        if not isinstance(ps[k], np.ndarray):
-            # convert all outputs to (min) 1D numpy arrays.
-            ps[k] = np.array(ps[k], ndmin=1)
-
-    # remove some superfluous outputs
-    rem = ["pdict"]
-    for r in rem:
-        if r in ps:
-            del ps[r]
-
-    return ps
-
-
-# B Isotopes
-# ----------
-def ABsys(
-    pHtot=None,
-    ABT=None,
-    ABO3=None,
-    ABO4=None,
-    dBT=None,
-    dBO3=None,
-    dBO4=None,
-    alphaB=None,
-    T_in=25.0,
-    S_in=35.0,
-    P_in=0.0,
-    Ca=0.0102821,
-    Mg=0.0528171,
-    ST=None,
-    FT=None,
-    pHsws=None,
-    pHfree=None,
-    pHNBS=None,
-    Ks=None,
-    pdict=None,
-    MyAMI_mode="calculate"
-):
-    """
-    Calculate the boron isotope chemistry of seawater from a minimal parameter set.
-
-    Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
-    Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468).
-
-    Inputs must either be single values, arrays of equal length or a mixture of both.
-    If you use arrays of unequal length, it won't work.
-
-    Error propagation:
-    If inputs are ufloat or uarray (from uncertainties package) errors will
-    be propagated through all calculations.
-
-    Concentration Units
-    +++++++++++++++++++
-    * 'A' is fractional abundance (11B / BT)
-    * 'd' are delta values
-    Either specified, both returned.
-
-    Parameters
-    ----------
-    pH, ABT, ABO3, ABO4, dBT, dBO3, dBO4 : array-like
-        Boron isotope system parameters. Two of pH, {ABT, dBT},
-        {ABO4, dBO4}, {ABO3, dBO3} must be provided.
-    alphaB : array-like
-        Alpha value describing B fractionation (1.0XXX).
-        If missing, it's calculated using the temperature
-        sensitive formulation of Honisch et al (2008)
-    T, S : array-like
-        Temperature in Celcius and Salinity in PSU.
-        Used in calculating MyAMI constants.
-    P : array-like
-        Pressure in Bar.
-        Used in calculating MyAMI constants.
-    Ca, Mg : arra-like
-        The [Ca] and [Mg] of STANDARD seawater (i.e. 35 salinity), in mol / kg.
-        Used in calculating MyAMI constants.
-    Ks : dict
-        A dictionary of constants. Must contain keys
-        'K1', 'K2', 'KB' and 'KW'.
-        If None, Ks are calculated using MyAMI model.
-    pdict : dict
-        Optionally, you can provide some or all parameters as a dict,
-        with keys the same as the parameter names above. Any parameters
-        included in the dict will overwrite manually specified
-        parameters. This is particularly useful if you're including
-        this in other code.
-
-    Returns
-    -------
-    dict(/Bunch) containing all calculated parameters.
-    """
-
-    # Bunch inputs
-    ps = Bunch(locals())
-    if isinstance(pdict, dict):
-        ps.update(pdict)
-
-    # Conserved seawater chemistry
-    if ps.ST is None:
-        ps.ST = calc_ST(ps.S_in)
-    if ps.FT is None:
-        ps.FT = calc_FT(ps.S_in)
-
-    # Calculate Ks
-    if isinstance(Ks, dict):
-        ps.Ks = Bunch(Ks)
-    else:
-        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT, MyAMI_mode=ps.MyAMI_mode))
-
-    # Calculate pH scales (does nothing if no pH given)
-    ps.update(
-        calc_pH_scales(
-            pHtot=ps.pHtot,
-            pHfree=ps.pHfree,
-            pHsws=ps.pHsws,
-            pHNBS=ps.pHNBS,
-            ST=ps.ST,
-            FT=ps.FT,
-            TempK=ps.T_in + 273.15,
-            Sal=ps.S_in,
-            Ks=ps.Ks,
-        )
-    )
-
-    # if deltas provided, calculate corresponding As
-    if ps.dBT is not None:
-        ps.ABT = d11_to_A11(ps.dBT)
-    if ps.dBO3 is not None:
-        ps.ABO3 = d11_to_A11(ps.dBO3)
-    if ps.dBO4 is not None:
-        ps.ABO4 = d11_to_A11(ps.dBO4)
-
-    # calculate alpha
-    if alphaB is None:
-        ps.alphaB = get_alphaB()
-    else:
-        ps.alphaB = alphaB
-
-    ps.update(calc_B_isotopes(**ps))
-
-    if ps.dBT is None:
-        ps.dBT = A11_to_d11(ps.ABT)
-    if ps.dBO3 is None:
-        ps.dBO3 = A11_to_d11(ps.ABO3)
-    if ps.dBO4 is None:
-        ps.dBO4 = A11_to_d11(ps.ABO4)
-
-    for k in [
-        "ABO3",
-        "ABO4",
-        "ABT",
-        "Ca",
-        "H",
-        "Mg",
-        "S_in",
-        "T_in",
-        "alphaB",
-        "dBO3",
-        "dBO4",
-        "dBT",
-        "pHtot",
-    ]:
-        if not isinstance(ps[k], np.ndarray):
-            # convert all outputs to (min) 1D numpy arrays.
-            ps[k] = np.array(ps[k], ndmin=1)
-
-    # remove some superfluous outputs
-    rem = ["pdict"]
-    for r in rem:
-        if r in ps:
-            del ps[r]
-
-    return ps
-
-
-# Whole C-B-Isotope System
-# ------------------------
-def CBsys(
-    pHtot=None,
-    DIC=None,
-    CO2=None,
-    HCO3=None,
-    CO3=None,
-    TA=None,
-    fCO2=None,
-    pCO2=None,
-    BT=None,
-    BO3=None,
-    BO4=None,
-    ABT=None,
-    ABO3=None,
-    ABO4=None,
-    dBT=None,
-    dBO3=None,
-    dBO4=None,
-    alphaB=None,
-    T_in=25.0,
-    S_in=35.0,
-    P_in=0.0,
-    T_out=None,
-    S_out=None,
-    P_out=None,
-    Ca=0.0102821,
-    Mg=0.0528171,
-    PT=0.0,
-    SiT=0.0,
-    ST=None,
-    FT=None,
-    pHsws=None,
-    pHfree=None,
-    pHNBS=None,
-    Ks=None,
-    pdict=None,
-    unit="umol",
-    MyAMI_mode="calculate"
-):
-    """
-    Calculate carbon, boron and boron isotope chemistry of seawater from a minimal parameter set.
-
-    Constants calculated by MyAMI model (Hain et al, 2015; doi:10.1002/2014GB004986).
-    Speciation calculations from Zeebe & Wolf-Gladrow (2001; ISBN:9780444509468) Appendix B
-
-    Inputs must either be single values, arrays of equal length or a mixture of both.
-    If you use arrays of unequal length, it won't work.
-
-    Note: Special Case! If pH is not known, you must provide either:
-      - Two of [DIC, CO2, HCO3, CO3], and one of [BT, BO3, BO4]
-      - One of [DIC, CO2, HCO3, CO3], and TA and BT
-      - Two of [BT, BO3, BO4] and one of [DIC, CO2, HCO3, CO3]
-
-    Isotopes will only be calculated if one of [ABT, ABO3, ABO4, dBT, dBO3, dBO4]
-    is provided.
-
-    Error propagation:
-    If inputs are ufloat or uarray (from uncertainties package) errors will
-    be propagated through all calculations.
-
-    Concentration Units
-    +++++++++++++++++++
-    * Ca and Mg must be in molar units.
-    * All other units must be the same, and can be specified in the 'unit' variable. Defaults to umolar.
-    * Isotopes can be in A (11B / BT) or d (delta). Either specified, both returned.
-
-    Parameters
-    ----------
-    pH, DIC, CO2, HCO3, CO3, TA : array-like
-        Carbon system parameters. Two of these must be provided.
-        If TA is specified, a B species must also be specified.
-    pH, BT, BO3, BO4 : array-like
-        Boron system parameters. Two of these must be provided.
-    pH, ABT, ABO3, ABO4, dBT, dBO3, dBO4 : array-like
-        Boron isotope system parameters. pH and one other
-        parameter must be provided.
-    alphaB : array-like
-        Alpha value describing B fractionation (1.0XXX).
-        If missing, it's calculated using the temperature
-        sensitive formulation of Honisch et al (2008)
-    T, S : array-like
-        Temperature in Celcius and Salinity in PSU.
-        Used in calculating MyAMI constants.
-    P : array-like
-        Pressure in Bar.
-        Used in calculating MyAMI constants.
-    unit : str
-        Concentration units of C and B parameters (all must be in
-        the same units).
-        Can be 'mol', 'mmol', 'umol', 'nmol', 'pmol' or 'fmol'.
-        Used in calculating Alkalinity. Default is 'umol'.
-    Ca, Mg : arra-like
-        The [Ca] and [Mg] of STANDARD seawater (i.e. 35 salinity), in mol / kg.
-        Used in calculating MyAMI constants.
-    Ks : dict
-        A dictionary of constants. Must contain keys
-        'K1', 'K2', 'KB' and 'KW'.
-        If None, Ks are calculated using MyAMI model.
-    pdict : dict
-        Optionally, you can provide some or all parameters as a dict,
-        with keys the same as the parameter names above. Any parameters
-        included in the dict will overwrite manually specified
-        parameters. This is particularly useful if you're including
-        this in other code.
-
-    Returns
-    -------
-    dict(/Bunch) containing all calculated parameters.
-    """
-    # Bunch inputs
-    ps = Bunch(locals())
-    if isinstance(pdict, dict):
-        ps.update(pdict)
-
-    # convert unit to multiplier
-    udict = {
-        "mol": 1.0,
-        "mmol": 1.0e3,
-        "umol": 1.0e6,
-        "nmol": 1.0e9,
-        "pmol": 1.0e12,
-        "fmol": 1.0e15,
-    }
-    if isinstance(ps.unit, str):
-        ps.unit = udict[ps.unit]
-    elif isinstance(ps.unit, (int, float)):
-        ps.unit = unit
-
-    upar = [
-        "DIC",
-        "CO2",
-        "HCO3",
-        "CO3",
-        "TA",
-        "BT",
-        "BO3",
-        "BO4",
-        "PT",
-        "SiT",
-    ]
- 
-    for p in upar:
-        if ps[p] is not None:
-            ps[p] = np.divide(ps[p], ps.unit)  # convert to molar
-
-    gupar = ['pCO2', 'fCO2']  # special unit case: pCO2, fCO2 because pCO2 is always in ppm
-    for p in gupar:
-        if ps[p] is not None:
-            ps[p] = np.divide(ps[p], 1e6)  # convert to mole fraction
-    
-    # Conserved seawater chemistry
-    if ps.ST is None:
-        ps.ST = calc_ST(ps.S_in)
-    if ps.FT is None:
-        ps.FT = calc_FT(ps.S_in)
-
-    # Remove negative values 
-    for p in ["DIC", "CO2", "HCO3", "CO3", "BT", "BO3", "BO4", "fCO2", "pCO2", "PT", "SiT"]:
-        if ps[p] is not None:
-            if isinstance(ps[p], (np.ndarray, pd.core.series.Series)):
-                ps[p][ps[p] < 0] = np.nan
-            elif ps[p] < 0:
-                ps[p] = np.nan
-    
-    # Calculate Ks
-    if isinstance(Ks, dict):
-        ps.Ks = Bunch(Ks)
-    else:
-        ps.Ks = Bunch(calc_Ks(temp_c=ps.T_in, sal=ps.S_in, p_bar=ps.P_in, magnesium=ps.Mg, calcium=ps.Ca, sulphate=ps.ST, fluorine=ps.FT, MyAMI_mode=ps.MyAMI_mode))
-
-    # calculate alpha
-    if alphaB is None:
-        ps.alphaB = get_alphaB()
-    else:
-        ps.alphaB = alphaB
+#         # Convert units
+#         unit_multiplier = self.unit_converter.UNIT_MULTIPLIERS.get(params.unit, params.unit)
+#         self.unit_converter.to_molar(params)
         
-    # convert any B isotopes to A notation
-    if ps.dBT is None and ps.ABT is None:
-        ps.dBT = 39.61
-    if ps.dBT is not None:
-        ps.ABT = d11_to_A11(ps.dBT)
-    if ps.dBO3 is not None:
-        ps.ABO3 = d11_to_A11(ps.dBO3)
-    if ps.dBO4 is not None:
-        ps.ABO4 = d11_to_A11(ps.dBO4)
+#         # Calculate defaults
+#         self.seawater.calculate_defaults(params)
         
-    nBiso = NnotNone(ps.ABT) + NnotNone(ps.ABO4, ps.ABO3)
-    
-    # Calculate all pH scales (does nothing if no pH given)
-    ps.update(
-        calc_pH_scales(
-            pHtot=ps.pHtot,
-            pHfree=ps.pHfree,
-            pHsws=ps.pHsws,
-            pHNBS=ps.pHNBS,
-            ST=ps.ST,
-            FT=ps.FT,
-            TempK=ps.T_in + 273.15,
-            Sal=ps.S_in,
-            Ks=ps.Ks,
-        )
-    )
-    
-    # if fCO2 is given but CO2 is not, calculate CO2
-    if ps.CO2 is None:
-        if ps.fCO2 is not None:
-            ps.CO2 = fCO2_to_CO2(ps.fCO2, ps.Ks)
-        elif ps.pCO2 is not None:
-            ps.CO2 = fCO2_to_CO2(pCO2_to_fCO2(ps.pCO2, ps.T_in), ps.Ks)
-    
-    # if no B info provided, assume modern conc.
-    nBspec = NnotNone(ps.BT, ps.BO3, ps.BO4)
-    if nBspec == 0:
-        ps.BT = calc_BT(ps.S_in)
-
-    # count number of not None C parameters
-    nCspec = NnotNone(ps.DIC, ps.CO2, ps.HCO3, ps.CO3)  # used below
+#         # Clean data
+#         self.validator.clean_negative_values(params)
         
-    # if pH or two B species are given:
-    if ps.pHtot is not None or nBspec == 2:
-        ps.update(calc_B_species(**ps))
-        ps.update(calc_C_species(**ps))
-        ps.update(calc_B_isotopes(**ps))
-    # if pH can be calculated from B isotopes
-    elif nBiso == 2:
-        ps.update(calc_B_isotopes(**ps))
-        ps.update(calc_B_species(**ps))
-        ps.update(calc_C_species(**ps))
-    # if there are two carbon species, or one carbon species + TA and BT
-    elif (nCspec == 2) | ((nCspec == 1) & (NnotNone(ps.TA, ps.BT) == 2)):
-        ps.update(calc_C_species(**ps))
-        ps.update(calc_B_species(**ps))
-        ps.update(calc_B_isotopes(**ps))
+#         # Calculate constants
+#         Ks = self._calculate_constants(params)
+        
+#         # Calculate pH scales
+#         ph_scales = self._calculate_ph_scales(params, Ks)
+        
+#         # Handle omega inputs
+#         self._handle_omega_inputs(params, Ks)
+        
+#         # Calculate carbon system
+#         result = self._calculate_carbon_system(params, Ks)
+#         result.update(ph_scales)
+        
+#         # Calculate derived properties
+#         self._calculate_derived_properties(result, params, Ks)
+        
+#         # Format output
+#         self._format_output(result, unit_multiplier)
+        
+#         # Handle output conditions if specified
+#         if self._has_output_conditions(params):
+#             result = self._calculate_output_conditions(result, params, unit_multiplier)
+        
+#         return result
     
-    else:  # if neither condition is met, throw an error
-        raise ValueError(
-            (
-                "Impossible! You haven't provided enough information.\n"
-                + "If you don't know pH, you must provide either:\n"
-                + "  - Two of [DIC, CO2, HCO3, CO3] and BT\n"
-                + "  - One of [DIC, CO2, HCO3, CO3], and TA and BT\n"
-                + "  - Two of [BT, BO3, BO4] and one of [DIC, CO2, HCO3, CO3]"
-                + "  - Two of [dBT, dBO3, dBO4] and one of [DIC, CO2, HCO3, CO3]"                
-            )
-        )
-
-    # convert isotopes to delta notation
-    if ps.dBT is None:
-        ps.dBT = A11_to_d11(ps.ABT)
-    if ps.dBO3 is None:
-        ps.dBO3 = A11_to_d11(ps.ABO3)
-    if ps.dBO4 is None:
-        ps.dBO4 = A11_to_d11(ps.ABO4)
+#     def _parse_inputs(self, kwargs) -> CarbonSystemParams:
+#         """Parse input arguments into structured parameters"""
+#         # Handle pdict override
+#         if 'pdict' in kwargs and isinstance(kwargs['pdict'], dict):
+#             kwargs.update(kwargs['pdict'])
+#             del kwargs['pdict']
+        
+#         # Create params object with validation
+#         return CarbonSystemParams(**{k: v for k, v in kwargs.items() 
+#                                    if k in CarbonSystemParams.__dataclass_fields__})
     
-    ps["revelle_factor"] = calc_revelle_factor(
-        TA=ps.TA,
-        DIC=ps.DIC,
-        BT=ps.BT,
-        PT=ps.PT,
-        SiT=ps.SiT,
-        ST=ps.ST,
-        FT=ps.FT,
-        Ks=ps.Ks,
-    )
-
-    # calc Omega
-    if Ca is None:
-        oCa = 0.0102821 * ps.S_in / 35.
-    else:
-        oCa = Ca * ps.S_in / 35.
-    ps['OmegaA'] = ps['CO3'] * oCa / ps.Ks.KspA
-    ps['OmegaC'] = ps['CO3'] * oCa / ps.Ks.KspC
+#     def _calculate_constants(self, params: CarbonSystemParams) -> Bunch:
+#         """Calculate equilibrium constants"""
+#         if isinstance(params.Ks, dict):
+#             return Bunch(params.Ks)
+#         else:
+#             return Bunch(calc_Ks(
+#                 temp_c=params.T_in, sal=params.S_in, p_bar=params.P_in,
+#                 magnesium=params.Mg, calcium=params.Ca, 
+#                 sulphate=params.ST, fluorine=params.FT, 
+#                 MyAMI_mode=params.MyAMI_mode
+#             ))
     
-    # clean up output
-    outputs = [
-        "BAlk",
-        "BT",
-        "CAlk",
-        "CO2",
-        "CO3",
-        "DIC",
-        "H",
-        "HCO3",
-        "HF",
-        "HSO4",
-        "Hfree",
-        "Ks",
-        "OH",
-        "PAlk",
-        "SiAlk",
-        "TA",
-        "FT",
-        "PT",
-        "ST",
-        "SiT",
-        "fCO2",
-        "pCO2",
-        "pHfree",
-        "pHsws",
-        "pHtot",
-        "pHNBS",
-        'OmegaA',
-        'OmegaC',
-        'revelle_factor',
-        "BO3",
-        "BO4",
-        "ABO3",
-        "ABO4",
-        "dBO3",
-        "dBO4",
-    ]
-    for k in outputs:
-        if k == 'Ks':
-            continue
-        if not isinstance(ps[k], np.ndarray):
-            # convert all outputs to (min) 1D numpy arrays.
-            ps[k] = np.array(ps[k], ndmin=1)
-
-    # Handle Units - at this point everything is in mol/kg-SW
-    for p in upar + ["CAlk", "BAlk", "PAlk", "SiAlk", "OH", "HSO4", "HF", "Hfree"]:
-        ps[p] *= ps.unit  # convert back to input units
-
-    for p in gupar:
-        if ps[p] is not None:
-            ps[p] = np.multiply(ps[p], 1e6)  # convert to ppm
-
-    # Calculate Output Conditions
-    # ===========================
+#     def _calculate_ph_scales(self, params: CarbonSystemParams, Ks: Bunch) -> Dict:
+#         """Calculate pH on different scales"""
+#         return calc_pH_scales(
+#             pHtot=params.pHtot, pHfree=params.pHfree,
+#             pHsws=params.pHsws, pHNBS=params.pHNBS,
+#             ST=params.ST, FT=params.FT,
+#             TempK=params.T_in + 273.15, Sal=params.S_in, Ks=Ks
+#         )
     
-    # Recursive approach to calculate output params.
-    # if output conditions specified, calculate outputs.
-    if ps.T_out is not None or ps.S_out is not None or ps.P_out is not None:
-        if ps.T_out is None:
-            ps.T_out = ps.T_in
-        if ps.S_out is None:
-            ps.S_out = ps.S_in
-        else:
-            # if salinity is modified, update salinity-dependent parameters
-            BT = ps.BT * ps.S_out / ps.S_in
-            ST = ps.ST * ps.S_out / ps.S_in
-            FT = ps.FT * ps.S_out / ps.S_in
-        if ps.P_out is None:
-            ps.P_out = ps.P_in
-        # assumes conserved alkalinity, DIC and BT
-        out_cond = CBsys(
-            TA=ps.TA,
-            DIC=ps.DIC,
-            dBT=ps.dBT,
-            T_in=ps.T_out,
-            S_in=ps.S_out,
-            P_in=ps.P_out,
-            unit=ps.unit,
-            Ca=Ca,
-            Mg=Mg,
-            BT=BT,
-            FT=FT,
-            ST=ST,
-        )
-        # rename parameters in output conditions
-        ps.update({k + "_in": ps[k] for k in outputs})
-        ps.update({k: out_cond[k] for k in outputs})
-
-        # remove some superfluous outputs
-    rem = ["pdict", "unit"]
-    for r in rem:
-        if r in ps:
-            del ps[r]
-    return ps
+#     def _handle_omega_inputs(self, params: CarbonSystemParams, Ks: Bunch) -> None:
+#         """Convert omega values to CO3 if provided"""
+#         if params.OmegaA is not None:
+#             params.CO3 = params.OmegaA * Ks.KspA / (params.Ca * params.S_in / 35.)
+#         elif params.OmegaC is not None:
+#             params.CO3 = params.OmegaC * Ks.KspC / (params.Ca * params.S_in / 35.)
+    
+#     def _calculate_carbon_system(self, params: CarbonSystemParams, Ks: Bunch) -> Bunch:
+#         """Calculate carbon system speciation"""
+#         # Convert params to dict for calc_C_species
+#         param_dict = {
+#             'pHtot': params.pHtot, 'DIC': params.DIC, 'TA': params.TA,
+#             'CO2': params.CO2, 'HCO3': params.HCO3, 'CO3': params.CO3,
+#             'pCO2': params.pCO2, 'fCO2': params.fCO2,
+#             'T_in': params.T_in, 'S_in': params.S_in,
+#             'BT': params.BT, 'PT': params.PT, 'SiT': params.SiT,
+#             'ST': params.ST, 'FT': params.FT, 'Ks': Ks
+#         }
+#         return calc_C_species(**param_dict)
+    
+#     def _calculate_derived_properties(self, result: Bunch, params: CarbonSystemParams, Ks: Bunch) -> None:
+#         """Calculate derived properties like Omega and Revelle factor"""
+#         # Revelle factor (only if no uncertainties)
+#         has_uncertainties = any(hasattr(result.get(param), 'nominal_value') 
+#                               for param in ['TA', 'DIC', 'CO2', 'HCO3', 'CO3'] 
+#                               if result.get(param) is not None)
+        
+#         if not has_uncertainties:
+#             result["revelle_factor"] = calc_revelle_factor(
+#                 TA=result.TA, DIC=result.DIC, BT=params.BT,
+#                 PT=params.PT, SiT=params.SiT, ST=params.ST, FT=params.FT, Ks=Ks
+#             )
+#         else:
+#             result["revelle_factor"] = None
+        
+#         # Omega calculations
+#         oCa = params.Ca * params.S_in / 35.
+#         result['OmegaA'] = result['CO3'] * oCa / Ks.KspA
+#         result['OmegaC'] = result['CO3'] * oCa / Ks.KspC
+    
+#     def _format_output(self, result: Bunch, unit_multiplier: float) -> None:
+#         """Format output arrays and convert units"""
+#         # Convert to arrays
+#         outputs = [
+#             "BT", "CO2", "CO3", "Ca", "DIC", "H", "HCO3", 
+#             "Mg", "S_in", "T_in", "TA", "CAlk", "PAlk", 
+#             "SiAlk", "OH", 'OmegaA', 'OmegaC', 'revelle_factor'
+#         ]
+#         for k in outputs:
+#             if k in result and not isinstance(result[k], np.ndarray):
+#                 result[k] = np.array(result[k], ndmin=1)
+        
+#         # Convert units back
+#         self.unit_converter.from_molar(result, unit_multiplier)
+    
+#     def _has_output_conditions(self, params: CarbonSystemParams) -> bool:
+#         """Check if output conditions are specified"""
+#         return any(getattr(params, attr) is not None 
+#                   for attr in ['T_out', 'S_out', 'P_out'])
+    
+#     def _calculate_output_conditions(self, result: Bunch, params: CarbonSystemParams, unit_multiplier: float) -> Bunch:
+#         """Calculate results at output conditions"""
+#         # Set defaults
+#         T_out = params.T_out or params.T_in
+#         S_out = params.S_out or params.S_in
+#         P_out = params.P_out or params.P_in
+        
+#         # Adjust salinity-dependent parameters if needed
+#         if params.S_out is not None and params.S_out != params.S_in:
+#             BT = params.BT * S_out / params.S_in
+#             ST = params.ST * S_out / params.S_in
+#             FT = params.FT * S_out / params.S_in
+#         else:
+#             BT, ST, FT = params.BT, params.ST, params.FT
+        
+#         # Calculate at output conditions
+#         out_cond = self.calculate(
+#             TA=result.TA, DIC=result.DIC,
+#             T_in=T_out, S_in=S_out, P_in=P_out,
+#             unit=unit_multiplier, Ca=params.Ca, Mg=params.Mg,
+#             BT=BT, FT=FT, ST=ST
+#         )
+        
+#         # Rename existing results with "_in" suffix
+#         output_params = [
+#             "BAlk", "BT", "CAlk", "CO2", "CO3", "DIC", "H", "HCO3", 
+#             "HF", "HSO4", "Hfree", "Ks", "OH", "PAlk", "SiAlk", "TA", "FT",
+#             "PT", "ST", "SiT", "fCO2", "pCO2", "pHfree", "pHsws", 
+#             "pHtot", "pHNBS", 'OmegaA', 'OmegaC', "revelle_factor"
+#         ]
+        
+#         for param in output_params:
+#             if param in result:
+#                 result[param + "_in"] = result[param]
+#                 result[param] = out_cond[param]
+        
+#         return result
