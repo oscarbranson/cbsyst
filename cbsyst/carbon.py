@@ -716,9 +716,12 @@ def calc_revelle_factor(TA, DIC, BT, PT, SiT, ST, FT, Ks):
 
 # CBsyst 1.0 functions
 
-def n_given(params):
+def given(params):
     valid_inputs = ['CO2', 'HCO3', 'CO3', 'TA', 'DIC', 'pCO2', 'fCO2', 'OmegaC', 'OmegaA']
-    return sum(params.get(p) is not None for p in valid_inputs)
+    return [params.get(p) for p in valid_inputs if params.get(p) is not None]
+
+def n_given(params):
+    return len(given(params))
 
 def use_Omega(params):
     if params.OmegaC is not None:
