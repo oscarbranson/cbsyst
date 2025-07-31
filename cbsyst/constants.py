@@ -1,8 +1,9 @@
 import kgen
-from .dataclasses import KValues, CarbonSystemParams
+from .dataclasses import KValues, CBsystData
+from . import dataclasses as dc
 
 
-def calc_Ks(params: CarbonSystemParams) -> KValues:
+def calc_Ks(params: CBsystData) -> KValues:
     Ks = kgen.calc_Ks(temp_c=params.T_in, sal=params.S_in, p_bar=params.P_in, magnesium=params.Mg, calcium=params.Ca, sulphate=params.ST, fluorine=params.FT, MyAMI_mode=params.MyAMI_mode)
 
     return KValues(**Ks)
@@ -50,10 +51,15 @@ def calc_BT(Sal):
     a, b = (0.0004157, 35.0)
     return a * Sal / b  # mol/kg-SW
 
-def calc_conservative_composition(params: CarbonSystemParams):
+def calc_conservative_composition(params: CBsystData):
     if params.ST is None:
         params.ST = calc_ST(params.S_in)
     if params.FT is None:
         params.FT = calc_FT(params.S_in)
-    if params.BT is None:
-        params.BT = calc_BT(params.S_in)
+    
+    if isinstance(params, (dc.BoronParams, dc.BoronSystemParams, dc.CarbonBoronParams, dc.CarbonBoronIsotopeParams)):
+        if params.BT is None and (params.BO3 is None and params.BO4 is None):
+            params.BT = calc_BT(params.S_in)
+    else:
+        if params.BT is None:
+            params.BT = calc_BT(params.S_in)
