@@ -53,7 +53,7 @@ def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None, **kwargs):
     elif BT is not None and BO4 is not None:
         H = BT_BO4(BT, BO4, Ks)
     elif BO3 is not None and BO4 is not None:
-        BT = BO3 + BO3
+        BT = BO3 + BO4
         H = BT_BO3(BT, BO3, Ks)
     elif pHtot is not None and BO3 is not None:
         H = 10.0**-pHtot
@@ -73,7 +73,7 @@ def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None, **kwargs):
     if pHtot is None:
         pHtot = np.array(negative_log10_preserve_type(H), ndmin=1)
 
-    return Bunch({"Htot": pHtot, "H": H, "BT": BT, "BO3": BO3, "BO4": BO4})
+    return Bunch({"pHtot": pHtot, "H": H, "BT": BT, "BO3": BO3, "BO4": BO4})
 
 # CBsyst 1.0 functions
 
@@ -108,13 +108,18 @@ SOLVERS = {
     ('pHtot', 'BO4'): solve_pH_BO4
 }
 
-def n_given(params):
+def given(params):
+    """Check which boron parameters are given in the parameters"""
     valid_inputs = ['BT', 'BO3', 'BO4']
-    return sum(params.get(p) is not None for p in valid_inputs)
+    return [params.get(p) for p in valid_inputs if params.get(p) is not None]
 
-def calc_remaining_B_specues(params):
-    params.BO3 = params.BO3 or cBO3(params.BT, params.H, params.Ks)
-    params.BO4 = params.BO4 or cBO4(params.BT, params.H, params.Ks)
+def n_given(params):
+    return len(given(params))
+
+def calc_remaining_B_species(params):
+    if 'BO3' in params.__dataclass_fields__:
+        params.BO3 = params.BO3 or cBO3(params.BT, params.H, params.Ks)
+        params.BO4 = params.BO4 or cBO4(params.BT, params.H, params.Ks)
     params.pHtot = params.pHtot or negative_log10_preserve_type(params.H)
 
 def solve_B_system(params):
@@ -127,5 +132,5 @@ def solve_B_system(params):
     
     solver(params)
 
-    calc_remaining_B_specues(params)
+    calc_remaining_B_species(params)
 
