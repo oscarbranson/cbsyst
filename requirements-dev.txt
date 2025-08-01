@@ -1,0 +1,26 @@
+# Include all core requirements
+-r requirements.txt
+
+# Testing
+pytest>=6.0.0
+pytest-cov>=2.10.0
+unittest-xml-reporting>=3.0.0
+
+# Code quality and formatting
+flake8>=3.8.0
+black>=21.0.0
+isort>=5.0.0
+mypy>=0.910
+
+# Documentation
+mkdocs>=1.4.0
+mkdocstrings>=0.19.0
+mkdocstrings-python>=0.8.0
+mkdocs-material>=8.5.0
+mkdocs-autorefs>=0.4.0
+
+# Build and distribution
+build>=0.8.0
+twine>=4.0.0
+wheel>=0.37.0
+setuptools>=60.0.0
