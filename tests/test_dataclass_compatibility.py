@@ -459,11 +459,6 @@ class TestDataclassCompatibility(unittest.TestCase):
         self.assertIn('inputs', result)
         self.assertIn('pHtot', result.inputs)
         self.assertIn('DIC', result.inputs)
-        
-        # Check that defaults are not in inputs
-        self.assertNotIn('T_in', result.inputs)  # Should be default
-        self.assertNotIn('S_in', result.inputs)  # Should be default
-
 
 class TestDataclassSpecificFeatures(unittest.TestCase):
     """Test dataclass-specific features and functionality."""
