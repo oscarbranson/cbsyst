@@ -119,6 +119,7 @@ def cplot(obs, pred, var, cvar, c, alpha=0.4, pclims=[0.05, 99.95]):
 
     ax1.set_xlabel("GLODAPv2 Measured")
     ax1.set_ylabel("cbsyst predicted")
+    ax1.set_title(f'cbsyst {cb.VERSION}', fontsize=10, loc='left', color=(0.4, 0.4, 0.4))
 
     ax1.text(
         0.05,
