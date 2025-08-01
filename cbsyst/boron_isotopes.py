@@ -1,4 +1,6 @@
-# B isotope fns
+"""
+Functions for calculating boron isotope abundances and fractionation.
+"""
 
 import numpy as np
 from cbsyst.helpers import NnotNone, Bunch

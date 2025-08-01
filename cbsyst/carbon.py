@@ -1,3 +1,7 @@
+"""
+Functions for calculating boron carbon speciation.
+"""
+
 import scipy.optimize as opt
 import numpy as np
 from cbsyst.helpers import cast_array, Bunch, maxShape, calc_fH

@@ -1,3 +1,7 @@
+"""
+Functions for calculating boron speciation.
+"""
+
 import numpy as np
 from typing import Optional, Union, Any, Dict, List, Tuple
 from .dataclasses import KValues, CBsystData
