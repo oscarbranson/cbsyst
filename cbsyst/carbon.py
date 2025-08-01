@@ -730,8 +730,8 @@ def use_Omega(params):
         params.CO3 = params.OmegaA * params.Ks.KspA / params.Ca
 
 def calculate_Omegas(params):
-    if params.OmegaA is None: params.OmegaA = params.CO3 * params.Ca / params.Ks.KspA
-    if params.OmegaC is None: params.OmegaC = params.CO3 * params.Ca / params.Ks.KspC
+    if params.OmegaA is None: params.OmegaA = params.CO3 * params.Ca * params.S_in / 35 / params.Ks.KspA
+    if params.OmegaC is None: params.OmegaC = params.CO3 * params.Ca * params.S_in / 35 / params.Ks.KspC
 
 def solve_CO2_pHtot(params):
     params.H = 10.0**-params.pHtot
@@ -844,7 +844,7 @@ def calculate_remaining_C_species(params):
                 SiT=params.SiT, ST=params.ST, FT=params.FT, 
                 Ks=params.Ks, mode="multi"
             )):
-        params[par] = params[par] or val
+        if params[par] is None: params[par] = val
 
 def solve_C_system(params):
 
