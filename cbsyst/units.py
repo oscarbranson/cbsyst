@@ -31,7 +31,7 @@ def convert_to_molar(params: CBsystData) -> None:
             continue        
         value = getattr(params, param)
         if value is not None:
-            setattr(params, param, np.divide(value, 1e6))
+            setattr(params, param, np.divide(value, multiplier))
 
 def convert_from_molar(params: CBsystData) -> None:
     """Convert results back to input units"""
@@ -50,4 +50,4 @@ def convert_from_molar(params: CBsystData) -> None:
             continue
         value = getattr(params, param)
         if value is not None:
-            params[param] = np.multiply(value, 1e6)
+            params[param] = np.multiply(value, multiplier)
