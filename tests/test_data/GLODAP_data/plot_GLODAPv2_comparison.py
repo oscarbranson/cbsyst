@@ -54,6 +54,7 @@ def GLODAPv2_comparison(figdir="."):
     print("   Making plots...")
     fig, axs = cplot(gd.phtsinsitutp, cpH.pHtot, "pH", "Depth", gd.depth)
     fig.savefig(figdir + "/Figures/pH_comparison.png", dpi=200)
+    fig.savefig('../../../docs/img/pH_comparison.png', dpi=200)
 
     print("Calculating TA from pH and DIC...")
     cTA = cb.Csys(
@@ -69,6 +70,7 @@ def GLODAPv2_comparison(figdir="."):
     print("   Making plots...")
     fig, ax = cplot(gd.talk, cTA.TA, "Alk", "Depth", gd.depth)
     fig.savefig("Figures/TA_comparison.png", dpi=200)
+    fig.savefig('../../../docs/img/TA_comparison.png', dpi=200)
 
     print("Calculating DIC from pH and TA...")
     cDIC = cb.Csys(
@@ -84,6 +86,7 @@ def GLODAPv2_comparison(figdir="."):
     print("   Making plots...")
     fig, ax = cplot(gd.tco2, cDIC.DIC, "DIC", "Depth", gd.depth)
     fig.savefig("Figures/DIC_comparison.png", dpi=200)
+    fig.savefig('../../../docs/img/DIC_comparison.png', dpi=200)
 
     print("Done.")
     print()
