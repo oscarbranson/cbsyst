@@ -104,7 +104,6 @@ def d11_to_A11(d11, SRM_ratio=4.04367):
     array-like
        Delta notation (d11) expressed as fractional abundance (A11).
     """
-    print(d11)
     return SRM_ratio * (d11 / 1e3 + 1.0) / (SRM_ratio * (d11 / 1e3 + 1.0) + 1.0)
 
 def d11_to_R11(d11, SRM_ratio=4.04367):
