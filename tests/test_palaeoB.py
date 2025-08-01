@@ -1,10 +1,5 @@
 import unittest
-import os
-import pandas as pd
 import numpy as np
-import cbsyst.carbon as cf
-import cbsyst.boron as bf
-import cbsyst.boron_isotopes as bif
 from cbsyst.cbsyst import Bsys, CBsys, ABsys
 
 np.random.seed(42)

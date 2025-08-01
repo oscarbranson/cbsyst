@@ -5,7 +5,6 @@ Functions for calculating boron speciation.
 import numpy as np
 from typing import Optional, Union, Any, Dict, List, Tuple
 from .dataclasses import KValues, CBsystData
-from .helpers import Bunch
 from .uncertainties import negative_log10_preserve_type
 from . import pH
 
@@ -163,67 +162,6 @@ def cBO3(
         BO3 = BT / (1 + KB/H)
     """
     return BT / (1 + Ks.KB / H)
-
-def calc_B_species(
-    pHtot: Optional[Union[float, np.ndarray]] = None, 
-    BT: Optional[Union[float, np.ndarray]] = None, 
-    BO3: Optional[Union[float, np.ndarray]] = None, 
-    BO4: Optional[Union[float, np.ndarray]] = None, 
-    Ks: Optional[Union[KValues, Dict]] = None, 
-    **kwargs: Any
-) -> Bunch:
-    """
-    Calculate all boron species from any two boron system parameters.
-    
-    Args:
-        pHtot: pH on total scale.
-        BT: Total boron concentration (mol/kg).
-        BO3: Boric acid (B(OH)3) concentration (mol/kg).
-        BO4: Borate (B(OH)4-) concentration (mol/kg).
-        Ks: Object containing equilibrium constants, must have KB attribute.
-        **kwargs: Additional keyword arguments (ignored).
-        
-    Returns:
-        Bunch: Object containing calculated boron species:
-            - pHtot: pH on total scale
-            - H: Hydrogen ion concentration (mol/kg)
-            - BT: Total boron concentration (mol/kg)
-            - BO3: Boric acid concentration (mol/kg)
-            - BO4: Borate concentration (mol/kg)
-            
-    Notes:
-        Requires exactly two input parameters from: pHtot, BT, BO3, BO4.
-        Calculates the remaining parameters using boron equilibrium relationships.
-    """
-    # B system calculations
-    if pHtot is not None and BT is not None:
-        H = 10.0**-pHtot
-    elif BT is not None and BO3 is not None:
-        H = BT_BO3(BT, BO3, Ks)
-    elif BT is not None and BO4 is not None:
-        H = BT_BO4(BT, BO4, Ks)
-    elif BO3 is not None and BO4 is not None:
-        BT = BO3 + BO4
-        H = BT_BO3(BT, BO3, Ks)
-    elif pHtot is not None and BO3 is not None:
-        H = 10.0**-pHtot
-        BT = pH_BO3(pHtot, BO3, Ks)
-    elif pHtot is not None and BO4 is not None:
-        H = 10.0**-pHtot
-        BT = pH_BO4(pHtot, BO4, Ks)
-
-    # The above makes sure that BT and H are known,
-    # this next bit calculates all the missing species
-    # from BT and H.
-
-    if BO3 is None:
-        BO3 = cBO3(BT, H, Ks)
-    if BO4 is None:
-        BO4 = cBO4(BT, H, Ks)
-    if pHtot is None:
-        pHtot = np.array(negative_log10_preserve_type(H), ndmin=1)
-
-    return Bunch({"pHtot": pHtot, "H": H, "BT": BT, "BO3": BO3, "BO4": BO4})
 
 # CBsyst 1.0 functions
 

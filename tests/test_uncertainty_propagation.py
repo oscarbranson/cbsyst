@@ -7,7 +7,7 @@ import numpy as np
 import uncertainties
 from uncertainties import ufloat
 import cbsyst as cb
-from cbsyst.helpers import Bunch
+from cbsyst.dataclasses import KValues
 
 
 class TestUncertaintyPropagation(unittest.TestCase):
@@ -38,7 +38,7 @@ class TestUncertaintyPropagation(unittest.TestCase):
     def test_algebraic_functions_with_uncertainties(self):
         """Test algebraic functions (cases 1, 6-9) with uncertainties."""
         # Get Ks object by creating a simple system
-        Ks = Bunch(cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+        Ks = KValues(**cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
         
         # Case 1: CO2 and pH -> DIC
         result = cb.carbon.CO2_pH(self.CO2_uncertain, self.pH_uncertain, Ks)
@@ -55,7 +55,7 @@ class TestUncertaintyPropagation(unittest.TestCase):
     def test_zero_finder_functions_with_uncertainties(self):
         """Test zero-finder functions (cases 2, 3, 5, 10, 12, 14) with uncertainties."""
         # Get Ks object by creating a simple system
-        Ks = Bunch(cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+        Ks = KValues(**cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
         
         # Case 2: CO2 and HCO3 -> H
         result = cb.carbon.CO2_HCO3(self.CO2_uncertain, self.HCO3_uncertain, Ks)
@@ -95,7 +95,7 @@ class TestUncertaintyPropagation(unittest.TestCase):
     
     def test_iterative_functions_with_uncertainties(self):
         """Test iterative functions (cases 4, 11, 13, 15) with uncertainties using decorator."""
-        Ks = Bunch(cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+        Ks = KValues(**cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
         
         # Case 4: CO2 and TA -> pH
         result = cb.carbon.CO2_TA(self.CO2_uncertain, self.TA_uncertain, 
@@ -125,7 +125,8 @@ class TestUncertaintyPropagation(unittest.TestCase):
     
     def test_no_uncertainties_preserved(self):
         """Test that functions work normally when no uncertainties are present."""
-        Ks = Bunch(cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+        Ks = KValues(**cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+
         
         # Test that functions return normal floats when no uncertainties
         result = cb.carbon.CO2_TA(15.0, 2300.0, self.BT, self.PT, self.SiT, self.ST, self.FT, Ks)
@@ -138,7 +139,8 @@ class TestUncertaintyPropagation(unittest.TestCase):
     
     def test_mixed_uncertainties(self):
         """Test functions with mix of uncertain and certain parameters."""
-        Ks = Bunch(cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+        Ks = KValues(**cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+
         
         # Mix of uncertain and certain parameters
         result = cb.carbon.CO2_HCO3(self.CO2_uncertain, 1800.0, Ks)  # Only CO2 has uncertainty
@@ -154,7 +156,8 @@ class TestUncertaintyPropagation(unittest.TestCase):
     
     def test_array_inputs_with_uncertainties(self):
         """Test functions with array inputs containing uncertainties."""
-        Ks = Bunch(cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+        Ks = KValues(**cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+
         
         # Create arrays with uncertainties
         CO2_array = np.array([ufloat(10, 0.5), ufloat(15, 1.0), ufloat(20, 1.5)])
@@ -170,7 +173,8 @@ class TestUncertaintyPropagation(unittest.TestCase):
     
     def test_uncertainty_magnitude_reasonable(self):
         """Test that propagated uncertainties have reasonable magnitudes."""
-        Ks = Bunch(cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+        Ks = KValues(**cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+
         
         # Test with small input uncertainties
         small_CO2 = ufloat(15, 0.1)  # Small uncertainty
@@ -195,7 +199,8 @@ class TestUncertaintyPropagation(unittest.TestCase):
         """Test functions with uarray inputs (correlated uncertainties)."""
         import uncertainties.unumpy as unp
         
-        Ks = Bunch(cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+        Ks = KValues(**cb.calc_Ks(temp_c=self.T, sal=self.S, p_bar=self.P))
+
         
         # Create uarray objects
         CO2_uarray = unp.uarray([10.0, 15.0, 20.0], [0.5, 1.0, 1.5])

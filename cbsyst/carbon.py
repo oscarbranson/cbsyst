@@ -4,7 +4,7 @@ Functions for calculating boron carbon speciation.
 
 import scipy.optimize as opt
 import numpy as np
-from cbsyst.helpers import cast_array, Bunch, maxShape, calc_fH
+from .helpers import maxShape
 from .uncertainties import negative_log10_preserve_type, _has_uncertainties, uncertainty_propagation_decorator, _zero_finder_with_uncertainties
 
 from typing import Dict, Tuple, Callable, Optional, Union, List, Any
@@ -46,6 +46,50 @@ def _zero_wrapper(ps: np.ndarray, fn: Callable, bounds: Tuple[float, float] = (1
     else:
         # Has uncertainties - use the enhanced finite difference method
         return _zero_finder_with_uncertainties(ps, fn, bounds)
+
+def solve_with_broadcasting(params, solver_fn):
+    """Generic solver using numpy broadcasting."""
+    # Broadcast all parameters
+    broadcasted = np.broadcast_arrays(*[np.asarray(p) for p in params])
+    
+    # Stack for apply_along_axis
+    param_stack = np.stack(broadcasted)
+    
+    # Apply solver
+    result = np.apply_along_axis(
+        lambda p: _zero_wrapper(p, solver_fn), 
+        0, param_stack
+    )
+    
+    return result.item() if result.ndim == 0 else result
+
+def solve_with_vectorization(params, solver_fn):
+    """
+    Vectorized solver using numpy.vectorize for better performance.
+    
+    This approach is cleaner than the broadcasting/stacking method and
+    handles both scalar and array inputs more efficiently.
+    
+    Args:
+        params: Sequence of parameters (scalars or arrays) to broadcast.
+        solver_fn: Function that takes individual parameter values.
+        
+    Returns:
+        Result array or scalar depending on input shapes.
+    """
+    # Create vectorized wrapper
+    vectorized_solver = np.vectorize(
+        lambda *args: _zero_wrapper(list(args), solver_fn),
+        otypes=[float]
+    )
+    
+    # Apply with automatic broadcasting
+    result = vectorized_solver(*params)
+    
+    # Return scalar if input was scalar
+    return result.item() if result.ndim == 0 else result
+
+solve_function = solve_with_vectorization
 
 # Zeebe & Wolf-Gladrow, Appendix B
 # 1. CO2 and pH given
@@ -94,16 +138,21 @@ def CO2_HCO3(CO2: Union[float, np.ndarray], HCO3: Union[float, np.ndarray], Ks: 
         This function uses the _zero_wrapper for robust root finding
         that handles both deterministic and uncertain parameters.
     """
-    # Don't strip uncertainties - let _zero_wrapper handle them
-    par = cast_array(CO2, HCO3, Ks.K1, Ks.K2)  # cast parameters into array
-    shape = maxShape(CO2, HCO3, Ks.K1, Ks.K2)  # get shape of output
-
-    result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_HCO3).reshape(shape)
     
-    # If result is a single-element array, extract the scalar
-    if result.size == 1:
-        return result.item()
-    return result
+    return solve_function(
+        (CO2, HCO3, Ks.K1, Ks.K2), 
+        zero_CO2_HCO3
+    )
+    # # Don't strip uncertainties - let _zero_wrapper handle them
+    # par = cast_array(CO2, HCO3, Ks.K1, Ks.K2)  # cast parameters into array
+    # shape = maxShape(CO2, HCO3, Ks.K1, Ks.K2)  # get shape of output
+
+    # result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_HCO3).reshape(shape)
+    
+    # # If result is a single-element array, extract the scalar
+    # if result.size == 1:
+    #     return result.item()
+    # return result
 
 
 def zero_CO2_HCO3(h: float, CO2: float, HCO3: float, K1: float, K2: float) -> float:
@@ -153,15 +202,21 @@ def CO2_CO3(CO2: Union[float, np.ndarray], CO3: Union[float, np.ndarray], Ks: Un
         This function uses the _zero_wrapper for robust root finding
         that handles both deterministic and uncertain parameters.
     """
-    par = cast_array(CO2, CO3, Ks.K1, Ks.K2)  # cast parameters into array
-    shape = maxShape(CO2, CO3, Ks.K1, Ks.K2)  # get shape of output
-
-    result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_CO3).reshape(shape)
     
-    # If result is a single-element array, extract the scalar
-    if result.size == 1:
-        return result.item()
-    return result
+    return solve_function(
+        (CO2, CO3, Ks.K1, Ks.K2), 
+        zero_CO2_CO3
+    )
+    
+    # par = cast_array(CO2, CO3, Ks.K1, Ks.K2)  # cast parameters into array
+    # shape = maxShape(CO2, CO3, Ks.K1, Ks.K2)  # get shape of output
+
+    # result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_CO3).reshape(shape)
+    
+    # # If result is a single-element array, extract the scalar
+    # if result.size == 1:
+    #     return result.item()
+    # return result
 
 
 def zero_CO2_CO3(h: float, CO2: float, CO3: float, K1: float, K2: float) -> float:
@@ -284,15 +339,21 @@ def CO2_DIC(CO2: Union[float, np.ndarray], DIC: Union[float, np.ndarray], Ks: Un
         This function uses the _zero_wrapper for robust root finding
         that handles both deterministic and uncertain parameters.
     """
-    par = cast_array(CO2, DIC, Ks.K1, Ks.K2)  # cast parameters into array
-    shape = maxShape(CO2, DIC, Ks.K1, Ks.K2)  # get shape of output
-
-    result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_DIC).reshape(shape)
     
-    # If result is a single-element array, extract the scalar
-    if result.size == 1:
-        return result.item()
-    return result
+    return solve_function(
+        (CO2, DIC, Ks.K1, Ks.K2), 
+        zero_CO2_DIC
+    )
+    
+    # par = cast_array(CO2, DIC, Ks.K1, Ks.K2)  # cast parameters into array
+    # shape = maxShape(CO2, DIC, Ks.K1, Ks.K2)  # get shape of output
+
+    # result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO2_DIC).reshape(shape)
+    
+    # # If result is a single-element array, extract the scalar
+    # if result.size == 1:
+    #     return result.item()
+    # return result
 
 
 def zero_CO2_DIC(h: float, CO2: float, DIC: float, K1: float, K2: float) -> float:
@@ -449,15 +510,21 @@ def HCO3_CO3(HCO3: Union[float, np.ndarray], CO3: Union[float, np.ndarray], Ks: 
         This function uses the _zero_wrapper for robust root finding
         that handles both deterministic and uncertain parameters.
     """
-    par = cast_array(HCO3, CO3, Ks.K1, Ks.K2)  # cast parameters into array
-    shape = maxShape(HCO3, CO3, Ks.K1, Ks.K2)  # get shape of output
     
-    result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_CO3).reshape(shape)
+    return solve_function(
+        (HCO3, CO3, Ks.K1, Ks.K2), 
+        zero_HCO3_CO3
+    )
     
-    # If result is a single-element array, extract the scalar
-    if result.size == 1:
-        return result.item()
-    return result
+    # par = cast_array(HCO3, CO3, Ks.K1, Ks.K2)  # cast parameters into array
+    # shape = maxShape(HCO3, CO3, Ks.K1, Ks.K2)  # get shape of output
+    
+    # result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_CO3).reshape(shape)
+    
+    # # If result is a single-element array, extract the scalar
+    # if result.size == 1:
+    #     return result.item()
+    # return result
 
 
 def zero_HCO3_CO3(h: float, HCO3: float, CO3: float, K1: float, K2: float) -> float:
@@ -511,17 +578,23 @@ def HCO3_TA(HCO3: Union[float, np.ndarray], TA: Union[float, np.ndarray], BT: Un
         Nutrient alkalinity not implemented for this input combination.
         Calculations use only C and B alkalinity.
     """
-    par = cast_array(
-        HCO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW
-    )  # cast parameters into array
-    shape = maxShape(HCO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # get shape of output
-
-    result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_TA).reshape(shape)
     
-    # If result is a single-element array, extract the scalar
-    if result.size == 1:
-        return result.item()
-    return result
+    return solve_function(
+        (HCO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW), 
+        zero_HCO3_TA
+    )
+    
+    # par = cast_array(
+    #     HCO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW
+    # )  # cast parameters into array
+    # shape = maxShape(HCO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # get shape of output
+
+    # result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_TA).reshape(shape)
+    
+    # # If result is a single-element array, extract the scalar
+    # if result.size == 1:
+    #     return result.item()
+    # return result
 
 
 def zero_HCO3_TA(h: float, HCO3: float, TA: float, BT: float, K1: float, K2: float, KB: float, KW: float) -> float:
@@ -581,15 +654,20 @@ def HCO3_DIC(HCO3: Union[float, np.ndarray], DIC: Union[float, np.ndarray], Ks: 
         This function uses the _zero_wrapper for robust root finding
         that handles both deterministic and uncertain parameters.
     """
-    par = cast_array(HCO3, DIC, Ks.K1, Ks.K2)  # cast parameters into array
-    shape = maxShape(HCO3, DIC, Ks.K1, Ks.K2)  # get shape of output
+    return solve_function(
+        (HCO3, DIC, Ks.K1, Ks.K2), 
+        zero_HCO3_DIC
+    )
     
-    result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_DIC).reshape(shape)
+    # par = cast_array(HCO3, DIC, Ks.K1, Ks.K2)  # cast parameters into array
+    # shape = maxShape(HCO3, DIC, Ks.K1, Ks.K2)  # get shape of output
     
-    # If result is a single-element array, extract the scalar
-    if result.size == 1:
-        return result.item()
-    return result
+    # result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_HCO3_DIC).reshape(shape)
+    
+    # # If result is a single-element array, extract the scalar
+    # if result.size == 1:
+    #     return result.item()
+    # return result
 
 
 def zero_HCO3_DIC(h, HCO3, DIC, K1, K2):
@@ -605,17 +683,23 @@ def CO3_TA(CO3, TA, BT, Ks):
     """
     Returns H
     """
-    par = cast_array(
-        CO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW
-    )  # cast parameters into array
-    shape = maxShape(CO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # get shape of output
     
-    result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO3_TA).reshape(shape)
+    return solve_function(
+        (CO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW), 
+        zero_CO3_TA
+    )
     
-    # If result is a single-element array, extract the scalar
-    if result.size == 1:
-        return result.item()
-    return result
+    # par = cast_array(
+    #     CO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW
+    # )  # cast parameters into array
+    # shape = maxShape(CO3, TA, BT, Ks.K1, Ks.K2, Ks.KB, Ks.KW)  # get shape of output
+    
+    # result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO3_TA).reshape(shape)
+    
+    # # If result is a single-element array, extract the scalar
+    # if result.size == 1:
+    #     return result.item()
+    # return result
 
 
 def zero_CO3_TA(h, CO3, TA, BT, K1, K2, KB, KW):
@@ -637,15 +721,21 @@ def CO3_DIC(CO3, DIC, Ks):
     """
     Returns H
     """
-    par = cast_array(CO3, DIC, Ks.K1, Ks.K2)  # cast parameters into array
-    shape = maxShape(CO3, DIC, Ks.K1, Ks.K2)  # get shape of output
-
-    result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO3_DIC).reshape(shape)
     
-    # If result is a single-element array, extract the scalar
-    if result.size == 1:
-        return result.item()
-    return result
+    return solve_function(
+        (CO3, DIC, Ks.K1, Ks.K2), 
+        zero_CO3_DIC
+    )
+    
+    # par = cast_array(CO3, DIC, Ks.K1, Ks.K2)  # cast parameters into array
+    # shape = maxShape(CO3, DIC, Ks.K1, Ks.K2)  # get shape of output
+
+    # result = np.apply_along_axis(_zero_wrapper, 0, par, fn=zero_CO3_DIC).reshape(shape)
+    
+    # # If result is a single-element array, extract the scalar
+    # if result.size == 1:
+    #     return result.item()
+    # return result
 
 
 def zero_CO3_DIC(h, CO3, DIC, K1, K2):
@@ -955,197 +1045,6 @@ def fCO2_to_pCO2(fCO2: Union[float, np.ndarray], Tc: Union[float, np.ndarray]) -
     delta = b0 + b1 * Tk
 
     return fCO2 / np.exp(P * (B + 2 * delta) / RT)
-
-def calc_C_species(
-    pHtot: Optional[Union[float, np.ndarray]] = None,
-    DIC: Optional[Union[float, np.ndarray]] = None,
-    CO2: Optional[Union[float, np.ndarray]] = None,
-    HCO3: Optional[Union[float, np.ndarray]] = None,
-    CO3: Optional[Union[float, np.ndarray]] = None,
-    TA: Optional[Union[float, np.ndarray]] = None,
-    fCO2: Optional[Union[float, np.ndarray]] = None,
-    pCO2: Optional[Union[float, np.ndarray]] = None,
-    T_in: Optional[Union[float, np.ndarray]] = None,
-    S_in: Optional[Union[float, np.ndarray]] = None,
-    BT: Optional[Union[float, np.ndarray]] = None,
-    PT: Union[float, np.ndarray] = 0,
-    SiT: Union[float, np.ndarray] = 0,
-    ST: Union[float, np.ndarray] = 0,
-    FT: Union[float, np.ndarray] = 0,
-    Ks: Optional[Union[KValues, dict]] = None,
-    **kwargs
-) -> Bunch:
-    """
-    Calculate all carbon species from minimal input parameters.
-    
-    This is the main carbonate system calculation function that determines
-    all carbon species and pH values from any two of the carbonate system
-    parameters. Implements all 15 parameter combinations from Zeebe &
-    Wolf-Gladrow, Appendix B.
-    
-    Args:
-        pHtot: pH on total scale.
-        DIC: Dissolved inorganic carbon in μmol/kg.
-        CO2: Dissolved CO2 concentration in μmol/kg.
-        HCO3: Bicarbonate ion concentration in μmol/kg.
-        CO3: Carbonate ion concentration in μmol/kg.
-        TA: Total alkalinity in μmol/kg.
-        fCO2: CO2 fugacity in μatm.
-        pCO2: CO2 partial pressure in μatm.
-        T_in: Temperature in degrees Celsius.
-        S_in: Salinity (practical salinity scale).
-        BT: Total boron concentration in μmol/kg.
-        PT: Total phosphate concentration in μmol/kg.
-        SiT: Total silicate concentration in μmol/kg.
-        ST: Total sulfate concentration in μmol/kg.
-        FT: Total fluoride concentration in μmol/kg.
-        Ks: Equilibrium constants data structure.
-        **kwargs: Additional keyword arguments.
-        
-    Returns:
-        Bunch object containing all calculated carbon species and pH values
-        on multiple scales, plus individual alkalinity components.
-        
-    Raises:
-        ValueError: If insufficient or incompatible parameters are provided.
-        
-    Note:
-        Requires exactly two carbon system parameters to solve. Automatically
-        handles unit conversions and calculates all remaining species.
-    """
-
-    # if fCO2 is given but CO2 is not, calculate CO2
-    if CO2 is None:
-        if fCO2 is not None:
-            CO2 = fCO2_to_CO2(fCO2, Ks)
-        elif pCO2 is not None:
-            CO2 = fCO2_to_CO2(pCO2_to_fCO2(pCO2, T_in), Ks)
-
-    # Carbon System Calculations (logic from Zeebe & Wolf-Gladrow, Appendix B)
-    # 1. CO2 and pH
-    if CO2 is not None and pHtot is not None:
-        H = 10.0**-pHtot
-        DIC = CO2_pH(CO2, pHtot, Ks)
-    # 2. CO2 and HCO3
-    elif CO2 is not None and HCO3 is not None:
-        H = CO2_HCO3(CO2, HCO3, Ks)
-        DIC = CO2_pH(CO2, negative_log10_preserve_type(H), Ks)
-    # 3. CO2 and CO3
-    elif CO2 is not None and CO3 is not None:
-        H = CO2_CO3(CO2, CO3, Ks)
-        DIC = CO2_pH(CO2, negative_log10_preserve_type(H), Ks)
-    # 4. CO2 and TA
-    elif CO2 is not None and TA is not None:
-        # unit conversion because OH and H wrapped
-        # up in TA fns - all need to be in same units.
-        pHtot = CO2_TA(CO2=CO2, TA=TA, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks)
-        H = 10.0**-pHtot
-        DIC = CO2_pH(CO2, pHtot, Ks)
-    # 5. CO2 and DIC
-    elif CO2 is not None and DIC is not None:
-        H = CO2_DIC(CO2, DIC, Ks)
-    # 6. pHtot and HCO3
-    elif pHtot is not None and HCO3 is not None:
-        H = 10.0**-pHtot
-        DIC = pH_HCO3(pHtot, HCO3, Ks)
-    # 7. pHtot and CO3
-    elif pHtot is not None and CO3 is not None:
-        H = 10.0**-pHtot
-        DIC = pH_CO3(pHtot, CO3, Ks)
-    # 8. pHtot and TA
-    elif pHtot is not None and TA is not None:
-        H = 10.0**-pHtot
-        DIC = pH_TA(pH=pHtot, TA=TA, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks)
-    # 9. pHtot and DIC
-    elif pHtot is not None and DIC is not None:
-        H = 10.0**-pHtot
-    # 10. HCO3 and CO3
-    elif HCO3 is not None and CO3 is not None:
-        H = HCO3_CO3(HCO3, CO3, Ks)
-        DIC = pH_CO3(negative_log10_preserve_type(H), CO3, Ks)
-    # 11. HCO3 and TA
-    elif HCO3 is not None and TA is not None:
-        Warning(
-            "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
-        )
-        H = HCO3_TA(HCO3, TA, BT, Ks)
-        DIC = pH_HCO3(negative_log10_preserve_type(H), HCO3, Ks)
-    # 12. HCO3 amd DIC
-    elif HCO3 is not None and DIC is not None:
-        H = HCO3_DIC(HCO3, DIC, Ks)
-    # 13. CO3 and TA
-    elif CO3 is not None and TA is not None:
-        Warning(
-            "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
-        )
-        H = CO3_TA(CO3, TA, BT, Ks)
-        DIC = pH_CO3(negative_log10_preserve_type(H), CO3, Ks)
-    # 14. CO3 and DIC
-    elif CO3 is not None and DIC is not None:
-        H = CO3_DIC(CO3, DIC, Ks)
-    # 15. TA and DIC
-    elif TA is not None and DIC is not None:
-        pHtot = TA_DIC(TA=TA, DIC=DIC, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks)
-        H = 10.0**-pHtot
-
-    # The above makes sure that DIC and H are known,
-    # this next bit calculates all the missing species
-    # from DIC and H.
-    if CO2 is None:
-        CO2 = cCO2(H, DIC, Ks)
-    if fCO2 is None:
-        fCO2 = CO2_to_fCO2(CO2, Ks)
-    if pCO2 is None:
-        pCO2 = fCO2_to_pCO2(fCO2, T_in)
-    if HCO3 is None:
-        HCO3 = cHCO3(H, DIC, Ks)
-    if CO3 is None:
-        CO3 = cCO3(H, DIC, Ks)
-    
-    # Calculate all elements of Alkalinity
-    # If TA was provided as input, preserve it. Otherwise calculate it.
-    if TA is None:
-        (TA, CAlk, BAlk, PAlk, SiAlk, OH, Hfree, HSO4, HF) = cTA(
-            H=H, DIC=DIC, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks, mode="multi"
-        )
-    else:
-        # TA was provided as input - preserve it and only calculate the other alkalinity components
-        (_, CAlk, BAlk, PAlk, SiAlk, OH, Hfree, HSO4, HF) = cTA(
-            H=H, DIC=DIC, BT=BT, PT=PT, SiT=SiT, ST=ST, FT=FT, Ks=Ks, mode="multi"
-        )
-
-    # if pH not calced yet, calculate on all scales.
-    if pHtot is None:
-        pHtot = np.array(negative_log10_preserve_type(H), ndmin=1)
-    
-    FREEtoTOT = negative_log10_preserve_type((1 + ST / Ks.KS))
-    SWStoTOT = negative_log10_preserve_type((1 + ST / Ks.KS) / (1 + ST / Ks.KS + FT / Ks.KF))
-    fH = calc_fH(T_in + 273.15, S_in)
-    
-    return Bunch(
-        {
-            "pHtot": pHtot,
-            "pHfree": pHtot - FREEtoTOT,
-            "pHsws": pHtot - SWStoTOT,
-            "pHNBS": pHtot - SWStoTOT - np.log10(fH),
-            "TA": TA,
-            "DIC": DIC,
-            "CO2": CO2,
-            "H": H,
-            "HCO3": HCO3,
-            "fCO2": fCO2,
-            "pCO2": pCO2,
-            "CO3": CO3,
-            "CAlk": CAlk,
-            "BAlk": BAlk,
-            "PAlk": PAlk,
-            "SiAlk": SiAlk,
-            "OH": OH,
-            "Hfree": Hfree,
-            "HSO4": HSO4,
-            "HF": HF,
-        }
-    )
 
 def calc_revelle_factor(TA: Union[float, np.ndarray], DIC: Union[float, np.ndarray], BT: Union[float, np.ndarray], 
                        PT: Union[float, np.ndarray], SiT: Union[float, np.ndarray], ST: Union[float, np.ndarray], 

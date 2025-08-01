@@ -3,7 +3,6 @@ Functions for calculating boron isotope abundances and fractionation.
 """
 
 import numpy as np
-from cbsyst.helpers import NnotNone, Bunch
 from .boron import chiB_calc
 from .uncertainties import negative_log10_preserve_type, sqrt_preserve_type
 from typing import Union, Optional, Dict, Tuple, Callable, List, Any
@@ -256,7 +255,7 @@ def ABO3_or_ABO4(ABO3: Optional[Union[float, np.ndarray]], ABO4: Optional[Union[
         At least one of ABO3 or ABO4 must be provided. If only ABO3 is
         given, ABO4 is calculated using the fractionation factor.
     """
-    if NnotNone(ABO3, ABO4) < 1:
+    if ABO3 is None and ABO4 is None:
         raise(ValueError("Either ABO4 or ABO3 must be specified"))
     elif ABO4 is None:
         ABO4 = ABO3_to_ABO4(ABO3,alphaB)
@@ -519,64 +518,6 @@ def calculate_KB(H: Union[float, np.ndarray], alphaB: Union[float, np.ndarray], 
             / ((ABO4 - ABT)
             / ( ABT 
             - 1 / ( (1/alphaB) * (1/ABO4 -1) + 1) )))
-
-def calc_B_isotopes(pHtot: Optional[Union[float, np.ndarray]] = None, 
-                    ABT: Optional[Union[float, np.ndarray]] = None, 
-                    ABO3: Optional[Union[float, np.ndarray]] = None, 
-                    ABO4: Optional[Union[float, np.ndarray]] = None, 
-                    alphaB: Optional[Union[float, np.ndarray]] = None, 
-                    Ks: Optional[Union[KValues, dict]] = None, **kwargs) -> Bunch:
-    """
-    Calculate all boron isotope species from minimal input parameters.
-
-    This is the main boron isotope calculation function that determines all
-    boron isotope abundances and pH from minimal input. Can solve from various
-    combinations of pH, total isotope abundance, and species-specific abundances.
-
-    Args:
-        pHtot: pH on total scale.
-        ABT: Fractional abundance of 11B in total dissolved boron.
-        ABO3: Fractional abundance of 11B in boric acid (B(OH)3).
-        ABO4: Fractional abundance of 11B in borate ion (B(OH)4-).
-        alphaB: Fractionation factor between B(OH)3 and B(OH)4-.
-        Ks: Dictionary or dataclass of equilibrium constants.
-        **kwargs: Additional keyword arguments.
-
-    Returns:
-        Bunch object containing all calculated boron isotope species and pH.
-
-    Raises:
-        ValueError: If insufficient parameters are provided to solve the system.
-
-    Note:
-        Requires at least two parameters to solve the system. If pH is provided,
-        needs either ABT or both ABO3/ABO4. If pH is not provided, needs ABT
-        plus one of ABO3 or ABO4.
-    """
-    # determine pH and ABT
-    if pHtot is not None:  # pH is known
-        H = 10.0**-pHtot
-        if ABT is None:
-            ABT = calculate_ABT(H=H, Ks=Ks, alphaB=alphaB, ABO3=ABO3, ABO4=ABO4)
-    else:  # pH is not known
-        if ABT is not None:
-            H = calculate_H(Ks=Ks, alphaB=alphaB, ABT=ABT, ABO3=ABO3, ABO4=ABO4)
-            pHtot = negative_log10_preserve_type(H)
-        else:
-            raise ValueError('ABT and one of ABO3 or ABO4 must be specified if pH is missing.')
-    
-    if ABO3 is None:
-        ABO3 = calculate_ABO3(H=H, Ks=Ks, ABT=ABT, alphaB=alphaB)
-    if ABO4 is None:
-        ABO4 = calculate_ABO4(H=H, Ks=Ks, ABT=ABT, alphaB=alphaB)
-    
-    return Bunch({
-        'pHtot': pHtot,
-        'ABT': ABT,
-        'ABO4': ABO4,
-        'ABO3': ABO3,
-        'H': H
-    })
 
 # CBsyst 1.0 functions
 

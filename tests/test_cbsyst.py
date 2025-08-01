@@ -2,11 +2,7 @@ import unittest
 import os
 import pandas as pd
 import numpy as np
-import cbsyst.carbon as cf
-import cbsyst.boron as bf
-import cbsyst.boron_isotopes as bif
 from cbsyst.cbsyst import Csys, CBsys
-from cbsyst.helpers import Bunch
 from tests.test_data.GLODAP_data.get_GLODAP_data import get_GLODAP
 
 class ReferenceDataTestCase(unittest.TestCase):

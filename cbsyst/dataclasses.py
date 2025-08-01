@@ -148,7 +148,7 @@ class mixin_CBsyst_print:
         out += 'Calculated:\n'
         out += line
         for p in ['pHtot', 'pHfree', 'pHsws', 'pHNBS', 'DIC', 'TA', 'CO2', 'HCO3', 'CO3', 'pCO2', 'fCO2', 'BT', 'BO3', 'BO4', 'dBT', 'dBO3', 'dBO4', 'OmegaC', 'OmegaA']:
-            if self.get(p):
+            if self.get(p) is not None:
                 out += f'{p:<{col1}}{self._fmt_value(self[p]):>{col2}}\n'
         out += section
 
@@ -170,7 +170,10 @@ class mixin_CBsyst_print:
             standard floating point formatting.
         """
         if isinstance(value, np.ndarray):
-            return f'{value[0]:.2f} ... {value[-1]:.2f} (n={len(value)})' if len(value) > 1 else f'{value[0]:.2f}'
+            if value.ndim == 1:
+                return f'{value[0]:.2f} ... {value[-1]:.2f} (n={len(value)})' if len(value) > 1 else f'{value[0]:.2f}'
+            elif value.ndim > 1:
+                return f'{value.min():.2f} - {value.max():.2f} (shape={value.shape})' if value.shape[0] > 1 else f'{value[0, 0]:.2f}'
         elif hasattr(value, 'nominal_value'):
             return f'{value.nominal_value:.2f} ± {value.std_dev:.2f}'
         else:

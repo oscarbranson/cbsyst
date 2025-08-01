@@ -51,6 +51,16 @@ def calc_BT(Sal):
     a, b = (0.0004157, 35.0)
     return a * Sal / b  # mol/kg-SW
 
+
+def calc_fH(TempK, Sal):
+    # Same as CO2SYS
+    # Takahashi et al, Chapter 3 in GEOSECS Pacific Expedition,
+    # v. 3, 1982 (p. 80)
+
+    a, b, c, d = (1.2948, -2.036e-3, 4.607e-4, -1.475e-6)
+    return a + b * TempK + (c + d * TempK) * Sal ** 2
+
+
 def calc_conservative_composition(params: CBsystData):
     if params.ST is None:
         params.ST = calc_ST(params.S_in)
