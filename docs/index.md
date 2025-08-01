@@ -28,3 +28,4 @@ print(result.pCO2)
 - [Installation](installation.md) - How to install cbsyst
 - [Usage](usage.md) - Examples and tutorials
 - [API Reference](api.md) - Complete function documentation
+- [Performance](performance.md) - Benchmarking `cbsyst` against real-world data.
