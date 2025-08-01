@@ -5,11 +5,10 @@ import inspect
 import numpy as np
 from cbsyst.uncertainties import remove_negatives
 
-from .dataclasses import CBsystData, create_dataclass
-from . import io, utils, units, constants, carbon, boron, boron_isotopes, pH
+from .dataclasses import CBsystData, KValues, create_dataclass
+from . import utils, units, constants, carbon, boron, boron_isotopes, pH
 
 from typing import Optional, Union, overload
-from typing_extensions import Unpack, TypedDict    
 
 DEBUG = False
 
@@ -52,14 +51,126 @@ def Csys(
     T_out: Optional[Union[float, np.ndarray]] = None,
     S_in: Union[float, np.ndarray] = 35.0,
     S_out: Optional[Union[float, np.ndarray]] = None,
-    P_in: Union[float, np.ndarray] = 0.0,
+    P_in: Union[float, np.ndarray] = None,
     P_out: Optional[Union[float, np.ndarray]] = None,
     # Constants
-    Ks: Optional[object] = None,
+    Ks: Optional[Union[dict, KValues]] = None,
     # Configuration
     unit: str = "umol",
     MyAMI_mode: str = "calculate",
-    ) ->CBsystData:
+    ) -> CBsystData:
+    """
+    Calculate the complete marine carbonate-boron system from any two known parameters.
+    
+    This is the main function for calculating seawater carbonate chemistry, boron speciation,
+    and boron isotope fractionation. 
+    
+    The function requires some combination of:
+        - Carbonate system: pH + any C species, or any two C species
+        - Boron system: pH + any B species, or any two B species  
+        - Isotope system: pH + any isotope parameter, or any two isotope parameters.
+        
+        When output conditions (T_out, S_out, P_out) are specified, the system
+        is recalculated at those conditions with appropriate corrections for
+        equilibrium constants and conservative ion concentrations.
+        
+        Gas parameters (pCO2, fCO2) are always in ppm regardless of unit setting.
+                 
+        The function automatically determines which calculation pathway to use based on the
+        provided parameters and can handle different temperature, salinity, and pressure
+        conditions for input and output.
+    
+    **Speciation constants** (Ks) can be provided directly as a dictionary, or will be calculated
+    for the specified conditions (T, S, P) using  the [KGen](https://palaeocarbonatechemistry.github.io/Kgen/) module. This uses the 'Best Practices'
+    Ks from Dickson, Sabine and Christian (2007), unless Ca or Mg differs from the default values.
+    
+    If Ca or Mg deviate from the default values, KGen will adjust the constants for modified
+    seawater chemistry using the MyAMI pitzer model. If MyAMI is being used, it can add
+    substantial overhead and calculation time. If you require fast calculations, set `MyAMI_mode`
+    to `"approximate"` to use a polynomial approximation of the MyAMI model. See the KGen
+    documentation for more details.
+    
+    **Uncertainties** will be propagated through calculations analytically using the [`uncertainties`](https://pythonhosted.org/uncertainties/)
+    module, if you provide inputs with uncertainties (e.g. `uncertainties.ufloat` or 
+    `uncertainties.unumpy.uarray` objects).
+    
+    Args:
+        pHtot: pH on the total scale.
+        pHsws: pH on the seawater scale.
+        pHfree: pH on the free scale.
+        pHNBS: pH on the NBS scale.
+        DIC: Dissolved inorganic carbon concentration.
+        TA: Total alkalinity.
+        CO2: Dissolved CO2 concentration.
+        HCO3: Bicarbonate ion concentration.
+        CO3: Carbonate ion concentration.
+        pCO2: Partial pressure of CO2 (ppm).
+        fCO2: Fugacity of CO2 (ppm).
+        OmegaC: Calcite saturation state.
+        OmegaA: Aragonite saturation state.
+        BT: Total boron concentration.
+        BO3: Boric acid concentration.
+        BO4: Borate ion concentration.
+        dBT: Boron isotope composition of total boron (‰, default 39.61).
+        dBO3: Boron isotope composition of boric acid (‰).
+        dBO4: Boron isotope composition of borate (‰).
+        ABT: Absolute boron isotope ratio of total boron.
+        ABO3: Absolute boron isotope ratio of boric acid.
+        ABO4: Absolute boron isotope ratio of borate.
+        alphaB: Boron isotope fractionation factor (default 1.0272).
+        Ca: Calcium concentration (mol/kg, default 0.0102821 for S=35).
+        Mg: Magnesium concentration (mol/kg, default 0.0528171 for S=35).
+        PT: Total phosphate concentration (mol/kg, default 0.0).
+        SiT: Total silicate concentration (mol/kg, default 0.0).
+        ST: Total sulfate concentration (mol/kg, auto-calculated from salinity if None).
+        FT: Total fluoride concentration (mol/kg, auto-calculated from salinity if None).
+        T_in: Input temperature (°C, default 25.0).
+        T_out: Output temperature (°C, if different from input).
+        S_in: Input salinity (PSU, default 35.0).
+        S_out: Output salinity (PSU, if different from input).
+        P_in: Input pressure (bar, default 0.0).
+        P_out: Output pressure (bar, if different from input).
+        Ks: Pre-calculated equilibrium constants (auto-calculated if None).
+        unit: Concentration unit for input/output ("umol", "mmol", or "mol", default "umol").
+        MyAMI_mode: MyAMI calculation mode, can be "calculate" or "approximate" (default "calculate").
+    
+    Returns:
+        CBsystData: Complete carbonate-boron system results containing all calculated
+            parameters, equilibrium constants, and metadata. Results include all
+            carbonate species, boron speciation, pH on all scales, saturation states,
+            and boron isotope compositions.
+    
+    Raises:
+        ValueError: If insufficient parameters are provided to solve the system
+            (need at least 2 from carbonate, boron, or isotope systems).
+                
+    Examples:
+        Basic carbonate system calculation:
+        
+        >>> result = Csys(pHtot=8.1, DIC=2000, T_in=25, S_in=35)
+        >>> print(f"TA = {result.TA:.1f} µmol/kg")
+        TA = 2300.5 µmol/kg
+        
+        With output conditions:
+        
+        >>> result = Csys(pHtot=8.1, DIC=2000, T_in=25, T_out=20, S_in=35, S_out=30)
+        >>> print(f"pH at input: {result.pHtot_in:.2f}, at output: {result.pHtot:.2f}")
+        pH at input: 8.10, at output: 8.05
+        
+        Boron isotope calculation:
+        
+        >>> result = Csys(dBT=39.61, dBO3=49.05, T_in=25, S_in=35)
+        >>> print(f"Calculated pH = {result.pHtot:.2f}")
+        Calculated pH = 8.15
+        
+        Array inputs:
+        
+        >>> pH_array = np.array([7.8, 8.0, 8.2])
+        >>> DIC_array = np.array([1950, 2000, 2050])
+        >>> result = Csys(pHtot=pH_array, DIC=DIC_array, T_in=25, S_in=35)
+        >>> print(result.TA.shape)
+        (3,)
+    """
     
     # get parameter defaults
     sig = inspect.signature(Csys)
