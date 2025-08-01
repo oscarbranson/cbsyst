@@ -11,6 +11,8 @@ from . import io, utils, units, constants, carbon, boron, boron_isotopes, pH
 from typing import Optional, Union, overload
 from typing_extensions import Unpack, TypedDict    
 
+DEBUG = False
+
 def Csys(
     # Carbon System Parameters
     pHtot: Optional[Union[float, np.ndarray]] = None,
@@ -85,7 +87,7 @@ def Csys(
     n_B_given = boron.n_given(csys)
     n_iso_given = boron_isotopes.n_given(csys)
 
-    print(n_pH_given, n_C_given, n_B_given, n_iso_given)
+    if DEBUG: print(n_pH_given, n_C_given, n_B_given, n_iso_given)
 
     csys.Ks = constants.calc_Ks(csys)  # create_dataclasscalculate constants
     units.convert_to_molar(csys)  # convert all concentration units to molar
@@ -108,34 +110,78 @@ def Csys(
     
     # if the C system was partially provided, calculate it
     if n_C_given == 1:
-        print('calculating carbon')
+        if DEBUG: print('calculating carbon')
         carbon.solve_C_system(csys)
     # if the B system was partially provided, calculate it
     if n_B_given == 1:
-        print('calculating boron')
+        if DEBUG: print('calculating boron')
         boron.solve_B_system(csys)
     # if the isotope system was partially provided, calculate it
     if n_iso_given == 1:
-        print('calculating boron isotopes')
+        if DEBUG: print('calculating boron isotopes')
         boron_isotopes.solve_B_isotopes(csys)
+        
+    # if has an output condition, recalculate at that condition.
+    if utils.has_output_condition(csys):
+        # Store input conditions
+        inputs = {k: csys.get(k) for k in csys.inputs}
+        
+        # Set output condition defaults
+        T_out = csys.T_out if csys.T_out is not None else csys.T_in
+        S_out = csys.S_out if csys.S_out is not None else csys.S_in
+        P_out = csys.P_out if csys.P_out is not None else csys.P_in
+        
+        # Update salinity-dependent parameters if salinity changes
+        if csys.S_out is not None:
+            BT_out = csys.BT * S_out / csys.S_in
+            ST_out = csys.ST * S_out / csys.S_in  
+            FT_out = csys.FT * S_out / csys.S_in
+        else:
+            BT_out = csys.BT
+            ST_out = csys.ST
+            FT_out = csys.FT
+        
+        # Calculate at output conditions - use same parameter set as old implementation
+        csys_out = Csys(
+            TA=csys.TA, 
+            DIC=csys.DIC, 
+            dBT=getattr(csys, 'dBT', None),
+            T_in=T_out,
+            S_in=S_out,
+            P_in=P_out,
+            unit=1,
+            Ca=csys.Ca,
+            Mg=csys.Mg,
+            BT=BT_out,
+            ST=ST_out,
+            FT=FT_out,
+        )
+        
+        # rename conditions so that in/out are correctly preserved
+        for k in ['T', 'S', 'P']:
+            setattr(csys_out, k + '_out', getattr(csys_out, k + '_in', None))
+            setattr(csys_out, k + '_in', getattr(csys, k + '_in', None))
+        
+        # store the input conditions, labelled as such.
+        for k, v in inputs.items():
+            if k not in ['T_out', 'T_in', 'S_out', 'S_in', 'P_out', 'P_in']:
+                setattr(csys_out, k + "_in", v)
 
-    # # if has an output condition, recalculate at that condition.
-    # if utils.has_output_condition(csys):
-    #     out = Csys(
-    #         TA=csys.TA, 
-    #         DIC=csys.DIC, 
-    #         T_in=csys.T_out or csys.T_in,
-    #         P_in=csys.P_out or csys.P_in,
-    #         S_in=csys.S_out or csys.S_in,
-    #         unit=csys.unit,
-    #         Ca=csys.Ca,
-    #         Mg=csys.Mg,
-    #         )
-    #     out.input_conditions = csys
+        # set units back to original
+        setattr(csys_out, 'unit', csys.unit)
+        units.convert_from_molar(csys_out)  # convert back to original concentration unit
 
-    units.convert_from_molar(csys)  # convert back to original concentration unit
+        return csys_out
 
-    return csys
+    else:
+        units.convert_from_molar(csys)  # convert back to original concentration unit
+
+        return csys
+
+# for backward compatibility, alias the old Csys function
+CBsys = Csys
+Bsys = Csys
+ABsys = Csys
 
 # def Csys(
 #         pHtot=None, DIC=None, TA=None,
