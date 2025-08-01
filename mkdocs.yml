@@ -37,12 +37,13 @@ plugins:
           options:
             docstring_style: google
             show_source: true
-            show_signature_annotations: true
+            # show_signature_annotations: true
 nav:
   - Home: index.md
   - Installation: installation.md
   - Usage: usage.md
   - API Reference: api.md
+  - Performance: performance.md
 
 markdown_extensions:
   - pymdownx.highlight:
