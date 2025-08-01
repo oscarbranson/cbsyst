@@ -730,8 +730,8 @@ def use_Omega(params):
         params.CO3 = params.OmegaA * params.Ks.KspA / params.Ca
 
 def calculate_Omegas(params):
-    params.OmegaA = params.OmegaA or params.CO3 * params.Ca / params.Ks.KspA
-    params.OmegaC = params.OmegaC or params.CO3 * params.Ca / params.Ks.KspC
+    if params.OmegaA is None: params.OmegaA = params.CO3 * params.Ca / params.Ks.KspA
+    if params.OmegaC is None: params.OmegaC = params.CO3 * params.Ca / params.Ks.KspC
 
 def solve_CO2_pHtot(params):
     params.H = 10.0**-params.pHtot
@@ -831,12 +831,12 @@ def can_solve_carbon(params):
 
 def calculate_remaining_C_species(params):
     # populate missing carbon parameters
-    params.CO2 = params.CO2 or cCO2(params.H, params.DIC, params.Ks)
-    params.fCO2 = params.fCO2 or CO2_to_fCO2(params.CO2, params.Ks)
-    params.pCO2 = params.pCO2 or fCO2_to_pCO2(params.fCO2, params.T_in)
-    params.HCO3 = params.HCO3 or cHCO3(params.H, params.DIC, params.Ks)
-    params.CO3 = params.CO3 or cCO3(params.H, params.DIC, params.Ks)
-    params.pHtot = params.pHtot or negative_log10_preserve_type(params.H)
+    if params.CO2 is None: params.CO2 = cCO2(params.H, params.DIC, params.Ks)
+    if params.fCO2 is None: params.fCO2 = CO2_to_fCO2(params.CO2, params.Ks)
+    if params.pCO2 is None: params.pCO2 = fCO2_to_pCO2(params.fCO2, params.T_in)
+    if params.HCO3 is None: params.HCO3 = cHCO3(params.H, params.DIC, params.Ks)
+    if params.CO3 is None: params.CO3 = cCO3(params.H, params.DIC, params.Ks)
+    if params.pHtot is None: params.pHtot = negative_log10_preserve_type(params.H)
 
     TA_COMPONENTS = ['TA', 'CAlk', 'BAlk', 'PAlk', 'SiAlk', 'OH', 'Hfree', 'HSO4', 'HF']
     for par, val in zip(TA_COMPONENTS, cTA(

@@ -78,26 +78,25 @@ def calc_B_species(pHtot=None, BT=None, BO3=None, BO4=None, Ks=None, **kwargs):
 # CBsyst 1.0 functions
 
 def solve_pH_BT(params):
-    params.H = 10.0**-params.pHtot
+    if params.H is None: params.H = 10.0**-params.pHtot
 
 def solve_BT_BO3(params):
-    params.H = BT_BO3(params.BT, params.BO3, params.Ks)
+    if params.H is None: params.H = BT_BO3(params.BT, params.BO3, params.Ks)
 
 def solve_BT_BO4(params):
-    params.H = BT_BO4(params.BT, params.BO4, params.Ks)
+    if params.H is None: params.H = BT_BO4(params.BT, params.BO4, params.Ks)
 
 def solve_BO3_BO4(params):
     params.BT = params.BO3 + params.BO4
-    params.H = BT_BO3(params.BT, params.BO3, params.Ks)
-    
-def solve_pH_BO3(params):
-    params.H = 10.0**-params.pHtot
-    params.BT = pH_BO3(params.pHtot, params.BO3, params.Ks)
+    if params.H is None: params.H = BT_BO3(params.BT, params.BO3, params.Ks)
 
+def solve_pH_BO3(params):
+    if params.H is None: params.H = 10.0**-params.pHtot
+    if params.BT is None: params.BT = pH_BO3(params.pHtot, params.BO3, params.Ks)
 
 def solve_pH_BO4(params):
-    params.H = 10.0**-params.pHtot
-    params.BT = pH_BO4(params.pHtot, params.BO4, params.Ks)
+    if params.H is None: params.H = 10.0**-params.pHtot
+    if params.BT is None: params.BT = pH_BO4(params.pHtot, params.BO4, params.Ks)
 
 SOLVERS = {
     ('pHtot', 'BT'): solve_pH_BT,
@@ -118,9 +117,9 @@ def n_given(params):
 
 def calc_remaining_B_species(params):
     if 'BO3' in params.__dataclass_fields__:
-        params.BO3 = params.BO3 or cBO3(params.BT, params.H, params.Ks)
-        params.BO4 = params.BO4 or cBO4(params.BT, params.H, params.Ks)
-    params.pHtot = params.pHtot or negative_log10_preserve_type(params.H)
+        if params.BO3 is None: params.BO3 = cBO3(params.BT, params.H, params.Ks)
+        if params.BO4 is None: params.BO4 = cBO4(params.BT, params.H, params.Ks)
+    if params.pHtot is None: params.pHtot = negative_log10_preserve_type(params.H)
 
 def solve_B_system(params):
     boron_params = ['pHtot', 'BT', 'BO3', 'BO4']
