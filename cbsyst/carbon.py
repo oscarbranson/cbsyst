@@ -77,10 +77,9 @@ def solve_with_vectorization(params, solver_fn):
     Returns:
         Result array or scalar depending on input shapes.
     """
-    # Create vectorized wrapper
+    # Create vectorized wrapper - don't specify otypes to allow uncertainty objects
     vectorized_solver = np.vectorize(
-        lambda *args: _zero_wrapper(list(args), solver_fn),
-        otypes=[float]
+        lambda *args: _zero_wrapper(list(args), solver_fn)
     )
     
     # Apply with automatic broadcasting
