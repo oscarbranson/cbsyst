@@ -1,38 +1,41 @@
 import unittest
 from cbsyst import boron_isotopes as bif
+from cbsyst.dataclasses import KValues
 
 from tests import check_vals
 ref = check_vals.boron_ref
+ref['Ks'] = KValues(**ref['Ks'])
+
 class BoronIsotopeFunctions(unittest.TestCase):
     """Test B isotope functions"""
 
     def test_boron_isotopes(self):
         
         with self.subTest(msg='get_alphaB'):
-            self.assertEqual(bif.get_alphaB(), ref.alphaB)
+            self.assertEqual(bif.get_alphaB(), ref['alphaB'])
 
         with self.subTest(msg='calculate_ABT (H, BO3)'):
             self.assertAlmostEqual(
-                bif.calculate_ABT(H=ref.H, ABO3=ref.ABO3, Ks=ref.Ks, alphaB=ref.alphaB),
-                ref.ABT,
+                bif.calculate_ABT(H=ref['H'], ABO3=ref['ABO3'], Ks=ref['Ks'], alphaB=ref['alphaB']),
+                ref['ABT'],
                 places=6,
             )
 
         with self.subTest(msg='calculate_ABT (H, BO4)'):
             self.assertAlmostEqual(
-                bif.calculate_ABT(H=ref.H, ABO4=ref.ABO4, Ks=ref.Ks, alphaB=ref.alphaB),
-                ref.ABT,
+                bif.calculate_ABT(H=ref['H'], ABO4=ref['ABO4'], Ks=ref['Ks'], alphaB=ref['alphaB']),
+                ref['ABT'],
                 places=6,
             )
 
         with self.subTest(msg='calculate_ABO3'):
             self.assertAlmostEqual(
-                bif.calculate_ABO3(H=ref.H, ABT=ref.ABT, Ks=ref.Ks, alphaB=ref.alphaB), ref.ABO3, places=6
+                bif.calculate_ABO3(H=ref['H'], ABT=ref['ABT'], Ks=ref['Ks'], alphaB=ref['alphaB']), ref['ABO3'], places=6
             )
 
         with self.subTest(msg='calculate_ABO4'):
             self.assertAlmostEqual(
-                bif.calculate_ABO4(H=ref.H, ABT=ref.ABT, Ks=ref.Ks, alphaB=ref.alphaB), ref.ABO4, places=6
+                bif.calculate_ABO4(H=ref['H'], ABT=ref['ABT'], Ks=ref['Ks'], alphaB=ref['alphaB']), ref['ABO4'], places=6
             )
 
         # Isotope unit conversions
