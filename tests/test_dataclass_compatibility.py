@@ -12,6 +12,8 @@ from cbsyst.helpers import Bunch
 from cbsyst.units import UNIT_MULTIPLIERS
 import uncertainties as u
 
+DEBUG = False
+
 class TestDataclassCompatibility(unittest.TestCase):
     """Test that new dataclass-based approach produces same results as original functions."""
     
@@ -44,8 +46,11 @@ class TestDataclassCompatibility(unittest.TestCase):
         """Assert that two results are close within tolerance."""
         # Get common keys between results
         common_keys = set(result_new.keys()) & set(result_old.keys())
-                
-        print(f"Debug: Comparing {len(common_keys)} common keys")
+
+        if DEBUG:
+            print(f"Debug: Comparing {len(common_keys)} common keys")
+
+        failures = []  # Collect all failures
         
         for key in common_keys:
             new_val = result_new[key]
@@ -54,59 +59,78 @@ class TestDataclassCompatibility(unittest.TestCase):
             if key == 'Ks':
                 continue
             
-            print(f"Debug: Key '{key}' - New: {type(new_val)} = {new_val}, Old: {type(old_val)} = {old_val}")
+            fail_msg = 'OK'
             
-            # Handle None values
-            if new_val is None and old_val is None:
-                continue
-            if new_val is None or old_val is None:
-                self.fail(f"Key {key}: new value is {new_val}, old value is {old_val}")
-            
-            # Skip non-numeric values (like strings, dicts, etc.)
-            if not self._is_numeric(new_val) or not self._is_numeric(old_val):
-                # For non-numeric values, just check equality
-                if key == 'unit':
-                    new_val = UNIT_MULTIPLIERS[new_val]
-                if new_val != old_val:
-                    self.fail(f"Key {key}: new value '{new_val}' != old value '{old_val}'")
-                continue
-            
-            # Handle uncertainties
-            if hasattr(new_val, 'nominal_value') and hasattr(old_val, 'nominal_value'):
-                # Both have uncertainties
-                try:
-                    np.testing.assert_allclose(
-                        new_val.nominal_value, old_val.nominal_value, 
-                        rtol=rtol, atol=atol,
-                        err_msg=f"Key {key} nominal values differ"
-                    )
-                    np.testing.assert_allclose(
-                        new_val.std_dev, old_val.std_dev, 
-                        rtol=rtol, atol=atol,
-                        err_msg=f"Key {key} uncertainties differ"
-                    )
-                except Exception as e:
-                    self.fail(f"Key {key} comparison failed: {e}")
-            elif hasattr(new_val, 'nominal_value') or hasattr(old_val, 'nominal_value'):
-                # Only one has uncertainties
-                new_nom = new_val.nominal_value if hasattr(new_val, 'nominal_value') else new_val
-                old_nom = old_val.nominal_value if hasattr(old_val, 'nominal_value') else old_val
-                try:
-                    np.testing.assert_allclose(
-                        new_nom, old_nom, rtol=rtol, atol=atol,
-                        err_msg=f"Key {key} values differ"
-                    )
-                except Exception as e:
-                    self.fail(f"Key {key} comparison failed: {e}")
-            else:
-                # Neither has uncertainties
-                try:
-                    np.testing.assert_allclose(
-                        new_val, old_val, rtol=rtol, atol=atol,
-                        err_msg=f"Key {key} values differ"
-                    )
-                except Exception as e:
-                    self.fail(f"Key {key} comparison failed: {e}")
+            try:
+                # Handle None values
+                if new_val is None and old_val is None:
+                    continue
+                if new_val is None or old_val is None:
+                    failures.append(f"Key {key}: new value is {new_val}, old value is {old_val}")
+                    continue
+                
+                # Skip non-numeric values (like strings, dicts, etc.)
+                if not self._is_numeric(new_val) or not self._is_numeric(old_val):
+                    # For non-numeric values, just check equality
+                    if key == 'unit':
+                        new_val = UNIT_MULTIPLIERS[new_val]
+                    if new_val != old_val:
+                        failures.append(f"Key {key}: new value '{new_val}' != old value '{old_val}'")
+                        fail_msg = 'FAILED'
+                    continue
+                
+                # Handle uncertainties
+                if hasattr(new_val, 'nominal_value') and hasattr(old_val, 'nominal_value'):
+                    # Both have uncertainties
+                    try:
+                        np.testing.assert_allclose(
+                            new_val.nominal_value, old_val.nominal_value, 
+                            rtol=rtol, atol=atol,
+                            err_msg=f"Key {key} nominal values differ"
+                        )
+                        np.testing.assert_allclose(
+                            new_val.std_dev, old_val.std_dev, 
+                            rtol=rtol, atol=atol,
+                            err_msg=f"Key {key} uncertainties differ"
+                        )
+                    except AssertionError as e:
+                        failures.append(f"Key {key} uncertainty comparison failed: {e}")
+                        fail_msg = 'FAILED'
+                elif hasattr(new_val, 'nominal_value') or hasattr(old_val, 'nominal_value'):
+                    # Only one has uncertainties
+                    new_nom = new_val.nominal_value if hasattr(new_val, 'nominal_value') else new_val
+                    old_nom = old_val.nominal_value if hasattr(old_val, 'nominal_value') else old_val
+                    try:
+                        np.testing.assert_allclose(
+                            new_nom, old_nom, rtol=rtol, atol=atol,
+                            err_msg=f"Key {key} values differ"
+                        )
+                    except AssertionError as e:
+                        failures.append(f"Key {key} mixed uncertainty comparison failed: {e}")
+                        fail_msg = 'FAILED'
+                else:
+                    # Neither has uncertainties
+                    try:
+                        np.testing.assert_allclose(
+                            new_val, old_val, rtol=rtol, atol=atol,
+                            err_msg=f"Key {key} values differ"
+                        )
+                    except AssertionError as e:
+                        failures.append(f"Key {key} comparison failed: {e}")
+                        fail_msg = 'FAILED'
+                    
+            except Exception as e:
+                failures.append(f"Key {key} unexpected error: {e}")
+                fail_msg = 'FAILED'
+    
+            if DEBUG:
+                print(f"Debug: {fail_msg} - {key} - New: {type(new_val)} = {new_val}, Old: {type(old_val)} = {old_val}")
+
+        
+        # If there were any failures, report them all
+        if failures:
+            failure_msg = f"Found {len(failures)} comparison failures:\n" + "\n".join(f"  - {failure}" for failure in failures)
+            self.fail(failure_msg)
     
     def _is_numeric(self, value):
         """Check if a value is numeric (can be used in mathematical operations)."""
@@ -517,4 +541,4 @@ class TestDataclassSpecificFeatures(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()
