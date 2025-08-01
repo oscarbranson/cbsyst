@@ -16,6 +16,9 @@ UNIT_MULTIPLIERS = {
     
 def convert_to_molar(params: CBsystData) -> None:
     """Convert input units to molar"""
+    if params.unit is None:
+        return
+
     multiplier = UNIT_MULTIPLIERS.get(params.unit, params.unit)
     
     if multiplier != 1:
@@ -31,10 +34,13 @@ def convert_to_molar(params: CBsystData) -> None:
             continue        
         value = getattr(params, param)
         if value is not None:
-            setattr(params, param, np.divide(value, multiplier))
+            setattr(params, param, np.divide(value, 1e6))  # gas params are always given in ppm, convert to fraction
 
 def convert_from_molar(params: CBsystData) -> None:
     """Convert results back to input units"""
+    if params.unit is None:
+        return
+    
     multiplier = UNIT_MULTIPLIERS.get(params.unit, params.unit)
 
     if multiplier != 1:
@@ -50,4 +56,4 @@ def convert_from_molar(params: CBsystData) -> None:
             continue
         value = getattr(params, param)
         if value is not None:
-            params[param] = np.multiply(value, multiplier)
+            params[param] = np.multiply(value, 1e6)  # convert back from fraction to ppm

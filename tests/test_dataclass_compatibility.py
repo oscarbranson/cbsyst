@@ -68,16 +68,8 @@ class TestDataclassCompatibility(unittest.TestCase):
                 if new_val is None or old_val is None:
                     failures.append(f"Key {key}: new value is {new_val}, old value is {old_val}")
                     continue
-                
-                # Skip non-numeric values (like strings, dicts, etc.)
-                if not self._is_numeric(new_val) or not self._is_numeric(old_val):
-                    # For non-numeric values, just check equality
-                    if key == 'unit':
-                        new_val = UNIT_MULTIPLIERS[new_val]
-                    if new_val != old_val:
-                        failures.append(f"Key {key}: new value '{new_val}' != old value '{old_val}'")
-                        fail_msg = 'FAILED'
-                    continue
+                if isinstance(old_val, np.ndarray):
+                    if old_val.size == 1: old_val = old_val.item()
                 
                 # Handle uncertainties
                 if hasattr(new_val, 'nominal_value') and hasattr(old_val, 'nominal_value'):
@@ -108,6 +100,14 @@ class TestDataclassCompatibility(unittest.TestCase):
                     except AssertionError as e:
                         failures.append(f"Key {key} mixed uncertainty comparison failed: {e}")
                         fail_msg = 'FAILED'
+                elif not self._is_numeric(new_val) or not self._is_numeric(old_val):
+                    # For non-numeric values, just check equality
+                    if key == 'unit':
+                        new_val = UNIT_MULTIPLIERS[new_val]
+                    if new_val != old_val:
+                        failures.append(f"Key {key}: new value '{new_val}' != old value '{old_val}'")
+                        fail_msg = 'FAILED'
+                    continue
                 else:
                     # Neither has uncertainties
                     try:
@@ -118,7 +118,8 @@ class TestDataclassCompatibility(unittest.TestCase):
                     except AssertionError as e:
                         failures.append(f"Key {key} comparison failed: {e}")
                         fail_msg = 'FAILED'
-                    
+                        
+
             except Exception as e:
                 failures.append(f"Key {key} unexpected error: {e}")
                 fail_msg = 'FAILED'

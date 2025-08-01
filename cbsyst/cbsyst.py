@@ -120,7 +120,7 @@ def Csys(
     if n_iso_given == 1:
         if DEBUG: print('calculating boron isotopes')
         boron_isotopes.solve_B_isotopes(csys)
-        
+
     # if has an output condition, recalculate at that condition.
     if utils.has_output_condition(csys):
         # Store input conditions
@@ -149,7 +149,7 @@ def Csys(
             T_in=T_out,
             S_in=S_out,
             P_in=P_out,
-            unit=1,
+            unit=None,
             Ca=csys.Ca,
             Mg=csys.Mg,
             BT=BT_out,
@@ -166,11 +166,14 @@ def Csys(
         for k, v in inputs.items():
             if k not in ['T_out', 'T_in', 'S_out', 'S_in', 'P_out', 'P_in']:
                 setattr(csys_out, k + "_in", v)
+                
+        # update inputs to include the _out parameters
+        csys_out.inputs = csys.inputs
 
         # set units back to original
         setattr(csys_out, 'unit', csys.unit)
         units.convert_from_molar(csys_out)  # convert back to original concentration unit
-
+        
         return csys_out
 
     else:
