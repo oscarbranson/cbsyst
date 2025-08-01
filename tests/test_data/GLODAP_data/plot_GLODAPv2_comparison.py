@@ -173,7 +173,8 @@ def cplot(obs, pred, var, cvar, c, alpha=0.4, pclims=[0.05, 99.95]):
         0.03,
         0.97,
         f"Median Offset: {median:{number_fmt}}"
-        + f"\n95% Limits: {pc95[0] - median:{number_fmt}} / +{pc95[1] - median:{number_fmt}}".format(*()),
+        + f"\n95% Limits: {pc95[0] - median:{number_fmt}} / +{pc95[1] - median:{number_fmt}}".format(*())
+        + f"\nn = {sum(~np.isnan(obs))}",
         transform=ax2.transAxes,
         va="top",
         ha="left",
@@ -272,7 +273,7 @@ def cplot_resid(cb_pred, cb_var, glodap_data, glodap_var, cb_cvar, alpha=0.4, pc
     ax2.text(
         0.03,
         0.97,
-        f"Median Offset: {median:{number_fmt}}"
+        f"\nMedian Offset: {median:{number_fmt}}"
         + f"\n95% Limits: {pc95[0] - median:{number_fmt}} / +{pc95[1] - median:{number_fmt}}".format(*()),
         transform=ax2.transAxes,
         va="top",
