@@ -275,6 +275,8 @@ class CarbonBoronIsotopeParams(
     pass    
 
 def create_dataclass(**kwargs):
+    given_pH = [field for field in mixin_pHConversion.__dataclass_fields__ if kwargs.get(field) is not None]
+
     given_constants = [field for field in mixin_Conditions.__dataclass_fields__ if kwargs.get(field) is not None]
     
     given_carbon = [field for field in mixin_CarbonSystem.__dataclass_fields__ if kwargs.get(field) is not None]
@@ -310,7 +312,7 @@ def create_dataclass(**kwargs):
 
     valid_kwargs = {k: v for k, v in kwargs.items()
                     if k in param_class.__dataclass_fields__}
-    valid_kwargs['inputs'] = tuple(given + given_constants)
+    valid_kwargs['inputs'] = tuple(given_pH + given + given_constants)
     
     return param_class(**valid_kwargs)
 
