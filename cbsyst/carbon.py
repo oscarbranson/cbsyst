@@ -7,13 +7,14 @@ import numpy as np
 from .helpers import maxShape
 from .uncertainties import negative_log10_preserve_type, _has_uncertainties, uncertainty_propagation_decorator, _zero_finder_with_uncertainties
 
-from typing import Dict, Tuple, Callable, Optional, Union, List, Any
+from typing import Dict, Tuple, Callable, Union, List, Any
 from .dataclasses import KValues, CBsystData
 
 # Function types
 # Zero-finders: 2-5, 10-15
 # Algebraic: 1, 6-9
 
+# Wrappers for zero-finders and uncertainty handling
 
 def _zero_wrapper(ps: np.ndarray, fn: Callable, bounds: Tuple[float, float] = (10 ** -14, 10 ** -1)) -> float:
     """
@@ -46,6 +47,8 @@ def _zero_wrapper(ps: np.ndarray, fn: Callable, bounds: Tuple[float, float] = (1
     else:
         # Has uncertainties - use the enhanced finite difference method
         return _zero_finder_with_uncertainties(ps, fn, bounds)
+
+# Solving logic
 
 def solve_with_broadcasting(params, solver_fn):
     """Generic solver using numpy broadcasting."""
@@ -90,6 +93,8 @@ def solve_with_vectorization(params, solver_fn):
 
 solve_function = solve_with_vectorization
 
+# Calculation Functions
+
 # Zeebe & Wolf-Gladrow, Appendix B
 # 1. CO2 and pH given
 def CO2_pH(CO2: Union[float, np.ndarray], pH: Union[float, np.ndarray], Ks: Union[KValues,dict]) -> Union[float, np.ndarray]:
@@ -115,6 +120,27 @@ def CO2_pH(CO2: Union[float, np.ndarray], pH: Union[float, np.ndarray], Ks: Unio
     h = 10.0**-pH
     return CO2 * (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h ** 2)
 
+def CO2_H(CO2: Union[float, np.ndarray], H: Union[float, np.ndarray], Ks: Union[KValues,dict]) -> Union[float, np.ndarray]:
+    """
+    Calculate dissolved inorganic carbon (DIC) from CO2 and H.
+    
+    Based on carbonate system equilibria from Zeebe & Wolf-Gladrow, Appendix B.
+    Uses the relationship between CO2, H, and the carbonate equilibrium constants
+    to determine total dissolved inorganic carbon.
+    
+    Args:
+        CO2: Dissolved CO2 concentration in μmol/kg.
+        H: Hydrogen ion concentration in mol/kg (total scale).
+        Ks: Equilibrium constants data structure.
+        
+    Returns:
+        DIC: Dissolved inorganic carbon concentration in μmol/kg.
+        
+    Example:
+        >>> CO2_H(10.0, 10**-8.1, Ks)
+        2000.5
+    """
+    return CO2 * (1 + Ks.K1 / H + Ks.K1 * Ks.K2 / H ** 2)
 
 # 2. CO2 and HCO3 given
 def CO2_HCO3(CO2: Union[float, np.ndarray], HCO3: Union[float, np.ndarray], Ks: Union[KValues,dict]) -> Union[float, np.ndarray]:
@@ -401,6 +427,23 @@ def pH_HCO3(pH: Union[float, np.ndarray], HCO3: Union[float, np.ndarray], Ks: Un
     h = 10.0**-pH
     return HCO3 * (1 + h / Ks.K1 + Ks.K2 / h)
 
+def H_HCO3(H: Union[float, np.ndarray], HCO3: Union[float, np.ndarray], Ks: Union[KValues,dict]) -> Union[float, np.ndarray]:
+    """
+    Calculate dissolved inorganic carbon from H and bicarbonate.
+    
+    Uses carbonate system equilibria to determine total dissolved inorganic
+    carbon when H and bicarbonate concentration are known. This is an
+    algebraic solution that doesn't require iteration.
+    
+    Args:
+        H: Hydrogen ion concentration in mol/kg.
+        HCO3: Bicarbonate ion concentration in μmol/kg.
+        Ks: Equilibrium constants data structure.
+        
+    Returns:
+        DIC: Dissolved inorganic carbon concentration in μmol/kg.
+    """
+    return HCO3 * (1 + H / Ks.K1 + Ks.K2 / H)
 
 # 7. pH and CO3
 def pH_CO3(pH: Union[float, np.ndarray], CO3: Union[float, np.ndarray], Ks: Union[KValues,dict]) -> Union[float, np.ndarray]:
@@ -422,6 +465,23 @@ def pH_CO3(pH: Union[float, np.ndarray], CO3: Union[float, np.ndarray], Ks: Unio
     h = 10.0**-pH
     return CO3 * (1 + h / Ks.K2 + h ** 2 / (Ks.K1 * Ks.K2))
 
+def H_CO3(H: Union[float, np.ndarray], CO3: Union[float, np.ndarray], Ks: Union[KValues,dict]) -> Union[float, np.ndarray]:
+    """
+    Calculate dissolved inorganic carbon from H and carbonate.
+    
+    Uses carbonate system equilibria to determine total dissolved inorganic
+    carbon when H and carbonate concentration are known. This is an
+    algebraic solution that doesn't require iteration.
+    
+    Args:
+        H: Hydrogen ion concentration in mol/kg.
+        CO3: Carbonate ion concentration in μmol/kg.
+        Ks: Equilibrium constants data structure.
+        
+    Returns:
+        DIC: Dissolved inorganic carbon concentration in μmol/kg.
+    """
+    return CO3 * (1 + H / Ks.K2 + H ** 2 / (Ks.K1 * Ks.K2))
 
 # 8. pH and TA
 def pH_TA(pH: Union[float, np.ndarray], TA: Union[float, np.ndarray], BT: Union[float, np.ndarray], 
@@ -466,6 +526,43 @@ def pH_TA(pH: Union[float, np.ndarray], TA: Union[float, np.ndarray], BT: Union[
 
     return CAlk * (H ** 2 + Ks.K1 * H + Ks.K1 * Ks.K2) / (Ks.K1 * (H + 2.0 * Ks.K2))
 
+def H_TA(H: Union[float, np.ndarray], TA: Union[float, np.ndarray], BT: Union[float, np.ndarray], 
+         PT: Union[float, np.ndarray], SiT: Union[float, np.ndarray], ST: Union[float, np.ndarray], 
+         FT: Union[float, np.ndarray], Ks: Union[KValues,dict]) -> Union[float, np.ndarray]:
+    """
+    Calculate dissolved inorganic carbon from H and total alkalinity.
+
+    Uses the alkalinity balance equation to determine total dissolved inorganic
+    carbon when H and total alkalinity are known. Calculates all alkalinity
+    contributions and solves for the carbonate alkalinity component.
+    
+    Args:
+        H: Hydrogen ion concentration in mol/kg.
+        TA: Total alkalinity in μmol/kg.
+        BT: Total boron concentration in μmol/kg.
+        PT: Total phosphate concentration in μmol/kg.
+        SiT: Total silicate concentration in μmol/kg.
+        ST: Total sulfate concentration in μmol/kg.
+        FT: Total fluoride concentration in μmol/kg.
+        Ks: Equilibrium constants data structure.
+        
+    Returns:
+        DIC: Dissolved inorganic carbon concentration in μmol/kg.
+    """
+    # negative alk
+    BAlk = BT * Ks.KB / (Ks.KB + H)
+    OH = Ks.KW / H
+    PhosTop = Ks.KP1 * Ks.KP2 * H + 2 * Ks.KP1 * Ks.KP2 * Ks.KP3 - H ** 3
+    PhosBot = H ** 3 + Ks.KP1 * H ** 2 + Ks.KP1 * Ks.KP2 * H + Ks.KP1 * Ks.KP2 * Ks.KP3
+    PAlk = PT * PhosTop / PhosBot
+    SiAlk = SiT * Ks.KSi / (Ks.KSi + H)
+    # positive alk
+    Hfree = H / (1 + ST / Ks.KS)
+    HSO4 = ST / (1 + Ks.KS / Hfree)
+    HF = FT / (1 + Ks.KF / Hfree)
+    CAlk = TA - BAlk - OH - PAlk - SiAlk + Hfree + HSO4 + HF
+
+    return CAlk * (H ** 2 + Ks.K1 * H + Ks.K1 * Ks.K2) / (Ks.K1 * (H + 2.0 * Ks.K2))
 
 # 9. pH and DIC
 def pH_DIC(pH: Union[float, np.ndarray], DIC: Union[float, np.ndarray], Ks: Union[KValues,dict]) -> Union[float, np.ndarray]:
@@ -487,6 +584,23 @@ def pH_DIC(pH: Union[float, np.ndarray], DIC: Union[float, np.ndarray], Ks: Unio
     h = 10.0**-pH
     return DIC / (1 + Ks.K1 / h + Ks.K1 * Ks.K2 / h ** 2)
 
+def H_DIC(H: Union[float, np.ndarray], DIC: Union[float, np.ndarray], Ks: Union[KValues,dict]) -> Union[float, np.ndarray]:
+    """
+    Calculate dissolved CO2 from H and dissolved inorganic carbon.
+    
+    Uses carbonate system equilibria to determine dissolved CO2 concentration
+    when H and total dissolved inorganic carbon are known. This is an
+    algebraic solution that doesn't require iteration.
+
+    Args:
+        H: Hydrogen ion concentration in mol/kg.
+        DIC: Dissolved inorganic carbon concentration in μmol/kg.
+        Ks: Equilibrium constants data structure.
+
+    Returns:
+        CO2: Dissolved CO2 concentration in μmol/kg.
+    """
+    return DIC / (1 + Ks.K1 / H + Ks.K1 * Ks.K2 / H ** 2)
 
 # 10. HCO3 and CO3
 def HCO3_CO3(HCO3: Union[float, np.ndarray], CO3: Union[float, np.ndarray], Ks: Union[KValues,dict]) -> Union[float, np.ndarray]:
@@ -1087,7 +1201,7 @@ def calc_revelle_factor(TA: Union[float, np.ndarray], DIC: Union[float, np.ndarr
 
     return (fCO2_hi - fCO2_lo) * DIC / (fCO2 * 2 * dDIC)
 
-# CBsyst 1.0 functions
+# C system Utilities
 
 def given(params: CBsystData) -> List[Any]:
     """
@@ -1145,102 +1259,6 @@ def calculate_Omegas(params: CBsystData) -> None:
     if params.OmegaA is None: params.OmegaA = params.CO3 * params.Ca * params.S_in / 35 / params.Ks.KspA
     if params.OmegaC is None: params.OmegaC = params.CO3 * params.Ca * params.S_in / 35 / params.Ks.KspC
 
-def solve_CO2_pHtot(params: CBsystData) -> None:
-    """Solve carbonate system from CO2 and pH (total scale)."""
-    params.H = 10.0**-params.pHtot
-    params.DIC = CO2_pH(params.CO2, params.pHtot, params.Ks)
-
-def solve_CO2_HCO3(params: CBsystData) -> None:
-    """Solve carbonate system from CO2 and bicarbonate."""
-    params.H = CO2_HCO3(params.CO2, params.HCO3, params.Ks)
-    params.DIC = CO2_pH(params.CO2, negative_log10_preserve_type(params.H), params.Ks)
-
-def solve_CO2_CO3(params: CBsystData) -> None:
-    """Solve carbonate system from CO2 and carbonate."""
-    params.H = CO2_CO3(params.CO2, params.CO3, params.Ks)
-    params.DIC = CO2_pH(params.CO2, negative_log10_preserve_type(params.H), params.Ks)
-
-def solve_CO2_TA(params: CBsystData) -> None:
-    """Solve carbonate system from CO2 and total alkalinity."""
-    params.pHtot = CO2_TA(CO2=params.CO2, TA=params.TA, BT=params.BT, PT=params.PT, SiT=params.SiT, ST=params.ST, FT=params.FT, Ks=params.Ks)
-    params.H = 10.0**-params.pHtot
-    params.DIC = CO2_pH(params.CO2, params.pHtot, params.Ks)
-
-def solve_CO2_DIC(params: CBsystData) -> None:
-    """Solve carbonate system from CO2 and dissolved inorganic carbon."""
-    params.H = CO2_DIC(params.CO2, params.DIC, params.Ks)
-
-def solve_pHtot_HCO3(params: CBsystData) -> None:
-    """Solve carbonate system from pH and bicarbonate."""
-    params.H = 10.0**-params.pHtot
-    params.DIC = pH_HCO3(params.pHtot, params.HCO3, params.Ks)
-
-def solve_pHtot_CO3(params: CBsystData) -> None:
-    """Solve carbonate system from pH and carbonate."""
-    params.H = 10.0**-params.pHtot
-    params.DIC = pH_CO3(params.pHtot, params.CO3, params.Ks)
-
-def solve_pHtot_TA(params: CBsystData) -> None:
-    """Solve carbonate system from pH and total alkalinity."""
-    params.H = 10.0**-params.pHtot
-    params.DIC = pH_TA(pH=params.pHtot, TA=params.TA, BT=params.BT, PT=params.PT, SiT=params.SiT, ST=params.ST, FT=params.FT, Ks=params.Ks)
-
-def solve_pHtot_DIC(params: CBsystData) -> None:
-    """Solve carbonate system from pH and dissolved inorganic carbon."""
-    params.H = 10.0**-params.pHtot
-
-def solve_HCO3_CO3(params: CBsystData) -> None:
-    """Solve carbonate system from bicarbonate and carbonate."""
-    params.H = HCO3_CO3(params.HCO3, params.CO3, params.Ks)
-    params.DIC = pH_CO3(negative_log10_preserve_type(params.H), params.CO3, params.Ks)
-
-def solve_HCO3_TA(params: CBsystData) -> None:
-    """Solve carbonate system from bicarbonate and total alkalinity."""
-    Warning(
-        "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
-    )
-    params.H = HCO3_TA(params.HCO3, params.TA, params.BT, params.Ks)
-    params.DIC = pH_HCO3(negative_log10_preserve_type(params.H), params.HCO3, params.Ks)
-
-def solve_HCO3_DIC(params: CBsystData) -> None:
-    """Solve carbonate system from bicarbonate and dissolved inorganic carbon."""
-    params.H = HCO3_DIC(params.HCO3, params.DIC, params.Ks)
-
-def solve_CO3_TA(params: CBsystData) -> None:
-    """Solve carbonate system from carbonate and total alkalinity."""
-    Warning(
-        "Nutrient alkalinity not implemented for this input combination.\nCalculations use only C and B alkalinity."
-    )
-    params.H = CO3_TA(params.CO3, params.TA, params.BT, params.Ks)
-    params.DIC = pH_CO3(negative_log10_preserve_type(params.H), params.CO3, params.Ks)
-
-def solve_CO3_DIC(params: CBsystData) -> None:
-    """Solve carbonate system from carbonate and dissolved inorganic carbon."""
-    params.H = CO3_DIC(params.CO3, params.DIC, params.Ks)
-
-def solve_TA_DIC(params: CBsystData) -> None:
-    """Solve carbonate system from total alkalinity and dissolved inorganic carbon."""
-    params.pHtot = TA_DIC(TA=params.TA, DIC=params.DIC, BT=params.BT, PT=params.PT, SiT=params.SiT, ST=params.ST, FT=params.FT, Ks=params.Ks)
-    params.H = 10.0**-params.pHtot
-
-SOLVERS: Dict[Tuple[str, str], Callable[[CBsystData], None]] = {
-    ('CO2', 'pHtot'): solve_CO2_pHtot,
-    ('CO2', 'HCO3'): solve_CO2_HCO3,
-    ('CO2', 'CO3'): solve_CO2_CO3,
-    ('CO2', 'TA'): solve_CO2_TA,
-    ('CO2', 'DIC'): solve_CO2_DIC,
-    ('pHtot', 'HCO3'): solve_pHtot_HCO3,
-    ('pHtot', 'CO3'): solve_pHtot_CO3,
-    ('pHtot', 'TA'): solve_pHtot_TA,
-    ('pHtot', 'DIC'): solve_pHtot_DIC,
-    ('HCO3', 'CO3'): solve_HCO3_CO3,
-    ('HCO3', 'TA'): solve_HCO3_TA,
-    ('HCO3', 'DIC'): solve_HCO3_DIC,
-    ('CO3', 'TA'): solve_CO3_TA,
-    ('CO3', 'DIC'): solve_CO3_DIC,
-    ('TA', 'DIC'): solve_TA_DIC,
-}
-
 def convert_CO2(params: CBsystData) -> None:
     """
     Convert pCO2 or fCO2 to dissolved CO2 concentration.
@@ -1258,24 +1276,67 @@ def convert_CO2(params: CBsystData) -> None:
             params.fCO2 = pCO2_to_fCO2(params.pCO2, params.T_in)
             params.CO2 = fCO2_to_CO2(params.fCO2, params.Ks)
 
-def can_solve_carbon(params: CBsystData) -> bool:
-    """
-    Check if carbonate system can be solved with provided parameters.
-    
-    Verifies that exactly two carbon system parameters are provided,
-    which is the minimum required to solve the carbonate system.
-    
-    Args:
-        params: CBsyst data structure containing carbon parameters.
-        
-    Returns:
-        True if exactly two carbon parameters are provided, False otherwise.
-    """
-    # check that two parameters are available
-    valid_inputs = ['CO2', 'pHtot', 'HCO3', 'CO3', 'TA', 'DIC', 'pCO2', 'fCO2', 'OmegaC', 'OmegaA']
-    n_inputs = sum(params.get(p) is not None for p in valid_inputs)
+# B System Solvers
 
-    return n_inputs == 2
+SOLVER_RULES: Dict[Tuple[str, str], List[Callable[[CBsystData], None]]] = {
+    ('CO2', 'pHtot'): [
+        lambda p: setattr(p, 'H', 10.0**-p.pHtot),
+        lambda p: setattr(p, 'DIC', CO2_H(CO2=p.CO2, H=p.H, Ks=p.Ks)),
+    ],
+    ('CO2', 'HCO3'): [
+        lambda p: setattr(p, 'H', CO2_HCO3(CO2=p.CO2, HCO3=p.HCO3, Ks=p.Ks)),
+        lambda p: setattr(p, 'DIC', CO2_H(CO2=p.CO2, H=p.H, Ks=p.Ks)),
+    ],
+    ('CO2', 'CO3'): [
+        lambda p: setattr(p, 'H', CO2_CO3(CO2=p.CO2, CO3=p.CO3, Ks=p.Ks)),
+        lambda p: setattr(p, 'DIC', CO2_H(CO2=p.CO2, H=p.H, Ks=p.Ks)),
+    ],
+    ('CO2', 'TA'): [
+        lambda p: setattr(p, 'pHtot', CO2_TA(CO2=p.CO2, TA=p.TA, BT=p.BT, PT=p.PT, SiT=p.SiT, ST=p.ST, FT=p.FT, Ks=p.Ks)),
+        lambda p: setattr(p, 'H', 10.0**-p.pHtot),
+        lambda p: setattr(p, 'DIC', CO2_H(CO2=p.CO2, H=p.H, Ks=p.Ks)),
+    ],
+    ('CO2', 'DIC'): [
+        lambda p: setattr(p, 'H', CO2_DIC(CO2=p.CO2, DIC=p.DIC, Ks=p.Ks)),
+    ],
+    ('pHtot', 'HCO3'): [
+        lambda p: setattr(p, 'H', 10.0**-p.pHtot),
+        lambda p: setattr(p, 'DIC', H_HCO3(H=p.H, HCO3=p.HCO3, Ks=p.Ks)),
+    ],
+    ('pHtot', 'CO3'): [
+        lambda p: setattr(p, 'H', 10.0**-p.pHtot),
+        lambda p: setattr(p, 'DIC', H_CO3(H=p.H, CO3=p.CO3, Ks=p.Ks)),
+    ],
+    ('pHtot', 'TA'): [
+        lambda p: setattr(p, 'H', 10.0**-p.pHtot),
+        lambda p: setattr(p, 'DIC', H_TA(H=p.H, TA=p.TA, BT=p.BT, PT=p.PT, SiT=p.SiT, ST=p.ST, FT=p.FT, Ks=p.Ks)),
+    ],
+    ('pHtot', 'DIC'): [
+        lambda p: setattr(p, 'H', 10.0**-p.pHtot),
+    ],
+    ('HCO3', 'CO3'): [
+        lambda p: setattr(p, 'H', HCO3_CO3(HCO3=p.HCO3, CO3=p.CO3, Ks=p.Ks)),
+        lambda p: setattr(p, 'DIC', H_CO3(H=p.H, CO3=p.CO3, Ks=p.Ks)),
+    ],
+    ('HCO3', 'TA'): [
+        lambda p: setattr(p, 'H', HCO3_TA(HCO3=p.HCO3, TA=p.TA, BT=p.BT, Ks=p.Ks)),
+        lambda p: setattr(p, 'DIC', H_HCO3(H=p.H, HCO3=p.HCO3, Ks=p.Ks)),
+    ],
+    ('HCO3', 'DIC'): [
+        lambda p: setattr(p, 'H', HCO3_DIC(HCO3=p.HCO3, DIC=p.DIC, Ks=p.Ks)),
+    ],
+    ('CO3', 'TA'): [
+        lambda p: setattr(p, 'H', CO3_TA(CO3=p.CO3, TA=p.TA, BT=p.BT, Ks=p.Ks)),
+        lambda p: setattr(p, 'DIC', H_CO3(H=p.H, CO3=p.CO3, Ks=p.Ks)),
+    ],
+    ('CO3', 'DIC'): [
+        lambda p: setattr(p, 'H', CO3_DIC(CO3=p.CO3, DIC=p.DIC, Ks=p.Ks)),
+    ],
+    ('TA', 'DIC'): [
+        lambda p: setattr(p, 'pHtot', TA_DIC(TA=p.TA, DIC=p.DIC, BT=p.BT, PT=p.PT, SiT=p.SiT, ST=p.ST, FT=p.FT, Ks=p.Ks)),
+        lambda p: setattr(p, 'H', 10.0**-p.pHtot),
+    ],
+}
 
 def calculate_remaining_C_species(params: CBsystData) -> None:
     """
@@ -1330,7 +1391,7 @@ def solve_C_system(params: CBsystData) -> None:
     provided = tuple([p for p in carbon_params if params.get(p) is not None])
     # params.inputs += provided 
 
-    solver = SOLVERS.get(provided)
+    solver = SOLVER_RULES.get(provided)
     if solver is None:
         n_provided = len(provided)
         if n_provided < 2:
@@ -1342,7 +1403,8 @@ def solve_C_system(params: CBsystData) -> None:
         raise ValueError(msg)
     
     # solve for H and DIC
-    solver(params)
+    for function in SOLVER_RULES.get(provided, []):
+        function(params)
 
     calculate_remaining_C_species(params)
     calculate_Omegas(params)
