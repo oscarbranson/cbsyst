@@ -3,11 +3,9 @@ Functions for calculating boron speciation.
 """
 
 import numpy as np
-from typing import Union, Any, Dict, List, Tuple
-from .dataclasses import KValues, CBsystData, SolverRule
+from typing import Union, Any, Dict, List, Tuple, Callable
+from .dataclasses import KValues, CBsystData
 from .uncertainties import negative_log10_preserve_type
-from .utils import apply_solver_rule
-
 # Basic Calculation Functions
 
 def chiB_calc(
@@ -194,14 +192,29 @@ def n_given(params: CBsystData) -> int:
 
 # B System Solvers
 
-SOLVER_RULES = [
-    SolverRule(('pHtot', 'BT'), 'H', lambda pH, BT: 10.0**-pH),
-    SolverRule(('BT', 'BO3'), 'H', BT_BO3),
-    SolverRule(('BT', 'BO4'), 'H', BT_BO4),
-    SolverRule(('BO3', 'BO4'), ['H', 'BT'], BT_BO4, pre_calculations=lambda params: setattr(params, 'BT', params.BO3 + params.BO4)),
-    SolverRule(('pHtot', 'BO3'), ['H', 'BT'], pH_BO3),
-    SolverRule(('pHtot', 'BO4'), ['H', 'BT'], pH_BO4),
-]
+SOLVER_RULES: Dict[Tuple[str, str], List[Callable[[CBsystData], None]]] = {
+    ('pHtot', 'BT'): [
+        lambda p: setattr(p, 'H', 10.0**-p.pHtot)
+        ],
+    ('BT', 'BO3'): [
+        lambda p: setattr(p, 'H', BT_BO3(BT=p.BT, BO=p.BO3, Ks=p.Ks))
+        ],
+    ('BT', 'BO4'): [
+        lambda p: setattr(p, 'H', BT_BO4()(BT=p.BT, BO4=p.BO4, Ks=p.Ks))
+        ],
+    ('BO3', 'BO4'): [
+        lambda p: setattr(p, 'BT', p.BO3 + p.BO4),
+        lambda p: setattr(p, 'H', BT_BO4()(BT=p.BT, BO4=p.BO4, Ks=p.Ks))
+    ],
+    ('pHtot', 'BO3'): [
+        lambda p: setattr(p, 'H', 10.0**-p.pHtot),
+        lambda p: setattr(p, 'BT', pH_BO3(pH=p.pHtot, BO3=p.BO3, Ks=p.Ks))
+    ],
+    ('pHtot', 'BO4'): [
+        lambda p: setattr(p, 'H', 10.0**-p.pHtot),
+        lambda p: setattr(p, 'BT', pH_BO4(pH=p.pHtot, BO4=p.BO4, Ks=p.Ks))
+    ],
+}
 
 def calc_remaining_B_species(params: CBsystData) -> None:
     """
@@ -237,9 +250,8 @@ def solve_B_system(params: CBsystData) -> None:
     boron_params = ['pHtot', 'BT', 'BO3', 'BO4']
     provided = tuple([p for p in boron_params if params.get(p) is not None])
 
-    for rule in SOLVER_RULES:
-        if rule.input_params == provided:
-            apply_solver_rule(rule, params)
-            break
+    if provided in SOLVER_RULES:
+        for func in SOLVER_RULES[provided]:
+            func(params)
     else:
-        raise ValueError(f"No solver found for parameter combination: {provided}")
+        raise ValueError(f"No solver found for provided parameters: {provided}")

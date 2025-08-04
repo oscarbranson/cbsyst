@@ -674,13 +674,3 @@ def create_dataclass(**kwargs) -> Union[CarbonSystemParams, BoronSystemParams, B
     valid_kwargs['inputs'] = tuple(given_pH + given + given_constants)
     
     return param_class(**valid_kwargs)
-
-# Class for paramter solvers
-
-@dataclass
-class SolverRule:
-    input_params: Tuple[str, str]
-    target_params: List[str]
-    function: Callable
-    post_calculations: Optional[List[Callable]] = None
-    pre_calculations: Optional[Callable] = None
