@@ -1403,7 +1403,7 @@ def solve_C_system(params: CBsystData) -> None:
         raise ValueError(msg)
     
     # solve for H and DIC
-    for function in SOLVER_RULES.get(provided, []):
+    for function in solver:
         function(params)
 
     calculate_remaining_C_species(params)
