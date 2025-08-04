@@ -519,36 +519,7 @@ def calculate_KB(H: Union[float, np.ndarray], alphaB: Union[float, np.ndarray], 
             / ( ABT 
             - 1 / ( (1/alphaB) * (1/ABO4 -1) + 1) )))
 
-# CBsyst 1.0 functions
-
-def solve_pH_ABT(params: CBsystData) -> None:
-    """Solve boron isotope system from pH and total abundance."""
-    if params.H is None: params.H = 10**-params.pHtot
-
-# TODO: needs optimising
-def solve_pH_ABO4_ABO3(params: CBsystData) -> None:
-    """Solve boron isotope system from pH and species-specific abundances."""
-    if params.H is None: params.H = 10**-params.pHtot
-    params.ABT = calculate_ABT(H=params.H, Ks=params.Ks, alphaB=params.alphaB, ABO3=params.ABO3, ABO4=params.ABO4)
-
-# TODO: needs optimising
-def solve_ABT_ABO3_ABO4(params: CBsystData) -> None:
-    """Solve boron isotope system from total and species-specific abundances."""
-    if params.H is None: params.H = calculate_H(Ks=params.Ks, ABT=params.ABT, ABO3=params.ABO3, ABO4=params.ABO4, alphaB=params.alphaB)
-
-def solve_ABO3_ABO4(params: CBsystData) -> None:
-    """Placeholder solver - insufficient parameters."""
-    raise NotImplementedError('ABT and one of ABO3 or ABO4 must be specified if pH is missing.')
-
-SOLVERS: Dict[Tuple[str, ...], Callable[[CBsystData], None]] = {
-    ('pHtot', 'ABT'): solve_pH_ABT,
-    ('pHtot', 'ABO4'): solve_pH_ABO4_ABO3,
-    ('pHtot', 'ABO3'): solve_pH_ABO4_ABO3,
-    ('ABT', 'ABO4'): solve_ABT_ABO3_ABO4,
-    ('ABT', 'ABO3'): solve_ABT_ABO3_ABO4,
-    ('ABO3', 'ABO4'): solve_ABO3_ABO4,
-    ('ABT', 'ABO3', 'ABO4'): solve_ABO3_ABO4,
-}
+# B isotope utilities
 
 def given(params: CBsystData) -> List[Any]:
     """
@@ -577,19 +548,6 @@ def n_given(params: CBsystData) -> int:
         Number of boron isotope parameters that are not None.
     """
     return len(given(params))
-
-def calculate_ABO3_ABO4(params: CBsystData) -> None:
-    """
-    Calculate missing boron isotope species abundances.
-    
-    Calculates ABO3 and ABO4 from hydrogen ion concentration, total abundance,
-    and fractionation factor if they are not already provided.
-    
-    Args:
-        params: CBsyst data structure, modified in place.
-    """
-    if params.ABO3 is None: params.ABO3 = calculate_ABO3(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
-    if params.ABO4 is None: params.ABO4 = calculate_ABO4(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
 
 def delta_to_abundance(params: CBsystData) -> None:
     """
@@ -625,6 +583,41 @@ def abundance_to_delta(params: CBsystData) -> None:
     if params.ABO4 is not None:
         if params.dBO4 is None: params.dBO4 = A11_to_d11(params.ABO4)
 
+# B isotope solvers
+
+SOLVER_RULES: Dict[Tuple[str, ...], List[Callable[[CBsystData], None]]] = {
+    ('pHtot', 'ABT'): [
+        lambda p: setattr(p, 'H', 10**-p.pHtot),
+    ],
+    ('pHtot', 'ABO4'): [
+        lambda p: setattr(p, 'H', 10**-p.pHtot) if p.H is None else None,
+        lambda p: setattr(p, 'ABT', calculate_ABT(H=p.H, Ks=p.Ks, alphaB=p.alphaB, ABO3=p.ABO3, ABO4=p.ABO4))
+    ],
+    ('pHtot', 'ABO3'): [
+        lambda p: setattr(p, 'H', 10**-p.pHtot) if p.H is None else None,
+        lambda p: setattr(p, 'ABT', calculate_ABT(H=p.H, Ks=p.Ks, alphaB=p.alphaB, ABO3=p.ABO3, ABO4=p.ABO4))    
+    ],
+    ('ABT', 'ABO4'): [
+        lambda p: setattr(p, 'H', calculate_H(Ks=p.Ks, ABT=p.ABT, ABO3=p.ABO3, ABO4=p.ABO4, alphaB=p.alphaB)) if p.H is None else None,
+    ],
+    ('ABT', 'ABO3'): [
+        lambda p: setattr(p, 'H', calculate_H(Ks=p.Ks, ABT=p.ABT, ABO3=p.ABO3, ABO4=p.ABO4, alphaB=p.alphaB)) if p.H is None else None,
+    ]
+}
+
+def calculate_ABO3_ABO4(params: CBsystData) -> None:
+    """
+    Calculate missing boron isotope species abundances.
+    
+    Calculates ABO3 and ABO4 from hydrogen ion concentration, total abundance,
+    and fractionation factor if they are not already provided.
+    
+    Args:
+        params: CBsyst data structure, modified in place.
+    """
+    if params.ABO3 is None: params.ABO3 = calculate_ABO3(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
+    if params.ABO4 is None: params.ABO4 = calculate_ABO4(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
+
 def solve_B_isotopes(params: CBsystData) -> None:
     """
     Solve the complete boron isotope system from provided parameters.
@@ -648,11 +641,12 @@ def solve_B_isotopes(params: CBsystData) -> None:
     provided = tuple([p for p in AB_params if params.get(p) is not None])
     # params.inputs += provided
     
-    solver = SOLVERS.get(provided)
+    solver = SOLVER_RULES.get(provided)
     if solver is None:
         raise ValueError(f"No solver found for parameter combination: {provided}")
 
-    solver(params)
+    for function in solver:
+        function(params)
 
     if params.pHtot is None: params.pHtot = negative_log10_preserve_type(params.H)
     calculate_ABO3_ABO4(params)
