@@ -163,7 +163,7 @@ def cBO3(
     """
     return BT / (1 + Ks.KB / H)
 
-# Utilities
+# B system Utilities
 
 def given(params: CBsystData) -> List[Any]:
     """
