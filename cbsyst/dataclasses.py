@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Union, Any, Iterator, Tuple
+from typing import Optional, Union, Any, Iterator, Tuple, Callable, List
 import numpy as np
 
 class CBsystData:
@@ -675,3 +675,12 @@ def create_dataclass(**kwargs) -> Union[CarbonSystemParams, BoronSystemParams, B
     
     return param_class(**valid_kwargs)
 
+# Class for paramter solvers
+
+@dataclass
+class SolverRule:
+    input_params: Tuple[str, str]
+    target_params: List[str]
+    function: Callable
+    post_calculations: Optional[List[Callable]] = None
+    pre_calculations: Optional[Callable] = None

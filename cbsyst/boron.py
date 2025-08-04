@@ -3,10 +3,12 @@ Functions for calculating boron speciation.
 """
 
 import numpy as np
-from typing import Optional, Union, Any, Dict, List, Tuple
-from .dataclasses import KValues, CBsystData
+from typing import Union, Any, Dict, List, Tuple
+from .dataclasses import KValues, CBsystData, SolverRule
 from .uncertainties import negative_log10_preserve_type
-from . import pH
+from .utils import apply_solver_rule
+
+# Basic Calculation Functions
 
 def chiB_calc(
     H: Union[float, np.ndarray], 
@@ -163,91 +165,7 @@ def cBO3(
     """
     return BT / (1 + Ks.KB / H)
 
-# CBsyst 1.0 functions
-
-def solve_pH_BT(params: CBsystData):
-    """
-    Solve for H from pH and BT parameters.
-    
-    Args:
-        params: Parameter object with pHtot and BT attributes.
-        
-    Notes:
-        Sets params.H = 10^(-pHtot) if H is None.
-    """
-    if params.H is None: params.H = 10.0**-params.pHtot
-
-def solve_BT_BO3(params: CBsystData) -> None:
-    """
-    Solve for H from BT and BO3 parameters.
-    
-    Args:
-        params: Parameter object with BT, BO3, and Ks attributes.
-        
-    Notes:
-        Sets params.H using BT_BO3 function if H is None.
-    """
-    if params.H is None: params.H = BT_BO3(params.BT, params.BO3, params.Ks)
-
-def solve_BT_BO4(params: CBsystData) -> None:
-    """
-    Solve for H from BT and BO4 parameters.
-    
-    Args:
-        params: Parameter object with BT, BO4, and Ks attributes.
-        
-    Notes:
-        Sets params.H using BT_BO4 function if H is None.
-    """
-    if params.H is None: params.H = BT_BO4(params.BT, params.BO4, params.Ks)
-
-def solve_BO3_BO4(params: CBsystData) -> None:
-    """
-    Solve for BT and H from BO3 and BO4 parameters.
-    
-    Args:
-        params: Parameter object with BO3, BO4, and Ks attributes.
-        
-    Notes:
-        Sets params.BT = BO3 + BO4 and calculates H using BT_BO3 function.
-    """
-    params.BT = params.BO3 + params.BO4
-    if params.H is None: params.H = BT_BO3(params.BT, params.BO3, params.Ks)
-
-def solve_pH_BO3(params: CBsystData) -> None:
-    """
-    Solve for H and BT from pH and BO3 parameters.
-    
-    Args:
-        params: Parameter object with pHtot, BO3, and Ks attributes.
-        
-    Notes:
-        Sets params.H from pHtot and params.BT using pH_BO3 function.
-    """
-    if params.H is None: params.H = 10.0**-params.pHtot
-    if params.BT is None: params.BT = pH_BO3(params.pHtot, params.BO3, params.Ks)
-
-def solve_pH_BO4(params: CBsystData) -> None:
-    """
-    Solve for H and BT from pH and BO4 parameters.
-    
-    Args:
-        params: Parameter object with pHtot, BO4, and Ks attributes.
-        
-    Notes:
-        Sets params.H from pHtot and params.BT using pH_BO4 function.
-    """
-    if params.H is None: params.H = 10.0**-params.pHtot
-    if params.BT is None: params.BT = pH_BO4(params.pHtot, params.BO4, params.Ks)
-
-SOLVERS: Dict[Tuple[str, str], Any] = {
-    ('pHtot', 'BT'): solve_pH_BT,
-    ('BT', 'BO3'): solve_BT_BO3,
-    ('BT', 'BO4'): solve_BT_BO4,
-    ('BO3', 'BO4'): solve_BO3_BO4,
-    ('pHtot', 'BO3'): solve_pH_BO3,
-    ('pHtot', 'BO4'): solve_pH_BO4
-}
+# Utilities
 
 def given(params: CBsystData) -> List[Any]:
     """
@@ -273,6 +191,17 @@ def n_given(params: CBsystData) -> int:
         int: Number of non-None boron parameters (BT, BO3, BO4).
     """
     return len(given(params))
+
+# B System Solvers
+
+SOLVER_RULES = [
+    SolverRule(('pHtot', 'BT'), 'H', lambda pH, BT: 10.0**-pH),
+    SolverRule(('BT', 'BO3'), 'H', BT_BO3),
+    SolverRule(('BT', 'BO4'), 'H', BT_BO4),
+    SolverRule(('BO3', 'BO4'), ['H', 'BT'], BT_BO4, pre_calculations=lambda params: setattr(params, 'BT', params.BO3 + params.BO4)),
+    SolverRule(('pHtot', 'BO3'), ['H', 'BT'], pH_BO3),
+    SolverRule(('pHtot', 'BO4'), ['H', 'BT'], pH_BO4),
+]
 
 def calc_remaining_B_species(params: CBsystData) -> None:
     """
@@ -308,11 +237,9 @@ def solve_B_system(params: CBsystData) -> None:
     boron_params = ['pHtot', 'BT', 'BO3', 'BO4']
     provided = tuple([p for p in boron_params if params.get(p) is not None])
 
-    solver = SOLVERS.get(provided)
-    if solver is None:
+    for rule in SOLVER_RULES:
+        if rule.input_params == provided:
+            apply_solver_rule(rule, params)
+            break
+    else:
         raise ValueError(f"No solver found for parameter combination: {provided}")
-    
-    solver(params)
-
-    calc_remaining_B_species(params)
-

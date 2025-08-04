@@ -1,7 +1,7 @@
 from typing import Union
 import numpy as np
 from .uncertainties import remove_negatives
-from .dataclasses import CarbonSystemParams, CBsystData
+from .dataclasses import CarbonSystemParams, CBsystData, SolverRule
 from . import constants
 
 def remove_negative_concentrations(params: CarbonSystemParams) -> None:
@@ -164,3 +164,31 @@ def pH_scale_converter(pH, scale, TempC, Sal, Press_bar=None, ST=None, FT=None):
     inp[np.argwhere(scale == np.array(pH_scales))[0, 0]] = pH
 
     return calc_pH_scales(*inp, TempC=TempC, Sal=Sal, p_bar=Press_bar)
+
+def apply_solver_rule(rule: SolverRule, params: CBsystData) -> None:
+    """
+    Apply a solver rule to the given parameters.
+    
+    Args:
+        rule: SolverRule object containing input parameters, target parameters,
+              and the function to apply.
+        params: CBsystData object containing the parameters to modify.
+        
+    Notes:
+        This function modifies the params object in-place based on the rule.
+        It can handle both direct assignments and function calls for calculations.
+    """
+    inputs = [getattr(params, name) for name in rule.input_params]
+    
+    if rule.pre_calculations:
+        rule.pre_calculations(params)
+    
+    if isinstance(rule.target_params, str):
+        setattr(params, rule.target_params, rule.function(*inputs))
+    else:
+        results = rule.function(*inputs)
+        for target, value in zip(rule.target_params, results):
+            setattr(params, target, value)
+    
+    if rule.post_calculations:
+        rule.post_calculations(params)
