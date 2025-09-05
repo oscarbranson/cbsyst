@@ -180,17 +180,14 @@ def Csys(
         if param.default is not None
     }
 
+    if dBO3 is not None or dBO4 is not None:
+        dBT = None
+    
+    if ABO3 is not None or ABO4 is not None:
+        ABT = None
+
     # create data object
     csys = create_dataclass(**locals())
-
-    # identify inputs
-    # csys.inputs = {
-    #     k: csys.get(k)
-    #     for k in csys.__dataclass_fields__ 
-    #     if (csys.get(k) is not None) and 
-    #     (k not in ['inputs']) and
-    #     (defaults.get(k) != csys.get(k))
-    # }
 
     # calculation logic:
     n_pH_given = pH.n_given(csys)
