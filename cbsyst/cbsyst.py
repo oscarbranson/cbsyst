@@ -180,10 +180,10 @@ def Csys(
         if param.default is not None
     }
 
-    if dBO3 is not None or dBO4 is not None:
+    if dBO3 is not None and dBO4 is not None:
         dBT = None
     
-    if ABO3 is not None or ABO4 is not None:
+    if ABO3 is not None and ABO4 is not None:
         ABT = None
 
     # create data object
@@ -205,12 +205,15 @@ def Csys(
     if n_pH_given == 0:
         # a. two carbon species given --> use to get pH, then calculate boron and isotopes
         if n_C_given == 2:
+            if DEBUG: print('calculating pH from carbon species')
             carbon.solve_C_system(csys)  # calculate carbon system
         # b. two boron species given --> use to get pH, then calculate carbon and isotopes
         elif n_B_given == 2:
+            if DEBUG: print('calculating pH from boron species')
             boron.solve_B_system(csys)  # calculate boron system
         # c. two isotope params given --> use to get pH, then calculate carbon and boron speciation
         elif n_iso_given >= 2:
+            if DEBUG: print('calculating pH from boron isotopes')
             boron_isotopes.solve_B_isotopes(csys)  # calculate boron isotopes
     
     # at this stage, pH is known
