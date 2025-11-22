@@ -255,3 +255,5 @@ def solve_B_system(params: CBsystData) -> None:
             func(params)
     else:
         raise ValueError(f"No solver found for provided parameters: {provided}")
+
+    calc_remaining_B_species(params)

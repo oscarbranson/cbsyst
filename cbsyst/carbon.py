@@ -7,6 +7,8 @@ import numpy as np
 from .helpers import maxShape
 from .uncertainties import negative_log10_preserve_type, _has_uncertainties, uncertainty_propagation_decorator, _zero_finder_with_uncertainties
 
+from .boron import calc_remaining_B_species
+
 from typing import Dict, Tuple, Callable, Union, List, Any
 from .dataclasses import KValues, CBsystData
 
@@ -1407,4 +1409,5 @@ def solve_C_system(params: CBsystData) -> None:
         function(params)
 
     calculate_remaining_C_species(params)
+    calc_remaining_B_species(params)
     calculate_Omegas(params)
