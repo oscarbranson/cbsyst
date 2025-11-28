@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+0.4.10 (2025-11-28)
+-------------
+Updates to kgen parameter names in helpers.py
+
+Main code changes:
+* Updated kgen parameter names in helpers.py to match kgen expectations.
+
 0.4.9 (2023-09-04)
 ------------
 Updates to work with Kgen 0.3.0
