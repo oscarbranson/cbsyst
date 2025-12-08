@@ -42,10 +42,7 @@ def _zero_wrapper(ps: np.ndarray, fn: Callable, bounds: Tuple[float, float] = (1
     
     if not has_uncertainties:
         # No uncertainties - use original implementation
-        try:
-            return opt.brentq(fn, *bounds, args=tuple(ps), xtol=1e-16)
-        except ValueError:
-            return opt.fsolve(fn, 1, args=tuple(ps))[0]
+        return opt.fsolve(fn, 1e-5, args=tuple(ps))[0]
     else:
         # Has uncertainties - use the enhanced finite difference method
         return _zero_finder_with_uncertainties(ps, fn, bounds)
@@ -1409,5 +1406,5 @@ def solve_C_system(params: CBsystData) -> None:
         function(params)
 
     calculate_remaining_C_species(params)
-    calc_remaining_B_species(params)
+    # calc_remaining_B_species(params)
     calculate_Omegas(params)
