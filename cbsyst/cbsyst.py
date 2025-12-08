@@ -65,35 +65,43 @@ def Csys(
     This is the main function for calculating seawater carbonate chemistry, boron speciation,
     and boron isotope fractionation. 
     
-    The function requires some combination of:
-        - Carbonate system: pH + any C species, or any two C species
-        - Boron system: pH + any B species, or any two B species  
-        - Isotope system: pH + any isotope parameter, or any two isotope parameters.
-        
+    Required Input Parameters:
+        The functions requires two or more parameters from the following categories:
+
+        * **Carbonate System**: pH + any C species, or any two C species
+        * **Boron System**: pH + any B species, or any two B species
+        * **Isotope System**: pH + any isotope parameter, or any two isotope parameters.
+
         When output conditions (T_out, S_out, P_out) are specified, the system
         is recalculated at those conditions with appropriate corrections for
         equilibrium constants and conservative ion concentrations.
-        
-        Gas parameters (pCO2, fCO2) are always in ppm regardless of unit setting.
-                 
+                         
+        ***Note***: Gas parameters (pCO2, fCO2) are always in ppm regardless of unit setting.
+
         The function automatically determines which calculation pathway to use based on the
         provided parameters and can handle different temperature, salinity, and pressure
         conditions for input and output.
+
+    Equilibrium Constants:
+        Equilibrium Speciation Constants (Ks) can be provided directly as a dictionary, or will be calculated
+        for the specified conditions (T, S, P) using  the [KGen](https://palaeocarbonatechemistry.github.io/Kgen/) module. This uses the 'Best Practices'
+        Ks from Dickson, Sabine and Christian (2007), unless Ca or Mg differs from the default values.
     
-    **Speciation constants** (Ks) can be provided directly as a dictionary, or will be calculated
-    for the specified conditions (T, S, P) using  the [KGen](https://palaeocarbonatechemistry.github.io/Kgen/) module. This uses the 'Best Practices'
-    Ks from Dickson, Sabine and Christian (2007), unless Ca or Mg differs from the default values.
-    
-    If Ca or Mg deviate from the default values, KGen will adjust the constants for modified
-    seawater chemistry using the MyAMI pitzer model. If MyAMI is being used, it can add
-    substantial overhead and calculation time. If you require fast calculations, set `MyAMI_mode`
-    to `"approximate"` to use a polynomial approximation of the MyAMI model. See the KGen
-    documentation for more details.
-    
-    **Uncertainties** will be propagated through calculations analytically using the [`uncertainties`](https://pythonhosted.org/uncertainties/)
-    module, if you provide inputs with uncertainties (e.g. `uncertainties.ufloat` or 
-    `uncertainties.unumpy.uarray` objects).
-    
+        ***Performance Note***: If Ca or Mg deviate from the default values, KGen will adjust the constants for modified
+        seawater chemistry using the MyAMI pitzer model. If MyAMI is being used, it can add
+        substantial overhead and calculation time. If you require fast calculations, set `MyAMI_mode`
+        to `"approximate"` to use a polynomial approximation of the MyAMI model. See the KGen
+        documentation for more details.
+
+    Uncertainty Propagation:
+        will be propagated through calculations analytically using the [`uncertainties`](https://pythonhosted.org/uncertainties/) module, if you provide inputs with uncertainties (e.g. `uncertainties.ufloat` or
+        `uncertainties.unumpy.uarray` objects).
+        
+    Backwards Compatibility:
+        In earlier versions of `cbsyst`, additional functions call Bsys, ABsys, and CBsys were also
+        available to calculate subsets of the carbon or boron systems. These functions still exist,
+        but are now aliases for the Csys function to maintain compatibility with existing code.
+
     Args:
         pHtot: pH on the total scale.
         pHsws: pH on the seawater scale.
