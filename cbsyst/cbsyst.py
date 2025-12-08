@@ -234,6 +234,7 @@ def Csys(
 
     # if has an output condition, recalculate at that condition.
     if utils.has_output_condition(csys):
+        if DEBUG: print('recalculating at output conditions')
         # Store input conditions
         inputs = {k: csys.get(k) for k in csys.inputs}
         
