@@ -4,7 +4,7 @@ Functions for calculating boron carbon speciation.
 
 import scipy.optimize as opt
 import numpy as np
-from .helpers import maxShape
+from .helpers import maxShape, isnone
 from .uncertainties import negative_log10_preserve_type, _has_uncertainties, uncertainty_propagation_decorator, _zero_finder_with_uncertainties
 
 from .boron import calc_remaining_B_species
@@ -1216,7 +1216,7 @@ def given(params: CBsystData) -> List[Any]:
         List of parameter values that are not None.
     """
     valid_inputs = ['CO2', 'HCO3', 'CO3', 'TA', 'DIC', 'pCO2', 'fCO2', 'OmegaC', 'OmegaA']
-    return [params.get(p) for p in valid_inputs if params.get(p) is not None]
+    return [params.get(p) for p in valid_inputs if not isnone(params.get(p))]
 
 def n_given(params: CBsystData) -> int:
     """
@@ -1255,8 +1255,8 @@ def calculate_Omegas(params: CBsystData) -> None:
     Args:
         params: CBsyst data structure, modified in place.
     """
-    if params.OmegaA is None: params.OmegaA = params.CO3 * params.Ca * params.S_in / 35 / params.Ks.KspA
-    if params.OmegaC is None: params.OmegaC = params.CO3 * params.Ca * params.S_in / 35 / params.Ks.KspC
+    if isnone(params.OmegaA): params.OmegaA = params.CO3 * params.Ca * params.S_in / 35 / params.Ks.KspA
+    if isnone(params.OmegaC): params.OmegaC = params.CO3 * params.Ca * params.S_in / 35 / params.Ks.KspC
 
 def convert_CO2(params: CBsystData) -> None:
     """
@@ -1268,7 +1268,7 @@ def convert_CO2(params: CBsystData) -> None:
     Args:
         params: CBsyst data structure, modified in place.
     """
-    if params.CO2 is None:
+    if isnone(params.CO2):
         if params.fCO2 is not None:
             params.CO2 = fCO2_to_CO2(params.fCO2, params.Ks)
         elif params.pCO2 is not None:
@@ -1348,12 +1348,12 @@ def calculate_remaining_C_species(params: CBsystData) -> None:
         params: CBsyst data structure, modified in place.
     """
     # populate missing carbon parameters
-    if params.CO2 is None: params.CO2 = cCO2(params.H, params.DIC, params.Ks)
-    if params.fCO2 is None: params.fCO2 = CO2_to_fCO2(params.CO2, params.Ks)
-    if params.pCO2 is None: params.pCO2 = fCO2_to_pCO2(params.fCO2, params.T_in)
-    if params.HCO3 is None: params.HCO3 = cHCO3(params.H, params.DIC, params.Ks)
-    if params.CO3 is None: params.CO3 = cCO3(params.H, params.DIC, params.Ks)
-    if params.pHtot is None: params.pHtot = negative_log10_preserve_type(params.H)
+    if isnone(params.CO2): params.CO2 = cCO2(params.H, params.DIC, params.Ks)
+    if isnone(params.fCO2): params.fCO2 = CO2_to_fCO2(params.CO2, params.Ks)
+    if isnone(params.pCO2): params.pCO2 = fCO2_to_pCO2(params.fCO2, params.T_in)
+    if isnone(params.HCO3): params.HCO3 = cHCO3(params.H, params.DIC, params.Ks)
+    if isnone(params.CO3): params.CO3 = cCO3(params.H, params.DIC, params.Ks)
+    if isnone(params.pHtot): params.pHtot = negative_log10_preserve_type(params.H)
 
     TA_COMPONENTS = ['TA', 'CAlk', 'BAlk', 'PAlk', 'SiAlk', 'OH', 'Hfree', 'HSO4', 'HF']
     for par, val in zip(TA_COMPONENTS, cTA(
@@ -1361,7 +1361,7 @@ def calculate_remaining_C_species(params: CBsystData) -> None:
                 SiT=params.SiT, ST=params.ST, FT=params.FT, 
                 Ks=params.Ks, mode="multi"
             )):
-        if params[par] is None: params[par] = val
+        if isnone(params[par]): params[par] = val
 
 def solve_C_system(params: CBsystData) -> None:
     """
@@ -1387,11 +1387,11 @@ def solve_C_system(params: CBsystData) -> None:
 
     # identify pair of provided params
     carbon_params = ['CO2', 'pHtot', 'HCO3', 'CO3', 'TA', 'DIC']
-    provided = tuple([p for p in carbon_params if params.get(p) is not None])
+    provided = tuple([p for p in carbon_params if not isnone(params.get(p))])
     # params.inputs += provided 
 
     solver = SOLVER_RULES.get(provided)
-    if solver is None:
+    if isnone(solver):
         n_provided = len(provided)
         if n_provided < 2:
             msg = f"Not enough carbon parameters provided: {provided}"

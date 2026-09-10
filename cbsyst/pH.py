@@ -1,11 +1,12 @@
 import numpy as np
 from .uncertainties import negative_log10_preserve_type
+from .helpers import isnone
 
 pH_scales = ['pHtot', 'pHNBS', 'pHsws', 'pHfree']
 
 def given(params):
     """Check which pH scales are given in the parameters"""
-    return [params.get(p) for p in pH_scales if params.get(p) is not None]
+    return [params.get(p) for p in pH_scales if not isnone(params.get(p))]
 
 def n_given(params):
     return len(given(params))
@@ -24,7 +25,7 @@ def convert_scales(params):
     params.fH = calc_fH(params.T_in + 273.15, params.S_in)
 
     pH_scales = ['pHtot', 'pHfree', 'pHNBS', 'pHsws']
-    pH_present = [ph for ph in pH_scales if params[ph] is not None]
+    pH_present = [ph for ph in pH_scales if not isnone(params[ph])]
 
     if len(pH_present) == 0:
         return

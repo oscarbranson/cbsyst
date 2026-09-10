@@ -7,8 +7,10 @@ from cbsyst.uncertainties import remove_negatives
 
 from .dataclasses import CBsystData, KValues, create_dataclass
 from . import utils, units, constants, carbon, boron, boron_isotopes, pH
+from .helpers import isnone
 
-from typing import Optional, Union, overload
+from typing import Optional, Union, overload, Iterable
+from functools import partial
 
 DEBUG = False
 
@@ -58,6 +60,7 @@ def Csys(
     # Configuration
     unit: str = "umol",
     MyAMI_mode: str = "calculate",
+    scope: Iterable[str] = []
     ) -> CBsystData:
     """
     Calculate the complete marine carbonate-boron system from any two known parameters.
@@ -185,19 +188,21 @@ def Csys(
     defaults = {
         param.name: param.default 
         for param in sig.parameters.values() 
-        if param.default is not None
+        if not isnone(param.default)
     }
 
-    if dBO3 is not None and dBO4 is not None:
+    if not isnone(dBT) and not isnone(dBO4):
         dBT = None
     
-    if ABO3 is not None and ABO4 is not None:
+    if not isnone(ABO3) and not isnone(ABO4):
         ABT = None
 
     # create data object
     csys = create_dataclass(**locals())
 
     # calculation logic:
+    scope = set(scope)
+    calced = set()
     n_pH_given = pH.n_given(csys)
     n_C_given = carbon.n_given(csys)
     n_B_given = boron.n_given(csys)
@@ -214,31 +219,55 @@ def Csys(
         # a. two carbon species given --> use to get pH, then calculate boron and isotopes
         if n_C_given == 2:
             if DEBUG: print('calculating pH from carbon species')
+            scope.add('carbon')
             carbon.solve_C_system(csys)  # calculate carbon system
+            calced.add('carbon')
         # b. two boron species given --> use to get pH, then calculate carbon and isotopes
         elif n_B_given == 2:
             if DEBUG: print('calculating pH from boron species')
+            scope.add('boron')
             boron.solve_B_system(csys)  # calculate boron system
+            calced.add('boron')
         # c. two isotope params given --> use to get pH, then calculate carbon and boron speciation
         elif n_iso_given >= 2:
             if DEBUG: print('calculating pH from boron isotopes')
+            scope.add('isotopes')
             boron_isotopes.solve_B_isotopes(csys)  # calculate boron isotopes
-    
+            calced.add('isotopes')
+
     # at this stage, pH is known
     pH.convert_scales(csys)
     
     # if the C system was partially provided, calculate it
     if n_C_given == 1:
+        scope.add('carbon')
         if DEBUG: print('calculating carbon')
         carbon.solve_C_system(csys)
+        calced.add('carbon')
     # if the B system was partially provided, calculate it
     if n_B_given == 1:
         if DEBUG: print('calculating boron')
+        scope.add('boron')
         boron.solve_B_system(csys)
+        calced.add('boron')
     # if the isotope system was partially provided, calculate it
     if n_iso_given == 1:
         if DEBUG: print('calculating boron isotopes')
+        scope.add('isotopes')
         boron_isotopes.solve_B_isotopes(csys)
+        calced.add('isotopes')
+
+    # find any remaining items in scope that have not been calculated, and calculate them
+    for item in scope - calced:
+        if item == 'carbon':
+            if DEBUG: print('calculating carbon')
+            carbon.solve_C_system(csys)
+        elif item == 'boron':
+            if DEBUG: print('calculating boron')
+            boron.solve_B_system(csys)
+        elif item == 'isotopes':
+            if DEBUG: print('calculating boron isotopes')
+            boron_isotopes.solve_B_isotopes(csys)
 
     # if has an output condition, recalculate at that condition.
     if utils.has_output_condition(csys):
@@ -302,6 +331,6 @@ def Csys(
         return csys
 
 # for backward compatibility, alias the old Csys function
-CBsys = Csys
-Bsys = Csys
-ABsys = Csys
+CBsys = partial(Csys, scope=['carbon', 'boron', 'isotopes'])
+Bsys = partial(Csys, scope=['boron'])
+ABsys = partial(Csys, scope=['isotopes'])

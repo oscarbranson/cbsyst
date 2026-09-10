@@ -6,6 +6,7 @@ import numpy as np
 from typing import Union, Any, Dict, List, Tuple, Callable
 from .dataclasses import KValues, CBsystData
 from .uncertainties import negative_log10_preserve_type
+from .helpers import isnone
 # Basic Calculation Functions
 
 def chiB_calc(
@@ -176,7 +177,7 @@ def given(params: CBsystData) -> List[Any]:
         list: List of non-None boron parameter values from BT, BO3, BO4.
     """
     valid_inputs = ['BT', 'BO3', 'BO4']
-    return [params.get(p) for p in valid_inputs if params.get(p) is not None]
+    return [params.get(p) for p in valid_inputs if not isnone(params.get(p))]
 
 def n_given(params: CBsystData) -> int:
     """
@@ -228,9 +229,9 @@ def calc_remaining_B_species(params: CBsystData) -> None:
         Calculates pHtot if it is None.
     """
     if 'BO3' in params.__dataclass_fields__:
-        if params.BO3 is None: params.BO3 = cBO3(params.BT, params.H, params.Ks)
-        if params.BO4 is None: params.BO4 = cBO4(params.BT, params.H, params.Ks)
-    if params.pHtot is None: params.pHtot = negative_log10_preserve_type(params.H)
+        if isnone(params.BO3): params.BO3 = cBO3(params.BT, params.H, params.Ks)
+        if isnone(params.BO4): params.BO4 = cBO4(params.BT, params.H, params.Ks)
+    if isnone(params.pHtot): params.pHtot = negative_log10_preserve_type(params.H)
 
 def solve_B_system(params: CBsystData) -> None:
     """
@@ -248,7 +249,7 @@ def solve_B_system(params: CBsystData) -> None:
                           (pHtot, BO3), (pHtot, BO4)
     """
     boron_params = ['pHtot', 'BT', 'BO3', 'BO4']
-    provided = tuple([p for p in boron_params if params.get(p) is not None])
+    provided = tuple([p for p in boron_params if not isnone(params.get(p))])
 
     if provided in SOLVER_RULES:
         for func in SOLVER_RULES[provided]:

@@ -7,6 +7,7 @@ from .boron import chiB_calc
 from .uncertainties import negative_log10_preserve_type, sqrt_preserve_type
 from typing import Union, Optional, Dict, Tuple, Callable, List, Any
 from .dataclasses import KValues, CBsystData
+from .helpers import isnone
 
 # B isotope fractionation factors
 def get_alphaB() -> float:
@@ -255,9 +256,9 @@ def ABO3_or_ABO4(ABO3: Optional[Union[float, np.ndarray]], ABO4: Optional[Union[
         At least one of ABO3 or ABO4 must be provided. If only ABO3 is
         given, ABO4 is calculated using the fractionation factor.
     """
-    if ABO3 is None and ABO4 is None:
+    if isnone(ABO3) and isnone(ABO4):
         raise(ValueError("Either ABO4 or ABO3 must be specified"))
-    elif ABO4 is None:
+    elif isnone(ABO4):
         ABO4 = ABO3_to_ABO4(ABO3,alphaB)
     return ABO4
 
@@ -560,11 +561,11 @@ def delta_to_abundance(params: CBsystData) -> None:
         params: CBsyst data structure, modified in place.
     """
     if params.dBT is not None:
-        if params.ABT is None: params.ABT = d11_to_A11(params.dBT)
+        if isnone(params.ABT): params.ABT = d11_to_A11(params.dBT)
     if params.dBO3 is not None:
-        if params.ABO3 is None: params.ABO3 = d11_to_A11(params.dBO3)
+        if isnone(params.ABO3): params.ABO3 = d11_to_A11(params.dBO3)
     if params.dBO4 is not None:
-        if params.ABO4 is None: params.ABO4 = d11_to_A11(params.dBO4)
+        if isnone(params.ABO4): params.ABO4 = d11_to_A11(params.dBO4)
 
 def abundance_to_delta(params: CBsystData) -> None:
     """
@@ -577,11 +578,11 @@ def abundance_to_delta(params: CBsystData) -> None:
         params: CBsyst data structure, modified in place.
     """
     if params.ABT is not None:
-        if params.dBT is None: params.dBT = A11_to_d11(params.ABT)
+        if isnone(params.dBT): params.dBT = A11_to_d11(params.ABT)
     if params.ABO3 is not None:
-        if params.dBO3 is None: params.dBO3 = A11_to_d11(params.ABO3)
+        if isnone(params.dBO3): params.dBO3 = A11_to_d11(params.ABO3)
     if params.ABO4 is not None:
-        if params.dBO4 is None: params.dBO4 = A11_to_d11(params.ABO4)
+        if isnone(params.dBO4): params.dBO4 = A11_to_d11(params.ABO4)
 
 # B isotope solvers
 
@@ -590,18 +591,18 @@ SOLVER_RULES: Dict[Tuple[str, ...], List[Callable[[CBsystData], None]]] = {
         lambda p: setattr(p, 'H', 10**-p.pHtot),
     ],
     ('pHtot', 'ABO4'): [
-        lambda p: setattr(p, 'H', 10**-p.pHtot) if p.H is None else None,
+        lambda p: setattr(p, 'H', 10**-p.pHtot) if isnone(p.H) else None,
         lambda p: setattr(p, 'ABT', calculate_ABT(H=p.H, Ks=p.Ks, alphaB=p.alphaB, ABO3=p.ABO3, ABO4=p.ABO4))
     ],
     ('pHtot', 'ABO3'): [
-        lambda p: setattr(p, 'H', 10**-p.pHtot) if p.H is None else None,
+        lambda p: setattr(p, 'H', 10**-p.pHtot) if isnone(p.H) else None,
         lambda p: setattr(p, 'ABT', calculate_ABT(H=p.H, Ks=p.Ks, alphaB=p.alphaB, ABO3=p.ABO3, ABO4=p.ABO4))    
     ],
     ('ABT', 'ABO4'): [
-        lambda p: setattr(p, 'H', calculate_H(Ks=p.Ks, ABT=p.ABT, ABO3=p.ABO3, ABO4=p.ABO4, alphaB=p.alphaB)) if p.H is None else None,
+        lambda p: setattr(p, 'H', calculate_H(Ks=p.Ks, ABT=p.ABT, ABO3=p.ABO3, ABO4=p.ABO4, alphaB=p.alphaB)) if isnone(p.H) else None,
     ],
     ('ABT', 'ABO3'): [
-        lambda p: setattr(p, 'H', calculate_H(Ks=p.Ks, ABT=p.ABT, ABO3=p.ABO3, ABO4=p.ABO4, alphaB=p.alphaB)) if p.H is None else None,
+        lambda p: setattr(p, 'H', calculate_H(Ks=p.Ks, ABT=p.ABT, ABO3=p.ABO3, ABO4=p.ABO4, alphaB=p.alphaB)) if isnone(p.H) else None,
     ]
 }
 
@@ -615,8 +616,8 @@ def calculate_ABO3_ABO4(params: CBsystData) -> None:
     Args:
         params: CBsyst data structure, modified in place.
     """
-    if params.ABO3 is None: params.ABO3 = calculate_ABO3(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
-    if params.ABO4 is None: params.ABO4 = calculate_ABO4(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
+    if isnone(params.ABO3): params.ABO3 = calculate_ABO3(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
+    if isnone(params.ABO4): params.ABO4 = calculate_ABO4(H=params.H, Ks=params.Ks, ABT=params.ABT, alphaB=params.alphaB)
 
 def solve_B_isotopes(params: CBsystData) -> None:
     """
@@ -642,12 +643,12 @@ def solve_B_isotopes(params: CBsystData) -> None:
     # params.inputs += provided
     
     solver = SOLVER_RULES.get(provided)
-    if solver is None:
+    if isnone(solver):
         raise ValueError(f"No solver found for parameter combination: {provided}")
 
     for function in solver:
         function(params)
 
-    if params.pHtot is None: params.pHtot = negative_log10_preserve_type(params.H)
+    if isnone(params.pHtot): params.pHtot = negative_log10_preserve_type(params.H)
     calculate_ABO3_ABO4(params)
     abundance_to_delta(params)

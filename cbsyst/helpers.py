@@ -165,3 +165,16 @@ def cast_array(*it):
                 # Fill remaining positions with last value
                 new[i, raveled.size:] = raveled[-1]
     return new
+
+def isnone(x):
+    """
+    True if x is None, or an object array containing only None.
+
+    np.array(None, dtype=object) is not None, so plain `is None` checks
+    treat it as a supplied value. This catches both forms.
+    """
+    if x is None:
+        return True
+    if isinstance(x, np.ndarray) and x.dtype == object:
+        return all(v is None for v in x.flat)  # True for empty arrays too
+    return False
