@@ -9,6 +9,7 @@ This breaks downstream numpy operations that expect numeric dtypes.
 import numpy as np
 import uncertainties
 import uncertainties.unumpy as unp
+from .helpers import isnone
 
 def _has_uncertainties(obj):
     """
@@ -161,7 +162,7 @@ def remove_negatives(value):
     array-like, ufloat, or uarray
         Value(s) with negatives replaced by NaN
     """
-    if value is None:
+    if isnone(value):
         return value
         
     if _has_uncertainties(value):
@@ -218,7 +219,7 @@ def _calculate_finite_difference_derivative(func, args_nominal, kwargs_nominal, 
     """
     if is_kwarg:
         # Keyword argument
-        if element_index is None:
+        if isnone(element_index):
             # Scalar kwarg
             delta = abs(kwargs_nominal[key] * epsilon) if kwargs_nominal[key] != 0 else epsilon
             
@@ -248,7 +249,7 @@ def _calculate_finite_difference_derivative(func, args_nominal, kwargs_nominal, 
             result_minus = func(*args_nominal, **kwargs_minus)
     else:
         # Positional argument
-        if element_index is None:
+        if isnone(element_index):
             # Scalar arg
             delta = abs(args_nominal[param_index] * epsilon) if args_nominal[param_index] != 0 else epsilon
             
@@ -454,7 +455,7 @@ def _zero_finder_finite_difference_derivative(zero_func, params_nominal, param_i
     """
     import scipy.optimize as opt
     
-    if element_index is None:
+    if isnone(element_index):
         # Scalar parameter
         delta = abs(params_nominal[param_index] * epsilon) if params_nominal[param_index] != 0 else epsilon
         
@@ -535,7 +536,7 @@ def _zero_finder_with_uncertainties(params, zero_func, bounds=(10 ** -14, 10 ** 
             result_shape = p.shape
             break
     
-    if result_shape is not None:
+    if not isnone(result_shape):
         # Array inputs - calculate uncertainty (same for all elements since result is scalar)
         total_variance = 0.0
         for item in derivatives:

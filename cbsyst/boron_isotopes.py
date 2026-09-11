@@ -536,7 +536,7 @@ def given(params: CBsystData) -> List[Any]:
         List of parameter values that are not None.
     """
     valid_inputs = ['ABT', 'ABO3', 'ABO4', 'dBT', 'dBO3', 'dBO4']
-    return [params.get(p) for p in valid_inputs if params.get(p) is not None]
+    return [params.get(p) for p in valid_inputs if not isnone(params.get(p))]
 
 def n_given(params: CBsystData) -> int:
     """
@@ -560,11 +560,11 @@ def delta_to_abundance(params: CBsystData) -> None:
     Args:
         params: CBsyst data structure, modified in place.
     """
-    if params.dBT is not None:
+    if not isnone(params.dBT):
         if isnone(params.ABT): params.ABT = d11_to_A11(params.dBT)
-    if params.dBO3 is not None:
+    if not isnone(params.dBO3):
         if isnone(params.ABO3): params.ABO3 = d11_to_A11(params.dBO3)
-    if params.dBO4 is not None:
+    if not isnone(params.dBO4):
         if isnone(params.ABO4): params.ABO4 = d11_to_A11(params.dBO4)
 
 def abundance_to_delta(params: CBsystData) -> None:
@@ -577,11 +577,11 @@ def abundance_to_delta(params: CBsystData) -> None:
     Args:
         params: CBsyst data structure, modified in place.
     """
-    if params.ABT is not None:
+    if not isnone(params.ABT):
         if isnone(params.dBT): params.dBT = A11_to_d11(params.ABT)
-    if params.ABO3 is not None:
+    if not isnone(params.ABO3):
         if isnone(params.dBO3): params.dBO3 = A11_to_d11(params.ABO3)
-    if params.ABO4 is not None:
+    if not isnone(params.ABO4):
         if isnone(params.dBO4): params.dBO4 = A11_to_d11(params.ABO4)
 
 # B isotope solvers
@@ -639,8 +639,10 @@ def solve_B_isotopes(params: CBsystData) -> None:
     delta_to_abundance(params)
 
     AB_params = ['pHtot', 'ABT', 'ABO4', 'ABO3']
-    provided = tuple([p for p in AB_params if params.get(p) is not None])
+    provided = tuple([p for p in AB_params if not isnone(params.get(p))])
     # params.inputs += provided
+    
+    print(provided)
     
     solver = SOLVER_RULES.get(provided)
     if isnone(solver):

@@ -3,6 +3,19 @@ import numpy as np
 import pandas as pd
 
 
+def isnone(x):
+    """
+    True if x is None, or an object array containing only None.
+
+    np.array(None, dtype=object) is not None, so plain `is None` checks
+    treat it as a supplied value. This catches both forms.
+    """
+    if x is None:
+        return True
+    if isinstance(x, np.ndarray) and x.dtype == object:
+        return all(v is None for v in x.flat)  # True for empty arrays too
+    return False
+
 # Helpers useful to the user
 # --------------------------
 def data_out(cbdat, path=None, include_constants=False):
@@ -67,7 +80,7 @@ def data_out(cbdat, path=None, include_constants=False):
     out = pd.DataFrame(index=range(size))
 
     for c in cols:
-        if c in cbdat and cbdat[c] is not None:
+        if c in cbdat and not isnone(cbdat[c]):
             if (np.ndim(cbdat[c]) == 1) and (cbdat[c].size == 1):
                 cbdat[c] = cbdat[c][0]
             if c in cbdat:
@@ -75,16 +88,16 @@ def data_out(cbdat, path=None, include_constants=False):
 
     if include_constants:
         for c in consts:
-            if c in cbdat.Ks and cbdat.Ks[c] is not None:
+            if c in cbdat.Ks and not isnone(cbdat.Ks[c]):
                 if (np.ndim(cbdat.Ks[c]) == 1) and (cbdat.Ks[c].size == 1):
                     cbdat.Ks[c] = cbdat.Ks[c][0]
                 out.loc[:, "p" + c] = -np.log10(cbdat.Ks[c])
-        if "alphaB" in cbdat and cbdat.alphaB is not None:
+        if "alphaB" in cbdat and not isnone(cbdat.alphaB):
             if (np.ndim(cbdat.alphaB) == 1) and (cbdat.alphaB.size == 1):
                 cbdat.alphaB = cbdat.alphaB[0]
             out.loc[:, "alphaB"] = cbdat.alphaB
 
-    if path is not None:
+    if not isnone(path):
         fmt = path.split(".")[-1]
         fdict = {
             "csv": "to_csv",
@@ -165,16 +178,3 @@ def cast_array(*it):
                 # Fill remaining positions with last value
                 new[i, raveled.size:] = raveled[-1]
     return new
-
-def isnone(x):
-    """
-    True if x is None, or an object array containing only None.
-
-    np.array(None, dtype=object) is not None, so plain `is None` checks
-    treat it as a supplied value. This catches both forms.
-    """
-    if x is None:
-        return True
-    if isinstance(x, np.ndarray) and x.dtype == object:
-        return all(v is None for v in x.flat)  # True for empty arrays too
-    return False

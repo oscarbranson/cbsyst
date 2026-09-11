@@ -1,5 +1,6 @@
 import numpy as np
 from .dataclasses import CBsystData
+from .helpers import isnone
 
 CONCENTRATION_PARAMS = ["DIC", "TA", "CO2", "HCO3", "CO3", "BT", "BO3", "BO4", "PT", "SiT"]
 GAS_PARAMS = ['pCO2', 'fCO2']
@@ -16,7 +17,7 @@ UNIT_MULTIPLIERS = {
     
 def convert_to_molar(params: CBsystData) -> None:
     """Convert input units to molar"""
-    if params.unit is None:
+    if isnone(params.unit):
         return
 
     multiplier = UNIT_MULTIPLIERS.get(params.unit, params.unit)
@@ -26,19 +27,19 @@ def convert_to_molar(params: CBsystData) -> None:
             if param not in params.__dataclass_fields__:
                 continue
             value = getattr(params, param)
-            if value is not None:
+            if not isnone(value):
                 setattr(params, param, np.divide(value, multiplier))
     
     for param in GAS_PARAMS:
         if param not in params.__dataclass_fields__:
             continue        
         value = getattr(params, param)
-        if value is not None:
+        if not isnone(value):
             setattr(params, param, np.divide(value, 1e6))  # gas params are always given in ppm, convert to fraction
 
 def convert_from_molar(params: CBsystData) -> None:
     """Convert results back to input units"""
-    if params.unit is None:
+    if isnone(params.unit):
         return
     
     multiplier = UNIT_MULTIPLIERS.get(params.unit, params.unit)
@@ -48,12 +49,12 @@ def convert_from_molar(params: CBsystData) -> None:
             if param not in params.__dataclass_fields__:
                 continue
             value = getattr(params, param)
-            if value is not None:
+            if not isnone(value):
                 params[param] *= multiplier
     
     for param in GAS_PARAMS:
         if param not in params.__dataclass_fields__:
             continue
         value = getattr(params, param)
-        if value is not None:
+        if not isnone(value):
             params[param] = np.multiply(value, 1e6)  # convert back from fraction to ppm

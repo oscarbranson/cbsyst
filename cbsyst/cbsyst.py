@@ -34,7 +34,7 @@ def Csys(
     BO3: Optional[Union[float, np.ndarray]] = None,
     BO4: Optional[Union[float, np.ndarray]] = None,
     # Boron Isotope Parameters
-    dBT: Optional[Union[float, np.ndarray]] = 39.61,
+    dBT: Optional[Union[float, np.ndarray]] = None,
     dBO3: Optional[Union[float, np.ndarray]] = None,
     dBO4: Optional[Union[float, np.ndarray]] = None,
     ABT: Optional[Union[float, np.ndarray]] = None,
@@ -191,12 +191,6 @@ def Csys(
         if not isnone(param.default)
     }
 
-    if not isnone(dBT) and not isnone(dBO4):
-        dBT = None
-    
-    if not isnone(ABO3) and not isnone(ABO4):
-        ABT = None
-
     # create data object
     csys = create_dataclass(**locals())
 
@@ -207,6 +201,11 @@ def Csys(
     n_C_given = carbon.n_given(csys)
     n_B_given = boron.n_given(csys)
     n_iso_given = boron_isotopes.n_given(csys)
+    
+    pH_known = n_pH_given > 0 or n_C_given == 2 or n_B_given == 2
+    n_iso_species = sum(not isnone(x) for x in (dBO3, dBO4, ABO3, ABO4))
+    if isnone(dBT) and isnone(ABT) and (n_iso_species + pH_known) < 2:
+        csys.dBT = 39.61  # modern seawater default
 
     if DEBUG: print(n_pH_given, n_C_given, n_B_given, n_iso_given)
 
@@ -276,12 +275,12 @@ def Csys(
         inputs = {k: csys.get(k) for k in csys.inputs}
         
         # Set output condition defaults
-        T_out = csys.T_out if csys.T_out is not None else csys.T_in
-        S_out = csys.S_out if csys.S_out is not None else csys.S_in
-        P_out = csys.P_out if csys.P_out is not None else csys.P_in
+        T_out = csys.T_out if not isnone(csys.T_out) else csys.T_in
+        S_out = csys.S_out if not isnone(csys.S_out) else csys.S_in
+        P_out = csys.P_out if not isnone(csys.P_out) else csys.P_in
         
         # Update salinity-dependent parameters if salinity changes
-        if csys.S_out is not None:
+        if not isnone(csys.S_out):
             BT_out = csys.BT * S_out / csys.S_in
             ST_out = csys.ST * S_out / csys.S_in  
             FT_out = csys.FT * S_out / csys.S_in
@@ -332,5 +331,5 @@ def Csys(
 
 # for backward compatibility, alias the old Csys function
 CBsys = partial(Csys, scope=['carbon', 'boron', 'isotopes'])
-Bsys = partial(Csys, scope=['boron'])
+Bsys = partial(Csys, scope=['boron', 'isotopes'])
 ABsys = partial(Csys, scope=['isotopes'])

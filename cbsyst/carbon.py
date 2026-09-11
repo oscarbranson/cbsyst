@@ -38,7 +38,7 @@ def _zero_wrapper(ps: np.ndarray, fn: Callable, bounds: Tuple[float, float] = (1
         ValueError: If root finding fails with standard methods.
     """
     # Check if any parameters have uncertainties
-    has_uncertainties = any(_has_uncertainties(p) for p in ps if p is not None)
+    has_uncertainties = any(_has_uncertainties(p) for p in ps if not isnone(p))
     
     if not has_uncertainties:
         # No uncertainties - use original implementation
@@ -1240,9 +1240,9 @@ def use_Omega(params: CBsystData) -> None:
     Args:
         params: CBsyst data structure, modified in place.
     """
-    if params.OmegaC is not None:
+    if not isnone(params.OmegaC):
         params.CO3 = params.OmegaC * params.Ks.KspC / params.Ca
-    if params.OmegaA is not None:
+    if not isnone(params.OmegaA):
         params.CO3 = params.OmegaA * params.Ks.KspA / params.Ca
 
 def calculate_Omegas(params: CBsystData) -> None:
@@ -1269,9 +1269,9 @@ def convert_CO2(params: CBsystData) -> None:
         params: CBsyst data structure, modified in place.
     """
     if isnone(params.CO2):
-        if params.fCO2 is not None:
+        if not isnone(params.fCO2):
             params.CO2 = fCO2_to_CO2(params.fCO2, params.Ks)
-        elif params.pCO2 is not None:
+        elif not isnone(params.pCO2):
             params.fCO2 = pCO2_to_fCO2(params.pCO2, params.T_in)
             params.CO2 = fCO2_to_CO2(params.fCO2, params.Ks)
 

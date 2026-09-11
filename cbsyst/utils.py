@@ -2,6 +2,7 @@ from typing import Union
 import numpy as np
 from .uncertainties import remove_negatives
 from .dataclasses import CarbonSystemParams, CBsystData
+from .helpers import isnone
 from . import constants
 
 def remove_negative_concentrations(params: CarbonSystemParams) -> None:
@@ -45,7 +46,7 @@ def has_output_condition(params: Union[CBsystData, CarbonSystemParams]) -> bool:
         need to be applied to equilibrium constants and whether pH scale
         conversions need to account for different ionic strengths.
     """
-    return params.T_out is not None or params.S_out is not None or params.P_out is not None
+    return not isnone(params.T_out) or not isnone(params.S_out) or not isnone(params.P_out)
 
 def swdens(TempC: Union[float, np.ndarray], Sal: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
     """
@@ -99,7 +100,7 @@ def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, Sal, TempC=None, p_bar=None, ST=
     """
 
     # check if any pH scale is given.
-    npH = sum([x is not None for x in [pHfree, pHsws, pHtot, pHNBS]])
+    npH = sum([not isnone(x) for x in [pHfree, pHsws, pHtot, pHNBS]])
 
     if npH == 0:
         raise ValueError("At least one pH scale must be provided (pHfree, pHsws, pHtot, pHNBS).")
@@ -107,18 +108,18 @@ def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, Sal, TempC=None, p_bar=None, ST=
     if npH > 1:
         raise ValueError("Only one pH scale can be provided at a time (pHfree, pHsws, pHtot, pHNBS).")
     
-    if TempK is None:
-        if TempC is None:
+    if isnone(TempK):
+        if isnone(TempC):
             raise ValueError("Temperature must be provided either as TempC or TempK.")
         TempK = TempC + 273.15
     
-    if ST is None:
+    if isnone(ST):
         ST = constants.calc_ST(Sal)
-    if FT is None:
+    if isnone(FT):
         FT = constants.calc_FT(Sal)
-    if p_bar is None:
-        P_bar = 0.0
-    if Ks is None:
+    if isnone(p_bar):
+        p_bar = 0.0
+    if isnone(Ks):
         Ks = constants.calc_Ks(temp_c=TempC, sal=Sal, p_bar=p_bar)
 
     # pH scale conversions
@@ -126,25 +127,25 @@ def calc_pH_scales(pHtot, pHfree, pHsws, pHNBS, Sal, TempC=None, p_bar=None, ST=
     SWStoTOT = -np.log10((1 + ST / Ks.KS) / (1 + ST / Ks.KS + FT / Ks.KF))
     fH = constants.calc_fH(TempK, Sal)
 
-    if pHtot is not None:
+    if not isnone(pHtot):
         return {
             "pHfree": pHtot - FREEtoTOT,
             "pHsws": pHtot - SWStoTOT,
             "pHNBS": pHtot - SWStoTOT - np.log10(fH),
         }
-    elif pHsws is not None:
+    elif not isnone(pHsws):
         return {
             "pHfree": pHsws + SWStoTOT - FREEtoTOT,
             "pHtot": pHsws + SWStoTOT,
             "pHNBS": pHsws - np.log10(fH),
         }
-    elif pHfree is not None:
+    elif not isnone(pHfree):
         return {
             "pHsws": pHfree + FREEtoTOT - SWStoTOT,
             "pHtot": pHfree + FREEtoTOT,
             "pHNBS": pHfree + FREEtoTOT - SWStoTOT - np.log10(fH),
         }
-    elif pHNBS is not None:
+    elif not isnone(pHNBS):
         return {
             "pHsws": pHNBS + np.log10(fH),
             "pHtot": pHNBS + np.log10(fH) + SWStoTOT,

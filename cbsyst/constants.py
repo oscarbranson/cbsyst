@@ -1,5 +1,6 @@
 import kgen
 from .dataclasses import KValues, CBsystData
+from .helpers import isnone
 from . import dataclasses as dc
 
 
@@ -62,14 +63,14 @@ def calc_fH(TempK, Sal):
 
 
 def calc_conservative_composition(params: CBsystData):
-    if params.ST is None:
+    if isnone(params.ST):
         params.ST = calc_ST(params.S_in)
-    if params.FT is None:
+    if isnone(params.FT):
         params.FT = calc_FT(params.S_in)
     
     if isinstance(params, (dc.BoronParams, dc.BoronSystemParams, dc.CarbonBoronParams, dc.CarbonBoronIsotopeParams)):
-        if params.BT is None and (params.BO3 is None and params.BO4 is None):
+        if isnone(params.BT) and (isnone(params.BO3) and isnone(params.BO4)):
             params.BT = calc_BT(params.S_in)
     else:
-        if params.BT is None:
+        if isnone(params.BT):
             params.BT = calc_BT(params.S_in)

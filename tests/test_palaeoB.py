@@ -12,21 +12,24 @@ dBT = np.random.uniform(35, 45, n)
 T = np.random.uniform(15, 35, n)
 S = np.random.uniform(30, 40, n)
 
+print('establishing test set')
 test = CBsys(pHtot=pHtot, dBT=dBT, BT=BT, DIC=DIC, T_in=T, S_in=S)
 
-
 class ReferenceDataTestCase(unittest.TestCase):
-    """Test boron idotopes"""
+    """Test boron isotopes"""
 
     def test_Bisotopes(self):
+        print('testing ABsys')
         check_A = ABsys(dBO4=test.dBO4, dBT=test.dBT, T_in=T, S_in=S)
         
         self.assertIsNone(np.testing.assert_allclose(test.pHtot, check_A.pHtot, rtol=1e-10))
         
+        print('testing Bsys')
         check_B = Bsys(dBO4=test.dBO4, dBT=test.dBT, BT=test.BT, T_in=T, S_in=S)
     
         self.assertIsNone(np.testing.assert_allclose(test.pHtot, check_B.pHtot, rtol=1e-10))
 
+        print('testing CBsys')
         check_CB = CBsys(dBO4=test.dBO4, dBT=test.dBT, DIC=test.DIC, BT=test.BT, T_in=T, S_in=S)
 
         self.assertIsNone(np.testing.assert_allclose(test.pHtot, check_CB.pHtot, rtol=1e-10))

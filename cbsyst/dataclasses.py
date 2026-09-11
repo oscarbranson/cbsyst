@@ -1,3 +1,4 @@
+from .helpers import isnone
 from dataclasses import dataclass
 from typing import Optional, Union, Any, Iterator, Tuple, Callable, List
 import numpy as np
@@ -148,7 +149,7 @@ class mixin_CBsyst_print:
         out += 'Calculated:\n'
         out += line
         for p in ['pHtot', 'pHfree', 'pHsws', 'pHNBS', 'DIC', 'TA', 'CO2', 'HCO3', 'CO3', 'pCO2', 'fCO2', 'BT', 'BO3', 'BO4', 'dBT', 'dBO3', 'dBO4', 'OmegaC', 'OmegaA']:
-            if self.get(p) is not None:
+            if not isnone(self.get(p)):
                 out += f'{p:<{col1}}{self._fmt_value(self[p]):>{col2}}\n'
         out += section
 
@@ -634,20 +635,17 @@ def create_dataclass(**kwargs) -> Union[CarbonSystemParams, BoronSystemParams, B
         have non-None values and selects the minimal dataclass that can accommodate
         all provided parameters. Input tracking is automatically handled.
     """
-    given_pH = [field for field in mixin_pHConversion.__dataclass_fields__ if kwargs.get(field) is not None]
+    given_pH = [field for field in mixin_pHConversion.__dataclass_fields__ if not isnone(kwargs.get(field))]
 
-    given_constants = [field for field in mixin_Conditions.__dataclass_fields__ if kwargs.get(field) is not None]
-    
-    given_carbon = [field for field in mixin_CarbonSystem.__dataclass_fields__ if kwargs.get(field) is not None]
+    given_constants = [field for field in mixin_Conditions.__dataclass_fields__ if not isnone(kwargs.get(field))]
+
+    given_carbon = [field for field in mixin_CarbonSystem.__dataclass_fields__ if not isnone(kwargs.get(field))]
     has_carbon = len(given_carbon) > 0
-    # has_carbon = any(kwargs.get(field) is not None for field in mixin_CarbonSystem.__dataclass_fields__)
-    given_boron = [field for field in mixin_BoronSystem.__dataclass_fields__ if kwargs.get(field) is not None]
+    given_boron = [field for field in mixin_BoronSystem.__dataclass_fields__ if not isnone(kwargs.get(field))]
     has_boron = len(given_boron) > 0
-    # has_boron = any(kwargs.get(field) is not None for field in mixin_BoronSystem.__dataclass_fields__)
 
-    given_isotopes = [field for field in mixin_BoronIsotopes.__dataclass_fields__ if kwargs.get(field) is not None]
+    given_isotopes = [field for field in mixin_BoronIsotopes.__dataclass_fields__ if not isnone(kwargs.get(field))]
     has_isotopes = len(given_isotopes) > 0
-    # has_isotopes = any(kwargs.get(field) is not None for field in mixin_BoronIsotopes.__dataclass_fields__)
 
     if ((has_carbon and has_boron and has_isotopes)
         or (has_carbon and has_isotopes)):
