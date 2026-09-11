@@ -641,9 +641,7 @@ def solve_B_isotopes(params: CBsystData) -> None:
     AB_params = ['pHtot', 'ABT', 'ABO4', 'ABO3']
     provided = tuple([p for p in AB_params if not isnone(params.get(p))])
     # params.inputs += provided
-    
-    print(provided)
-    
+        
     solver = SOLVER_RULES.get(provided)
     if isnone(solver):
         raise ValueError(f"No solver found for parameter combination: {provided}")
