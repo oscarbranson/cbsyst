@@ -1,9 +1,0 @@
-# Core dependencies for cbsyst
-numpy>=1.15.0
-scipy>=1.2.0
-pandas>=0.24.0
-uncertainties>=3.0.0
-kgen>=0.2.0
-
-# Optional dependencies for enhanced functionality
-matplotlib>=3.0.0  # for plotting capabilities

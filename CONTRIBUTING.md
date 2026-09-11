@@ -29,7 +29,7 @@ Contribution workflow:
 2. Fork repository
 3. Make changes
 4. Write unittests for any additions within test_cbsyst.py or test_MyAMI_V2.py, as appropriate.
-5. Run tests using setup.py test, and make sure your updated code passes all tests.
+5. Run tests using `python -m unittest`, and make sure your updated code passes all tests.
 6. Submit pull request, referencing issues as appropriate.
 
 ### Coding Style
@@ -41,7 +41,7 @@ Make sure you update docstrings in line with any code changes.
 
 ### Tests
 
-Currently using the unittest module, and testing via ``setup.py test``.
+Currently using the unittest module, and testing via ``python -m unittest``.
 
 Current unittests check internal consistency of functions against stable-state reference values, and compare the output of Csys against reference carbon speciation data. 
 

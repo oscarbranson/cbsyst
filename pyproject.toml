@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cbsyst"
+dynamic = ["version"]
+description = "Tools for calculating ocean C and B chemistry."
+readme = "README.md"
+authors = [{ name = "Oscar Branson", email = "ob266@cam.ac.uk" }]
+license = "MIT"
+license-files = ["LICENCE.txt"]
+requires-python = ">=3.9"
+keywords = ["science", "chemistry", "oceanography", "carbon"]
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",
+    "Intended Audience :: Science/Research",
+]
+dependencies = [
+    "numpy>=1.15",
+    "scipy>=1.2",
+    "pandas>=0.24",
+    "uncertainties>=3.0",
+    "kgen>=0.2.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=6.0", "pytest-cov>=2.10", "unittest-xml-reporting>=3.0", "matplotlib>=3.0", "tqdm>=4.14"]
+docs = ["mkdocs>=1.4", "mkdocstrings[python]>=0.19", "mkdocs-material>=8.5", "mkdocs-autorefs>=0.4"]
+dev = ["cbsyst[test,docs]", "flake8", "black", "isort", "mypy", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/oscarbranson/cbsyst"
+
+[tool.setuptools.dynamic]
+version = { attr = "cbsyst.VERSION" }
+
+[tool.setuptools.packages.find]
+include = ["cbsyst*"]
